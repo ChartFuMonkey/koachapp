@@ -5,36 +5,55 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default async function CoachPage() {
-  const [clientsRes, phasesRes, logsRes] = await Promise.all([
-    supabaseAdmin
-      .from("clients")
-      .select("id, is_active, created_at")
-      .order("created_at", { ascending: false }),
+  // 1. Fetch clients first
+  const clientsRes = await supabaseAdmin
+    .from("clients")
+    .select("id, is_active, created_at")
+    .order("created_at", { ascending: false });
+
+  const clients = clientsRes.data || [];
+
+  if (clients.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24">
+        <p className="text-lg text-gray-400">
+          Nema klijenata. Dodaj prvog klijenta.
+        </p>
+        <Link href="/coach/clients/new" className="mt-4">
+          <Button>
+            <UserPlus size={16} /> Novi klijent
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  // 2. Use clientIds to filter parallel queries
+  const clientIds = clients.map((c) => c.id);
+
+  const [phasesRes, logsRes, profilesRes] = await Promise.all([
     supabaseAdmin
       .from("phases")
       .select("client_id, name")
-      .eq("is_active", true),
+      .eq("is_active", true)
+      .in("client_id", clientIds),
     supabaseAdmin
       .from("daily_logs")
       .select("client_id, log_date, weight_kg")
+      .in("client_id", clientIds)
       .order("log_date", { ascending: false })
       .limit(1000),
+    supabaseAdmin
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", clientIds),
   ]);
 
-  const clients = clientsRes.data || [];
   const phases = phasesRes.data || [];
   const logs = logsRes.data || [];
+  const profiles = profilesRes.data || [];
 
-  // Fetch profile names for all client IDs
-  const clientIds = clients.map((c) => c.id);
-  const { data: profiles } = await supabaseAdmin
-    .from("profiles")
-    .select("id, full_name")
-    .in("id", clientIds.length > 0 ? clientIds : ["none"]);
-
-  const profileMap = new Map(
-    (profiles || []).map((p) => [p.id, p.full_name])
-  );
+  const profileMap = new Map(profiles.map((p) => [p.id, p.full_name]));
   const phaseMap = new Map(phases.map((p) => [p.client_id, p.name]));
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000)
@@ -58,21 +77,6 @@ export default async function CoachPage() {
       weekLogs: weekCount,
     };
   });
-
-  if (clients.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24">
-        <p className="text-lg text-gray-400">
-          Nema klijenata. Dodaj prvog klijenta.
-        </p>
-        <Link href="/coach/clients/new" className="mt-4">
-          <Button>
-            <UserPlus size={16} /> Novi klijent
-          </Button>
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div>

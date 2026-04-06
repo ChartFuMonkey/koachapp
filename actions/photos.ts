@@ -1,6 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { todayCET } from "@/lib/date";
+
+const ALLOWED_ANGLES = ["front", "side", "back"] as const;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function getPhotos() {
   const supabase = await createClient();
@@ -18,15 +23,18 @@ export async function getPhotos() {
 
   if (error) {
     console.error("Photos fetch error:", error);
-    return { error: "Greska pri dohvacanju fotografija." };
+    return { error: "Greška pri dohvaćanju fotografija." };
   }
 
   // Generate signed URLs for all photos
   const photosWithUrls = await Promise.all(
     (photos || []).map(async (photo) => {
-      const { data } = await supabase.storage
+      const { data, error: urlError } = await supabase.storage
         .from("progress-photos")
         .createSignedUrl(photo.storage_path, 3600);
+      if (urlError) {
+        console.error("Signed URL error:", urlError, photo.storage_path);
+      }
       return { ...photo, signedUrl: data?.signedUrl || null };
     })
   );
@@ -47,6 +55,21 @@ export async function uploadPhoto(formData: FormData) {
 
   if (!file) return { error: "Nema datoteke." };
 
+  // Validate angle
+  if (!ALLOWED_ANGLES.includes(angle as typeof ALLOWED_ANGLES[number])) {
+    return { error: "Nevažeći kut fotografije." };
+  }
+
+  // Validate file size
+  if (file.size > MAX_FILE_SIZE) {
+    return { error: "Datoteka je prevelika (maks. 10 MB)." };
+  }
+
+  // Validate file type
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return { error: "Nedozvoljeni format datoteke (samo JPEG, PNG, WebP)." };
+  }
+
   const timestamp = Date.now();
   const storagePath = `${user.id}/${timestamp}_${angle}.jpg`;
 
@@ -56,10 +79,10 @@ export async function uploadPhoto(formData: FormData) {
 
   if (uploadError) {
     console.error("Upload error:", uploadError);
-    return { error: "Greska pri uploadu fotografije." };
+    return { error: "Greška pri uploadu fotografije." };
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayCET();
 
   const { data: row, error: insertError } = await supabase
     .from("progress_photos")
@@ -74,13 +97,17 @@ export async function uploadPhoto(formData: FormData) {
 
   if (insertError) {
     console.error("Photo insert error:", insertError);
-    return { error: "Greska pri spremanju fotografije." };
+    return { error: "Greška pri spremanju fotografije." };
   }
 
   // Generate signed URL for the new photo
-  const { data: urlData } = await supabase.storage
+  const { data: urlData, error: urlError } = await supabase.storage
     .from("progress-photos")
     .createSignedUrl(storagePath, 3600);
+
+  if (urlError) {
+    console.error("Signed URL error:", urlError, storagePath);
+  }
 
   return { data: { ...row, signedUrl: urlData?.signedUrl || null } };
 }

@@ -1,8 +1,15 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import {
+  requireCoachOwnsClient,
+  requireCoachOwnsPhase,
+} from "@/lib/auth/require-coach";
 
 export async function getClientPhases(clientId: string) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   const { data, error } = await supabaseAdmin
     .from("phases")
     .select("*")
@@ -18,6 +25,9 @@ export async function getClientPhases(clientId: string) {
 }
 
 export async function createPhase(clientId: string, formData: FormData) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   const name = (formData.get("name") as string)?.trim();
   if (!name) return { error: "Naziv faze je obavezan." };
 
@@ -46,6 +56,9 @@ export async function createPhase(clientId: string, formData: FormData) {
 }
 
 export async function activatePhase(clientId: string, phaseId: string) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   // Deactivate all phases for this client
   const { error: deactivateErr } = await supabaseAdmin
     .from("phases")
@@ -62,6 +75,7 @@ export async function activatePhase(clientId: string, phaseId: string) {
     .from("phases")
     .update({ is_active: true })
     .eq("id", phaseId)
+    .eq("client_id", clientId)
     .select("target_kcal")
     .single();
 
@@ -85,6 +99,9 @@ export async function activatePhase(clientId: string, phaseId: string) {
 }
 
 export async function deletePhase(phaseId: string) {
+  const auth = await requireCoachOwnsPhase(phaseId);
+  if (auth.error) return { error: auth.error };
+
   const { error } = await supabaseAdmin
     .from("phases")
     .delete()

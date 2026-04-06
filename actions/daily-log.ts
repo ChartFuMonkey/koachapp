@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { todayCET } from "@/lib/date";
 
 export type DailyLogData = {
   weight_kg: number | null;
@@ -30,7 +31,7 @@ export async function saveDailyLog(data: DailyLogData) {
     return { error: "Nisi prijavljen/a." };
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayCET();
 
   const { error } = await supabase.from("daily_logs").upsert(
     {
@@ -61,7 +62,7 @@ export async function getTodayLog() {
     return { error: "Nisi prijavljen/a." };
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayCET();
 
   const { data, error } = await supabase
     .from("daily_logs")

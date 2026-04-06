@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { todayCET } from "@/lib/date";
 
 export type CheckinData = {
   energy_level: number;
@@ -25,14 +26,14 @@ export async function getThisWeekCheckin() {
   } = await supabase.auth.getUser();
   if (authError || !user) return { error: "Nisi prijavljen/a." };
 
-  // Calculate last Monday (ISO week starts Monday)
-  const now = new Date();
+  // Calculate last Monday (ISO week starts Monday) using CET date
+  const todayStr = todayCET();
+  const now = new Date(todayStr + "T12:00:00");
   const day = now.getDay(); // 0=Sun, 1=Mon...
   const diffToMonday = day === 0 ? 6 : day - 1;
   const monday = new Date(now);
   monday.setDate(now.getDate() - diffToMonday);
   const mondayStr = monday.toISOString().split("T")[0];
-  const todayStr = now.toISOString().split("T")[0];
 
   const { data, error } = await supabase
     .from("checkins")
@@ -58,7 +59,7 @@ export async function submitCheckin(formData: CheckinData) {
   } = await supabase.auth.getUser();
   if (authError || !user) return { error: "Nisi prijavljen/a." };
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayCET();
 
   // Calculate ISO week number
   const d = new Date(today + "T00:00:00");

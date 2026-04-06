@@ -16,12 +16,12 @@ export default function Error({
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center">
-      <h2 className="text-xl font-bold">Something went wrong</h2>
+      <h2 className="text-xl font-bold">Nešto je pošlo po krivu</h2>
       <p className="mt-2 text-sm text-gray-400">
-        An unexpected error occurred.
+        Došlo je do neočekivane greške.
       </p>
       <Button onClick={() => unstable_retry()} className="mt-4">
-        Try again
+        Pokušaj ponovo
       </Button>
     </div>
   );

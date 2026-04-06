@@ -1,8 +1,12 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireCoach, requireCoachOwnsClient } from "@/lib/auth/require-coach";
 
 export async function createNewClient(formData: FormData) {
+  const auth = await requireCoach();
+  if (auth.error) return { error: auth.error };
+
   const email = formData.get("email") as string;
   const fullName = formData.get("full_name") as string;
 
@@ -10,7 +14,7 @@ export async function createNewClient(formData: FormData) {
     return { error: "Email i ime su obavezni." };
   }
 
-  const coachId = process.env.NEXT_PUBLIC_COACH_UUID!;
+  const coachId = auth.user.id;
 
   // Build the redirect URL for the invite email
   const siteUrl =
@@ -50,8 +54,10 @@ export async function createNewClient(formData: FormData) {
 
   // 3. Insert client
   const parse = (key: string) => {
-    const v = formData.get(key) as string;
-    return v ? parseFloat(v) : null;
+    const v = formData.get(key);
+    if (typeof v !== "string" || v === "") return null;
+    const num = parseFloat(v);
+    return isNaN(num) ? null : num;
   };
 
   const { error: clientError } = await supabaseAdmin.from("clients").insert({
@@ -80,6 +86,9 @@ export async function updateClientNotes(
   notes: string,
   injuries: string
 ) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   const { error } = await supabaseAdmin
     .from("clients")
     .update({ notes, injuries, updated_at: new Date().toISOString() })
@@ -102,6 +111,9 @@ export async function updateClientTargets(
     target_sleep_h: number | null;
   }
 ) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   const { error } = await supabaseAdmin
     .from("clients")
     .update({ ...data, updated_at: new Date().toISOString() })

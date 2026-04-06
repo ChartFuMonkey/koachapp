@@ -1,14 +1,19 @@
 "use server";
 
+import { requireCoach } from "@/lib/auth/require-coach";
+
 export async function sendReminder(clientId: string) {
+  const auth = await requireCoach();
+  if (auth.error) return { error: auth.error };
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
   const res = await fetch(`${supabaseUrl}/functions/v1/send-push`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${serviceRoleKey}`,
     },
     body: JSON.stringify({
       client_id: clientId,
@@ -20,7 +25,7 @@ export async function sendReminder(clientId: string) {
   if (!res.ok) {
     const errText = await res.text();
     console.error("Send reminder error:", errText);
-    return { error: "Greska pri slanju podsjetnika." };
+    return { error: "Greška pri slanju podsjetnika." };
   }
 
   const result = await res.json();

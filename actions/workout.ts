@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { todayCET } from "@/lib/date";
 
 export async function getActiveProgram() {
   const supabase = await createClient();
@@ -67,7 +68,7 @@ export async function createWorkoutSession(programDayId: string) {
 
   if (!user) return { error: "Nisi prijavljen/a." };
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayCET();
 
   const { data, error } = await supabase
     .from("workout_sessions")

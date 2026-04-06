@@ -25,7 +25,7 @@ export async function savePushSubscription(subscription: {
 
   if (error) {
     console.error("Push subscription save error:", error);
-    return { error: "Greska pri spremanju pretplate." };
+    return { error: "Greška pri spremanju pretplate." };
   }
 
   return { success: true };

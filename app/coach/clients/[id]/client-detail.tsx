@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,13 @@ export default function ClientDetail({
     target_sleep_h: client.target_sleep_h as number | null,
   });
 
+  // Clean up notesSaved timer
+  useEffect(() => {
+    if (!notesSaved) return;
+    const timer = setTimeout(() => setNotesSaved(false), 2000);
+    return () => clearTimeout(timer);
+  }, [notesSaved]);
+
   const weightData = logs
     .filter((l) => l.weight_kg != null)
     .reverse()
@@ -91,7 +98,6 @@ export default function ClientDetail({
     await updateClientNotes(client.id as string, notes, injuries);
     setSaving(false);
     setNotesSaved(true);
-    setTimeout(() => setNotesSaved(false), 2000);
   }
 
   async function handleSaveTargets() {

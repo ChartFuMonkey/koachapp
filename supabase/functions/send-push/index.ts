@@ -3,11 +3,14 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// VAPID keys — private key is safe here (server-side only, never sent to browser)
-const VAPID_PRIVATE_KEY = "***REDACTED***";
-const VAPID_PUBLIC_KEY =
-  "***REDACTED***";
-const VAPID_SUBJECT = "mailto:igor.milihram@gmail.com";
+// VAPID keys from environment (server-side only, never sent to browser)
+const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
+const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:igor.milihram@gmail.com";
+
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "https://koachapp.vercel.app";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // --- Web Push helpers (Web Crypto API, no npm dependencies) ---
 
@@ -204,26 +207,70 @@ async function sendPush(
   return res.status;
 }
 
+// --- CORS headers helper ---
+
+function corsHeaders(origin?: string | null) {
+  const allowedOrigin =
+    origin && origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN;
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+  };
+}
+
 // --- Main handler ---
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("origin");
+
   if (req.method === "OPTIONS") {
     return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "authorization, x-client-info, apikey, content-type",
-      },
+      headers: corsHeaders(origin),
     });
   }
 
+  const cors = corsHeaders(origin);
+
   try {
+    // Auth check: verify Bearer token matches service role key
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (token !== supabaseServiceKey) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...cors } }
+      );
+    }
+
     const { client_id, title, body } = await req.json();
 
     if (!client_id || !title || !body) {
       return new Response(
         JSON.stringify({ error: "Missing client_id, title, or body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json", ...cors } }
+      );
+    }
+
+    // Validate client_id is a valid UUID
+    if (typeof client_id !== "string" || !UUID_RE.test(client_id)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid client_id format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...cors } }
+      );
+    }
+
+    // Validate title and body are strings with reasonable length
+    if (typeof title !== "string" || title.length > 200) {
+      return new Response(
+        JSON.stringify({ error: "Invalid title" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...cors } }
+      );
+    }
+    if (typeof body !== "string" || body.length > 1000) {
+      return new Response(
+        JSON.stringify({ error: "Invalid body" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...cors } }
       );
     }
 
@@ -237,7 +284,7 @@ Deno.serve(async (req) => {
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...cors },
       });
     }
 
@@ -260,12 +307,12 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ sent }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...cors },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...cors },
     });
   }
 });

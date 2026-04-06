@@ -1,10 +1,19 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import {
+  requireCoachOwnsClient,
+  requireCoachOwnsProgram,
+  requireCoachOwnsProgramDay,
+  requireCoachOwnsProgramExercise,
+} from "@/lib/auth/require-coach";
 
 // ── Programs ──────────────────────────────────────────────
 
 export async function getClientPrograms(clientId: string) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   const { data, error } = await supabaseAdmin
     .from("workout_programs")
     .select(
@@ -47,7 +56,8 @@ export async function getClientPrograms(clientId: string) {
 }
 
 export async function createProgram(clientId: string, name: string) {
-  const coachId = process.env.NEXT_PUBLIC_COACH_UUID!;
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
 
   const { data, error } = await supabaseAdmin
     .from("workout_programs")
@@ -55,7 +65,7 @@ export async function createProgram(clientId: string, name: string) {
       client_id: clientId,
       name,
       is_active: false,
-      created_by: coachId,
+      created_by: auth.user.id,
     })
     .select("id")
     .single();
@@ -69,6 +79,9 @@ export async function createProgram(clientId: string, name: string) {
 }
 
 export async function deleteProgram(programId: string) {
+  const auth = await requireCoachOwnsProgram(programId);
+  if (auth.error) return { error: auth.error };
+
   // Delete program_exercises, then days, then program
   const { data: days } = await supabaseAdmin
     .from("program_days")
@@ -102,6 +115,9 @@ export async function deleteProgram(programId: string) {
 }
 
 export async function activateProgram(clientId: string, programId: string) {
+  const auth = await requireCoachOwnsClient(clientId);
+  if (auth.error) return { error: auth.error };
+
   // Deactivate all programs for this client
   const { error: deactivateErr } = await supabaseAdmin
     .from("workout_programs")
@@ -117,7 +133,8 @@ export async function activateProgram(clientId: string, programId: string) {
   const { error } = await supabaseAdmin
     .from("workout_programs")
     .update({ is_active: true, updated_at: new Date().toISOString() })
-    .eq("id", programId);
+    .eq("id", programId)
+    .eq("client_id", clientId);
 
   if (error) {
     console.error("Activate error:", error);
@@ -130,6 +147,9 @@ export async function activateProgram(clientId: string, programId: string) {
 // ── Days ──────────────────────────────────────────────────
 
 export async function addProgramDay(programId: string, dayLabel: string) {
+  const auth = await requireCoachOwnsProgram(programId);
+  if (auth.error) return { error: auth.error };
+
   // Get current max sort_order
   const { data: existing } = await supabaseAdmin
     .from("program_days")
@@ -159,6 +179,9 @@ export async function addProgramDay(programId: string, dayLabel: string) {
 }
 
 export async function deleteProgramDay(dayId: string) {
+  const auth = await requireCoachOwnsProgramDay(dayId);
+  if (auth.error) return { error: auth.error };
+
   await supabaseAdmin
     .from("program_exercises")
     .delete()
@@ -187,6 +210,9 @@ export async function addProgramExercise(
   restSec: number | null,
   rpe: number | null
 ) {
+  const auth = await requireCoachOwnsProgramDay(dayId);
+  if (auth.error) return { error: auth.error };
+
   // Get current max sort_order for this day
   const { data: existing } = await supabaseAdmin
     .from("program_exercises")
@@ -216,6 +242,9 @@ export async function addProgramExercise(
 }
 
 export async function removeProgramExercise(id: string) {
+  const auth = await requireCoachOwnsProgramExercise(id);
+  if (auth.error) return { error: auth.error };
+
   const { error } = await supabaseAdmin
     .from("program_exercises")
     .delete()
@@ -234,6 +263,9 @@ export async function reorderProgramExercise(
   dayId: string,
   direction: "up" | "down"
 ) {
+  const auth = await requireCoachOwnsProgramDay(dayId);
+  if (auth.error) return { error: auth.error };
+
   // Get all exercises for this day, ordered
   const { data: exercises, error } = await supabaseAdmin
     .from("program_exercises")
@@ -255,7 +287,7 @@ export async function reorderProgramExercise(
   const currentOrder = exercises[idx].sort_order ?? idx;
   const swapOrder = exercises[swapIdx].sort_order ?? swapIdx;
 
-  await Promise.all([
+  const results = await Promise.all([
     supabaseAdmin
       .from("program_exercises")
       .update({ sort_order: swapOrder })
@@ -265,6 +297,12 @@ export async function reorderProgramExercise(
       .update({ sort_order: currentOrder })
       .eq("id", exercises[swapIdx].id),
   ]);
+
+  const reorderError = results.find((r) => r.error);
+  if (reorderError?.error) {
+    console.error("Reorder error:", reorderError.error);
+    return { error: "Greška pri promjeni redoslijeda." };
+  }
 
   return { success: true };
 }
