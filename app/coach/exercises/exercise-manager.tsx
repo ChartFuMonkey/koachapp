@@ -23,6 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/confirm-dialog";
 
 type Exercise = {
   id: string;
@@ -53,6 +54,7 @@ export default function ExerciseManager({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -88,8 +90,7 @@ export default function ExerciseManager({
     router.refresh();
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}"?`)) return;
+  async function handleDelete(id: string) {
     const res = await deleteExercise(id);
 
     if ("error" in res) {
@@ -98,6 +99,7 @@ export default function ExerciseManager({
     }
 
     toast.success("Exercise deleted");
+    setDeleteTarget(null);
     router.refresh();
   }
 
@@ -294,7 +296,7 @@ export default function ExerciseManager({
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            onClick={() => handleDelete(ex.id, ex.name)}
+                            onClick={() => setDeleteTarget({ id: ex.id, name: ex.name })}
                             className="text-red-400 hover:text-red-300"
                           >
                             <Trash2 size={12} />
@@ -360,7 +362,7 @@ export default function ExerciseManager({
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          onClick={() => handleDelete(ex.id, ex.name)}
+                          onClick={() => setDeleteTarget({ id: ex.id, name: ex.name })}
                           className="text-red-400 hover:text-red-300"
                         >
                           <Trash2 size={12} />
@@ -374,6 +376,15 @@ export default function ExerciseManager({
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Delete "${deleteTarget?.name}"?`}
+        description="This exercise will be permanently deleted."
+        confirmLabel="Delete"
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

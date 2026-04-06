@@ -22,7 +22,9 @@ import {
   YAxis,
 } from "recharts";
 import { updateClientNotes, updateClientTargets } from "@/actions/coach";
-import { Save, Pencil, X, Dumbbell, Layers } from "lucide-react";
+import { sendReminder } from "@/actions/send-reminder";
+import { Save, Pencil, X, Dumbbell, Layers, Bell } from "lucide-react";
+import { toast } from "sonner";
 import Link from "next/link";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -52,6 +54,7 @@ export default function ClientDetail({
   const [injuries, setInjuries] = useState((client.injuries as string) || "");
   const [saving, setSaving] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   const [targets, setTargets] = useState({
     target_calories: client.target_calories as number | null,
@@ -71,6 +74,17 @@ export default function ClientDetail({
     }));
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  async function handleSendReminder() {
+    setSendingReminder(true);
+    const result = await sendReminder(client.id as string);
+    if ("error" in result) {
+      toast.error(result.error);
+    } else {
+      toast.success(`Podsjetnik poslan (${result.sent})`);
+    }
+    setSendingReminder(false);
+  }
 
   async function handleSaveNotes() {
     setSaving(true);
@@ -143,6 +157,17 @@ export default function ClientDetail({
             ).toLocaleDateString("hr-HR")}
           </p>
         )}
+        <div className="mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSendReminder}
+            disabled={sendingReminder}
+          >
+            <Bell size={14} />{" "}
+            {sendingReminder ? "Šaljem..." : "Pošalji podsjetnik"}
+          </Button>
+        </div>
       </div>
 
       {/* Targets grid */}

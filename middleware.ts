@@ -32,6 +32,15 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isCoach = user?.id === process.env.NEXT_PUBLIC_COACH_UUID;
 
+  // / — if already logged in, redirect to /app or /coach
+  if (pathname === "/") {
+    if (user) {
+      const destination = isCoach ? "/coach" : "/app";
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
+    return supabaseResponse;
+  }
+
   // /login — if already logged in, redirect to /app or /coach
   if (pathname === "/login") {
     if (user) {
@@ -64,5 +73,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/app/:path*", "/coach/:path*", "/login"],
+  matcher: ["/", "/app/:path*", "/coach/:path*", "/login"],
 };

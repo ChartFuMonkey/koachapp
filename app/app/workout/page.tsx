@@ -178,9 +178,9 @@ export default function WorkoutPage() {
                                 href={ex.video_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex shrink-0 items-center gap-1 rounded-md bg-blue-500/20 px-2.5 py-1.5 text-xs font-medium text-blue-400"
+                                className="flex shrink-0 items-center gap-1.5 rounded-md bg-blue-500/20 px-3 py-2 text-sm font-medium text-blue-400"
                               >
-                                <Play className="size-3" /> Video
+                                <Play className="size-3.5" /> Video
                               </a>
                             )}
                           </div>

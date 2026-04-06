@@ -7,14 +7,18 @@ import {
   ClipboardList,
   Dumbbell,
   CheckSquare,
+  Camera,
   User,
 } from "lucide-react";
+import PushBanner from "@/components/push-banner";
+import InstallBanner from "@/components/install-banner";
 
 const tabs = [
   { label: "Danas", icon: Home, route: "/app" },
   { label: "Dnevnik", icon: ClipboardList, route: "/app/log" },
   { label: "Trening", icon: Dumbbell, route: "/app/workout" },
   { label: "Prijava", icon: CheckSquare, route: "/app/checkin" },
+  { label: "Foto", icon: Camera, route: "/app/photos" },
   { label: "Profil", icon: User, route: "/app/profile" },
 ];
 
@@ -23,11 +27,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <main className="pb-20">{children}</main>
+      <main className="pb-[calc(4rem+env(safe-area-inset-bottom))]">{children}</main>
+      <PushBanner />
+      <InstallBanner />
 
       <nav
-        className="fixed bottom-0 w-full border-t border-gray-800 bg-gray-950"
-        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+        className="fixed bottom-0 w-full border-t border-gray-800 bg-gray-950 pb-[env(safe-area-inset-bottom)]"
       >
         <div className="flex justify-around">
           {tabs.map((tab) => {
@@ -41,7 +46,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={tab.route}
                 href={tab.route}
-                className={`flex min-h-[48px] flex-col items-center justify-center gap-1 px-2 py-1 ${
+                className={`flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-1 px-2 py-1 ${
                   isActive ? "text-blue-500" : "text-gray-500"
                 }`}
               >

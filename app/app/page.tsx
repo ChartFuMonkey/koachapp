@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -204,6 +204,13 @@ export default async function DanasPage() {
           </Card>
         )}
       </div>
+
+      <Link href="/app/progress" className="mt-4 block">
+        <Button variant="outline" className="h-10 w-full">
+          <TrendingUp className="mr-2 size-4" />
+          Vidi napredak
+        </Button>
+      </Link>
     </div>
   );
 }

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import ConfirmDialog from "@/components/confirm-dialog";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -77,6 +78,11 @@ export default function ProgramBuilder({
   const [addingExerciseFor, setAddingExerciseFor] = useState<string | null>(
     null
   );
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "program" | "day";
+    id: string;
+    label: string;
+  } | null>(null);
 
   function toggleDay(dayId: string) {
     setExpandedDays((prev) => {
@@ -105,19 +111,14 @@ export default function ProgramBuilder({
     router.refresh();
   }
 
-  async function handleDeleteProgram(progId: string, progName: string) {
-    if (
-      !confirm(
-        `Obriši program "${progName}"? Svi dani i vježbe će biti obrisani.`
-      )
-    )
-      return;
+  async function handleDeleteProgram(progId: string) {
     const res = await deleteProgram(progId);
     if ("error" in res) {
       toast.error(res.error);
       return;
     }
     toast.success("Program obrisan");
+    setDeleteTarget(null);
     router.refresh();
   }
 
@@ -152,14 +153,14 @@ export default function ProgramBuilder({
     router.refresh();
   }
 
-  async function handleDeleteDay(dayId: string, label: string) {
-    if (!confirm(`Obriši "${label}"?`)) return;
+  async function handleDeleteDay(dayId: string) {
     const res = await deleteProgramDay(dayId);
     if ("error" in res) {
       toast.error(res.error);
       return;
     }
     toast.success("Dan obrisan");
+    setDeleteTarget(null);
     router.refresh();
   }
 
@@ -289,7 +290,7 @@ export default function ProgramBuilder({
                       variant="ghost"
                       size="icon-xs"
                       onClick={() =>
-                        handleDeleteProgram(prog.id, prog.name)
+                        setDeleteTarget({ type: "program", id: prog.id, label: prog.name })
                       }
                       className="text-red-400 hover:text-red-300"
                     >
@@ -431,7 +432,7 @@ export default function ProgramBuilder({
                                 variant="ghost"
                                 size="xs"
                                 onClick={() =>
-                                  handleDeleteDay(day.id, day.day_label)
+                                  setDeleteTarget({ type: "day", id: day.id, label: day.day_label })
                                 }
                                 className="text-red-400 hover:text-red-300"
                               >
@@ -498,6 +499,22 @@ export default function ProgramBuilder({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Obriši "${deleteTarget?.label}"?`}
+        description={
+          deleteTarget?.type === "program"
+            ? "Svi dani i vježbe će biti obrisani."
+            : "Sve vježbe u ovom danu će biti obrisane."
+        }
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          if (deleteTarget.type === "program") handleDeleteProgram(deleteTarget.id);
+          else handleDeleteDay(deleteTarget.id);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

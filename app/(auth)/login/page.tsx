@@ -7,6 +7,21 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+
+function translateAuthError(message: string): string {
+  if (message.includes("Invalid login credentials"))
+    return "Pogrešan email ili lozinka.";
+  if (message.includes("Email not confirmed"))
+    return "Email adresa nije potvrđena.";
+  if (message.includes("Too many requests"))
+    return "Previše pokušaja. Pokušaj ponovo za par minuta.";
+  if (message.includes("User not found"))
+    return "Korisnik nije pronađen.";
+  if (message.includes("Network"))
+    return "Greška s mrežom. Provjeri internetsku vezu.";
+  return "Greška pri prijavi. Pokušaj ponovo.";
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +42,7 @@ export default function LoginPage() {
     });
 
     if (authError) {
-      setError(authError.message);
+      setError(translateAuthError(authError.message));
       setLoading(false);
       return;
     }
@@ -60,7 +75,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="email@primjer.com"
-                className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
+                className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -74,7 +89,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="********"
-                className="border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
+                className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
               />
             </div>
             {error && (
@@ -82,12 +97,15 @@ export default function LoginPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Prijava..." : "Prijava"}
+            <Button type="submit" disabled={loading} className="h-11 w-full text-base">
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Prijava...
+                </>
+              ) : (
+                "Prijava"
+              )}
             </Button>
           </CardFooter>
         </form>

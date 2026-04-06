@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import ConfirmDialog from "@/components/confirm-dialog";
 
 type Phase = {
   id: string;
@@ -75,6 +76,7 @@ export default function PhaseManager({
   const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -107,8 +109,7 @@ export default function PhaseManager({
     router.refresh();
   }
 
-  async function handleDelete(phaseId: string, name: string) {
-    if (!confirm(`Obriši fazu "${name}"?`)) return;
+  async function handleDelete(phaseId: string) {
     const res = await deletePhase(phaseId);
 
     if ("error" in res) {
@@ -117,6 +118,7 @@ export default function PhaseManager({
     }
 
     toast.success("Faza obrisana");
+    setDeleteTarget(null);
     router.refresh();
   }
 
@@ -300,7 +302,7 @@ export default function PhaseManager({
                       <Button
                         variant="ghost"
                         size="icon-xs"
-                        onClick={() => handleDelete(phase.id, phase.name)}
+                        onClick={() => setDeleteTarget({ id: phase.id, name: phase.name })}
                         className="text-red-400 hover:text-red-300"
                       >
                         <Trash2 size={12} />
@@ -313,6 +315,14 @@ export default function PhaseManager({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Obriši fazu "${deleteTarget?.name}"?`}
+        description="Faza će biti trajno obrisana."
+        onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
