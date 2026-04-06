@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createNewClient } from "@/actions/coach";
-import { Loader2, ArrowRight, Copy, Check } from "lucide-react";
+import { Loader2, ArrowRight, Mail } from "lucide-react";
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -16,9 +16,8 @@ export default function NewClientPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
     id: string;
-    password: string;
+    email: string;
   } | null>(null);
-  const [copied, setCopied] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,45 +34,35 @@ export default function NewClientPage() {
       return;
     }
 
-    setResult(res as { id: string; password: string });
+    setResult(res as { id: string; email: string });
   }
 
-  async function handleCopy() {
-    if (!result) return;
-    await navigator.clipboard.writeText(result.password);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  // Success screen — show credentials
+  // Success screen — invite sent
   if (result) {
     return (
       <div className="mx-auto max-w-md py-12">
         <Card>
           <CardContent className="space-y-4 p-6">
-            <h2 className="text-xl font-bold text-green-400">
-              Klijent kreiran!
-            </h2>
-            <p className="text-sm text-gray-400">
-              Spremi ove podatke za prijavu — lozinka se prikazuje samo jednom.
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-green-500/20">
+                <Mail size={20} className="text-green-400" />
+              </div>
+              <h2 className="text-xl font-bold text-green-400">
+                Klijent kreiran!
+              </h2>
+            </div>
 
             <div className="rounded-lg bg-gray-900 p-4">
-              <div className="mb-2">
-                <span className="text-xs text-gray-500">Email</span>
-                <p className="font-mono text-sm">{result.id ? "—" : "—"}</p>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">Lozinka</span>
-                <div className="flex items-center gap-2">
-                  <p className="font-mono text-sm text-yellow-400 break-all">
-                    {result.password}
-                  </p>
-                  <Button variant="ghost" size="icon-xs" onClick={handleCopy}>
-                    {copied ? <Check size={12} /> : <Copy size={12} />}
-                  </Button>
-                </div>
-              </div>
+              <p className="text-sm text-gray-300">
+                Pozivnica je poslana na{" "}
+                <span className="font-semibold text-white">
+                  {result.email}
+                </span>
+              </p>
+              <p className="mt-2 text-xs text-gray-500">
+                Klijent će primiti email s linkom za postavljanje lozinke.
+                Nakon toga se može prijaviti u aplikaciju.
+              </p>
             </div>
 
             <Button

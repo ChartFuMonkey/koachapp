@@ -10,18 +10,23 @@ export async function createNewClient(formData: FormData) {
     return { error: "Email i ime su obavezni." };
   }
 
-  const password = crypto.randomUUID();
   const coachId = process.env.NEXT_PUBLIC_COACH_UUID!;
 
-  // 1. Create auth user
+  // Build the redirect URL for the invite email
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://koachapp.vercel.app";
+
+  // 1. Invite user by email — Supabase sends them an invite to set their password
   const { data: authData, error: authError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
+    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback?next=/set-password`,
+      data: { full_name: fullName },
     });
 
   if (authError || !authData.user) {
+    if (authError?.message?.includes("already been registered")) {
+      return { error: "Korisnik s ovim emailom već postoji." };
+    }
     return { error: authError?.message || "Greška pri kreiranju korisnika." };
   }
 
@@ -67,7 +72,7 @@ export async function createNewClient(formData: FormData) {
     return { error: "Greška pri kreiranju klijenta: " + clientError.message };
   }
 
-  return { id: userId, password };
+  return { id: userId, email };
 }
 
 export async function updateClientNotes(
