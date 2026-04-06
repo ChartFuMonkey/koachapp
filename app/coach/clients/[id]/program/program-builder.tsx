@@ -1,0 +1,660 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  createProgram,
+  deleteProgram,
+  activateProgram,
+  addProgramDay,
+  deleteProgramDay,
+  addProgramExercise,
+  removeProgramExercise,
+  reorderProgramExercise,
+} from "@/actions/programs";
+import {
+  Plus,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  X,
+  Loader2,
+  Zap,
+  Dumbbell,
+} from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+type Exercise = { id: string; name: string };
+type ProgramExercise = {
+  id: string;
+  sets: number | null;
+  reps: string | null;
+  rest_sec: number | null;
+  rpe: number | null;
+  sort_order: number;
+  exercises: Exercise | null;
+};
+type ProgramDay = {
+  id: string;
+  day_label: string;
+  sort_order: number;
+  program_exercises: ProgramExercise[];
+};
+type Program = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  program_days: ProgramDay[];
+};
+
+export default function ProgramBuilder({
+  clientId,
+  clientName,
+  programs,
+  allExercises,
+}: {
+  clientId: string;
+  clientName: string;
+  programs: Program[];
+  allExercises: Exercise[];
+}) {
+  const router = useRouter();
+  const [showNewProgram, setShowNewProgram] = useState(false);
+  const [newProgramName, setNewProgramName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [addingDayFor, setAddingDayFor] = useState<string | null>(null);
+  const [newDayLabel, setNewDayLabel] = useState("");
+  const [addingExerciseFor, setAddingExerciseFor] = useState<string | null>(
+    null
+  );
+
+  function toggleDay(dayId: string) {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(dayId)) next.delete(dayId);
+      else next.add(dayId);
+      return next;
+    });
+  }
+
+  async function handleCreateProgram(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newProgramName.trim()) return;
+    setSaving(true);
+    const res = await createProgram(clientId, newProgramName.trim());
+    setSaving(false);
+
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+
+    toast.success("Program kreiran");
+    setShowNewProgram(false);
+    setNewProgramName("");
+    router.refresh();
+  }
+
+  async function handleDeleteProgram(progId: string, progName: string) {
+    if (
+      !confirm(
+        `Obriši program "${progName}"? Svi dani i vježbe će biti obrisani.`
+      )
+    )
+      return;
+    const res = await deleteProgram(progId);
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success("Program obrisan");
+    router.refresh();
+  }
+
+  async function handleActivate(progId: string) {
+    setSaving(true);
+    const res = await activateProgram(clientId, progId);
+    setSaving(false);
+
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+
+    toast.success("Program aktiviran");
+    router.refresh();
+  }
+
+  async function handleAddDay(progId: string) {
+    if (!newDayLabel.trim()) return;
+    setSaving(true);
+    const res = await addProgramDay(progId, newDayLabel.trim());
+    setSaving(false);
+
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+
+    toast.success("Dan dodan");
+    setAddingDayFor(null);
+    setNewDayLabel("");
+    router.refresh();
+  }
+
+  async function handleDeleteDay(dayId: string, label: string) {
+    if (!confirm(`Obriši "${label}"?`)) return;
+    const res = await deleteProgramDay(dayId);
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success("Dan obrisan");
+    router.refresh();
+  }
+
+  async function handleRemoveExercise(peId: string) {
+    const res = await removeProgramExercise(peId);
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleReorder(
+    peId: string,
+    dayId: string,
+    direction: "up" | "down"
+  ) {
+    await reorderProgramExercise(peId, dayId, direction);
+    router.refresh();
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <Link
+          href={`/coach/clients/${clientId}`}
+          className="mb-2 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200"
+        >
+          <ChevronLeft size={14} /> {clientName}
+        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-xl font-bold sm:text-2xl">Program Builder</h1>
+          {!showNewProgram && (
+            <Button
+              onClick={() => setShowNewProgram(true)}
+              size="sm"
+              className="shrink-0 sm:size-default"
+            >
+              <Plus size={14} /> <span className="hidden sm:inline">Novi</span> program
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* New program form */}
+      {showNewProgram && (
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <form
+              onSubmit={handleCreateProgram}
+              className="flex flex-col gap-3 sm:flex-row sm:items-end"
+            >
+              <div className="flex-1">
+                <Label className="mb-1 text-xs">Naziv programa</Label>
+                <Input
+                  value={newProgramName}
+                  onChange={(e) => setNewProgramName(e.target.value)}
+                  placeholder="e.g. Push/Pull/Legs"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={saving}>
+                  {saving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Plus size={14} />
+                  )}
+                  Kreiraj
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowNewProgram(false)}
+                >
+                  <X size={14} />
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Programs list */}
+      {programs.length === 0 && !showNewProgram ? (
+        <p className="py-8 text-center text-gray-500">
+          Nema programa. Kreirajte prvi program za ovog klijenta.
+        </p>
+      ) : (
+        <div className="space-y-6">
+          {programs.map((prog) => (
+            <Card
+              key={prog.id}
+              className={prog.is_active ? "border-green-500/30" : ""}
+            >
+              <CardContent className="p-3 sm:p-4">
+                {/* Program header */}
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Dumbbell
+                      size={18}
+                      className="hidden text-gray-400 sm:block"
+                    />
+                    <h2 className="text-base font-semibold sm:text-lg">
+                      {prog.name}
+                    </h2>
+                    {prog.is_active && (
+                      <Badge className="border-green-500/30 bg-green-500/20 text-green-400">
+                        Aktivan
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!prog.is_active && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => handleActivate(prog.id)}
+                        disabled={saving}
+                      >
+                        <Zap size={12} /> Aktiviraj
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() =>
+                        handleDeleteProgram(prog.id, prog.name)
+                      }
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Days */}
+                <div className="space-y-2">
+                  {prog.program_days.map((day) => (
+                    <div
+                      key={day.id}
+                      className="rounded-lg border border-gray-800 bg-gray-900/30"
+                    >
+                      {/* Day header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleDay(day.id)}
+                        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-gray-800/30"
+                      >
+                        <span className="text-sm font-medium text-gray-200 sm:text-base">
+                          {day.day_label}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {day.program_exercises.length} vježb
+                            {day.program_exercises.length === 1 ? "a" : "i"}
+                          </span>
+                          <ChevronDown
+                            size={14}
+                            className={`text-gray-400 transition-transform ${
+                              expandedDays.has(day.id) ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </button>
+
+                      {/* Day content (expanded) */}
+                      {expandedDays.has(day.id) && (
+                        <div className="border-t border-gray-800 px-2 py-2 sm:px-3">
+                          {day.program_exercises.length === 0 ? (
+                            <p className="py-2 text-sm text-gray-500">
+                              Nema vježbi u ovom danu.
+                            </p>
+                          ) : (
+                            <div className="space-y-1">
+                              {day.program_exercises.map((pe, idx) => (
+                                <div
+                                  key={pe.id}
+                                  className="flex items-center gap-1.5 rounded px-1.5 py-1.5 text-sm hover:bg-gray-800/30 sm:gap-2 sm:px-2"
+                                >
+                                  <span className="w-4 shrink-0 text-center text-xs text-gray-500 sm:w-5">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="min-w-0 flex-1 truncate font-medium text-gray-200">
+                                    {pe.exercises?.name ?? "Unknown"}
+                                  </span>
+                                  <span className="shrink-0 text-xs text-gray-400 sm:text-sm">
+                                    {pe.sets && pe.reps
+                                      ? `${pe.sets}×${pe.reps}`
+                                      : pe.sets
+                                        ? `${pe.sets}s`
+                                        : pe.reps ?? "—"}
+                                  </span>
+                                  {pe.rest_sec && (
+                                    <span className="hidden text-xs text-gray-500 sm:inline">
+                                      {pe.rest_sec}s
+                                    </span>
+                                  )}
+                                  {pe.rpe && (
+                                    <span className="hidden text-xs text-blue-400 sm:inline">
+                                      RPE {pe.rpe}
+                                    </span>
+                                  )}
+                                  <div className="flex shrink-0 gap-0.5">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-xs"
+                                      onClick={() =>
+                                        handleReorder(pe.id, day.id, "up")
+                                      }
+                                      disabled={idx === 0}
+                                      className="opacity-50 hover:opacity-100"
+                                    >
+                                      <ChevronUp size={10} />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-xs"
+                                      onClick={() =>
+                                        handleReorder(pe.id, day.id, "down")
+                                      }
+                                      disabled={
+                                        idx ===
+                                        day.program_exercises.length - 1
+                                      }
+                                      className="opacity-50 hover:opacity-100"
+                                    >
+                                      <ChevronDown size={10} />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-xs"
+                                      onClick={() =>
+                                        handleRemoveExercise(pe.id)
+                                      }
+                                      className="text-red-400 hover:text-red-300"
+                                    >
+                                      <Trash2 size={10} />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Add exercise to day */}
+                          {addingExerciseFor === day.id ? (
+                            <AddExerciseForm
+                              dayId={day.id}
+                              allExercises={allExercises}
+                              onDone={() => {
+                                setAddingExerciseFor(null);
+                                router.refresh();
+                              }}
+                              onCancel={() => setAddingExerciseFor(null)}
+                            />
+                          ) : (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => setAddingExerciseFor(day.id)}
+                              >
+                                <Plus size={12} /> Dodaj vježbu
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() =>
+                                  handleDeleteDay(day.id, day.day_label)
+                                }
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 size={12} /> Obriši dan
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add day */}
+                {addingDayFor === prog.id ? (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <div className="flex-1">
+                      <Label className="mb-1 text-xs">Naziv dana</Label>
+                      <Input
+                        value={newDayLabel}
+                        onChange={(e) => setNewDayLabel(e.target.value)}
+                        placeholder='e.g. "Dan A — Noge"'
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddDay(prog.id);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddDay(prog.id)}
+                        disabled={saving}
+                      >
+                        Dodaj
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setAddingDayFor(null);
+                          setNewDayLabel("");
+                        }}
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => setAddingDayFor(prog.id)}
+                  >
+                    <Plus size={14} /> Dodaj dan
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Add Exercise to Day Form ──────────────────────────────
+
+function AddExerciseForm({
+  dayId,
+  allExercises,
+  onDone,
+  onCancel,
+}: {
+  dayId: string;
+  allExercises: Exercise[];
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [sets, setSets] = useState("");
+  const [reps, setReps] = useState("");
+  const [restSec, setRestSec] = useState("");
+  const [rpe, setRpe] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const filtered = allExercises.filter((ex) =>
+    ex.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  async function handleSubmit() {
+    if (!selectedId) {
+      toast.error("Odaberite vježbu.");
+      return;
+    }
+    setSaving(true);
+    const res = await addProgramExercise(
+      dayId,
+      selectedId,
+      sets ? parseInt(sets) : null,
+      reps || null,
+      restSec ? parseInt(restSec) : null,
+      rpe ? parseInt(rpe) : null
+    );
+    setSaving(false);
+
+    if ("error" in res) {
+      toast.error(res.error);
+      return;
+    }
+
+    toast.success("Vježba dodana");
+    onDone();
+  }
+
+  return (
+    <div className="mt-2 rounded-lg border border-gray-700 bg-gray-900/50 p-3">
+      {!selectedId ? (
+        <div>
+          <Input
+            placeholder="Pretraži vježbe..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            autoFocus
+          />
+          <div className="mt-2 max-h-40 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="py-2 text-sm text-gray-500">Nema rezultata.</p>
+            ) : (
+              filtered.map((ex) => (
+                <button
+                  key={ex.id}
+                  type="button"
+                  onClick={() => setSelectedId(ex.id)}
+                  className="w-full rounded px-2 py-1.5 text-left text-sm text-gray-300 hover:bg-gray-800"
+                >
+                  {ex.name}
+                </button>
+              ))
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="xs"
+            className="mt-2"
+            onClick={onCancel}
+          >
+            <X size={12} /> Odustani
+          </Button>
+        </div>
+      ) : (
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-200">
+              {allExercises.find((e) => e.id === selectedId)?.name}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setSelectedId("")}
+            >
+              <X size={10} />
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div>
+              <Label className="mb-1 text-xs">Setovi</Label>
+              <Input
+                type="number"
+                value={sets}
+                onChange={(e) => setSets(e.target.value)}
+                placeholder="3"
+              />
+            </div>
+            <div>
+              <Label className="mb-1 text-xs">Ponavljanja</Label>
+              <Input
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+                placeholder="8-12"
+              />
+            </div>
+            <div>
+              <Label className="mb-1 text-xs">Odmor (s)</Label>
+              <Input
+                type="number"
+                value={restSec}
+                onChange={(e) => setRestSec(e.target.value)}
+                placeholder="90"
+              />
+            </div>
+            <div>
+              <Label className="mb-1 text-xs">RPE</Label>
+              <Input
+                type="number"
+                min="1"
+                max="10"
+                value={rpe}
+                onChange={(e) => setRpe(e.target.value)}
+                placeholder="7"
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" onClick={handleSubmit} disabled={saving}>
+              {saving ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Plus size={14} />
+              )}
+              Spremi
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              <X size={14} /> Odustani
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

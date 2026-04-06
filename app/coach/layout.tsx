@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Users, Dumbbell, LogOut } from "lucide-react";
+import { Users, Dumbbell, LogOut, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
@@ -17,6 +18,12 @@ export default function CoachLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -26,9 +33,39 @@ export default function CoachLayout({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed left-0 top-0 flex h-screen w-64 flex-col border-r border-gray-800 bg-gray-950">
-        <div className="p-6">
+      {/* Mobile header bar */}
+      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-800 bg-gray-950 px-4 md:hidden">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
+        >
+          <Menu size={20} />
+        </button>
+        <span className="ml-3 text-lg font-bold text-white">KoachApp</span>
+      </div>
+
+      {/* Overlay (mobile) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-gray-800 bg-gray-950 transition-transform duration-200 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0`}
+      >
+        <div className="flex items-center justify-between p-6">
           <h1 className="text-xl font-bold text-white">KoachApp</h1>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="rounded-lg p-1 text-gray-400 hover:text-white md:hidden"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1">
@@ -67,7 +104,10 @@ export default function CoachLayout({
         </div>
       </aside>
 
-      <main className="ml-64 p-8">{children}</main>
+      {/* Main content */}
+      <main className="min-w-0 flex-1 pt-14 md:ml-64 md:pt-0">
+        <div className="mx-auto max-w-6xl p-4 sm:p-6 md:p-8">{children}</div>
+      </main>
     </div>
   );
 }
