@@ -68,7 +68,7 @@ export default function CoachLayout({
           </button>
         </div>
 
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
           {navLinks.map((link) => {
             const isActive =
               link.route === "/coach"
@@ -93,7 +93,7 @@ export default function CoachLayout({
           })}
         </nav>
 
-        <div className="mt-auto p-6">
+        <div className="shrink-0 border-t border-gray-800 p-6">
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 text-gray-400 transition-colors hover:text-white"
