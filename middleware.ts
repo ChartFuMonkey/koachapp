@@ -44,7 +44,9 @@ export async function middleware(request: NextRequest) {
   // /login — if already logged in, redirect to /app or /coach
   if (pathname === "/login") {
     if (user) {
-      const destination = isCoach ? "/coach" : "/app";
+      const role = request.nextUrl.searchParams.get("role");
+      // If coach explicitly chose "login as client", send them to /app
+      const destination = role === "client" ? "/app" : isCoach ? "/coach" : "/app";
       return NextResponse.redirect(new URL(destination, request.url));
     }
     return supabaseResponse;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,10 @@ function translateAuthError(message: string): string {
   return "Greška pri prijavi. Pokušaj ponovo.";
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = searchParams.get("role");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -47,7 +49,10 @@ export default function LoginPage() {
       return;
     }
 
-    if (data.user?.id === process.env.NEXT_PUBLIC_COACH_UUID) {
+    // If user chose "login as client", always go to client dashboard
+    if (role === "client") {
+      router.push("/app");
+    } else if (data.user?.id === process.env.NEXT_PUBLIC_COACH_UUID) {
       router.push("/coach");
     } else {
       router.push("/app");
@@ -111,5 +116,13 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

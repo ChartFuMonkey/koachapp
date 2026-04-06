@@ -14,12 +14,12 @@ export default function LandingPage() {
       </p>
 
       <div className="mt-10 flex w-full max-w-xs flex-col gap-3">
-        <Link href="/login">
+        <Link href="/login?role=client">
           <Button className="h-12 w-full text-base font-semibold">
             Prijava kao klijent
           </Button>
         </Link>
-        <Link href="/login">
+        <Link href="/login?role=coach">
           <Button variant="outline" className="h-12 w-full text-base font-semibold">
             <ShieldCheck className="mr-2 size-5" />
             Prijava kao trener
