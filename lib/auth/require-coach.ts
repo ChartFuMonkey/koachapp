@@ -109,6 +109,27 @@ export async function requireCoachOwnsProgramExercise(exerciseId: string) {
 }
 
 /**
+ * Verifies the coach owns the meal plan (via meal_plan -> client -> coach).
+ */
+export async function requireCoachOwnsMealPlan(planId: string) {
+  const auth = await requireCoach();
+  if (auth.error) return { error: auth.error };
+
+  const { data } = await supabaseAdmin
+    .from("meal_plans")
+    .select("id, clients!inner(coach_id)")
+    .eq("id", planId)
+    .eq("clients.coach_id", auth.user.id)
+    .maybeSingle();
+
+  if (!data) {
+    return { error: "Neautorizirani pristup." as const };
+  }
+
+  return { user: auth.user };
+}
+
+/**
  * Verifies the coach owns the phase (via phase -> client -> coach).
  */
 export async function requireCoachOwnsPhase(phaseId: string) {

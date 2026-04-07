@@ -28,7 +28,6 @@ export default function LogPage() {
   const [targets, setTargets] = useState<Targets | null>(null);
 
   // Form fields
-  const [weightKg, setWeightKg] = useState("");
   const [caloriesKcal, setCaloriesKcal] = useState("");
   const [proteinG, setProteinG] = useState("");
   const [carbsG, setCarbsG] = useState("");
@@ -41,6 +40,7 @@ export default function LogPage() {
   const [sleepQuality, setSleepQuality] = useState(5);
   const [energyLevel, setEnergyLevel] = useState(5);
   const [notes, setNotes] = useState("");
+  const [followedMealPlan, setFollowedMealPlan] = useState<boolean | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -55,7 +55,6 @@ export default function LogPage() {
 
       if (logResult.data) {
         const d = logResult.data;
-        if (d.weight_kg != null) setWeightKg(String(d.weight_kg));
         if (d.calories_kcal != null) setCaloriesKcal(String(d.calories_kcal));
         if (d.protein_g != null) setProteinG(String(d.protein_g));
         if (d.carbs_g != null) setCarbsG(String(d.carbs_g));
@@ -68,6 +67,7 @@ export default function LogPage() {
         if (d.sleep_quality != null) setSleepQuality(d.sleep_quality);
         if (d.energy_level != null) setEnergyLevel(d.energy_level);
         if (d.notes != null) setNotes(d.notes);
+        if (d.followed_meal_plan != null) setFollowedMealPlan(d.followed_meal_plan);
       }
 
       setLoading(false);
@@ -86,7 +86,7 @@ export default function LogPage() {
     setSaving(true);
 
     const data: DailyLogData = {
-      weight_kg: parseNum(weightKg),
+      weight_kg: null,
       calories_kcal: parseNum(caloriesKcal),
       protein_g: parseNum(proteinG),
       carbs_g: parseNum(carbsG),
@@ -99,6 +99,7 @@ export default function LogPage() {
       sleep_quality: sleepQuality,
       energy_level: energyLevel,
       notes: notes.trim() || null,
+      followed_meal_plan: followedMealPlan,
     };
 
     const result = await saveDailyLog(data);
@@ -125,15 +126,6 @@ export default function LogPage() {
       <h1 className="mb-6 text-2xl font-bold">Dnevni log</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Težina */}
-        <Field
-          label="Težina (kg)"
-          value={weightKg}
-          onChange={setWeightKg}
-          inputMode="decimal"
-          target={null}
-        />
-
         {/* Kalorije */}
         <Field
           label="Kalorije (kcal)"
@@ -290,6 +282,39 @@ export default function LogPage() {
             placeholder="Opcionalno..."
             className="mt-1 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
           />
+        </div>
+
+        {/* Plan prehrane */}
+        <div>
+          <Label>Jesi li pratio/la plan prehrane?</Label>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setFollowedMealPlan(followedMealPlan === true ? null : true)
+              }
+              className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                followedMealPlan === true
+                  ? "border-green-500 bg-green-500/20 text-green-400"
+                  : "border-gray-700 text-gray-400 hover:border-gray-600"
+              }`}
+            >
+              Da
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFollowedMealPlan(followedMealPlan === false ? null : false)
+              }
+              className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                followedMealPlan === false
+                  ? "border-red-500 bg-red-500/20 text-red-400"
+                  : "border-gray-700 text-gray-400 hover:border-gray-600"
+              }`}
+            >
+              Ne
+            </button>
+          </div>
         </div>
 
         {/* Spremi button */}

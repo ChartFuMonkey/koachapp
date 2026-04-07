@@ -17,6 +17,7 @@ export type DailyLogData = {
   sleep_quality: number | null;
   energy_level: number | null;
   notes: string | null;
+  followed_meal_plan: boolean | null;
 };
 
 export async function saveDailyLog(data: DailyLogData) {

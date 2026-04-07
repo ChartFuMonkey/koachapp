@@ -44,10 +44,9 @@ export default function SetPasswordPage() {
       return;
     }
 
+    // Sign out so the user logs in fresh with their new password
+    await supabase.auth.signOut();
     setSuccess(true);
-    setTimeout(() => {
-      router.push("/app");
-    }, 2000);
   }
 
   if (success) {
@@ -58,8 +57,14 @@ export default function SetPasswordPage() {
             <CheckCircle size={48} className="text-green-400" />
             <h2 className="text-xl font-bold text-white">Lozinka postavljena!</h2>
             <p className="text-center text-sm text-gray-400">
-              Preusmjeravanje na aplikaciju...
+              Sada se možeš prijaviti sa svojom novom lozinkom.
             </p>
+            <Button
+              onClick={() => router.push("/login?role=client")}
+              className="mt-2 h-11 w-full text-base"
+            >
+              Prijavi se
+            </Button>
           </CardContent>
         </Card>
       </div>

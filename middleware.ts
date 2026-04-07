@@ -30,6 +30,18 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+
+  // If Supabase redirected here with an auth code (e.g. invite email fallback),
+  // forward to /auth/callback so the code gets exchanged for a session
+  const code = request.nextUrl.searchParams.get("code");
+  if (code) {
+    const callbackUrl = new URL("/auth/callback", request.url);
+    callbackUrl.searchParams.set("code", code);
+    const next = request.nextUrl.searchParams.get("next");
+    if (next) callbackUrl.searchParams.set("next", next);
+    return NextResponse.redirect(callbackUrl);
+  }
+
   const isCoach = user?.id === process.env.NEXT_PUBLIC_COACH_UUID;
 
   // / — if already logged in, redirect to /app or /coach

@@ -23,7 +23,7 @@ import {
 } from "recharts";
 import { updateClientNotes, updateClientTargets } from "@/actions/coach";
 import { sendReminder } from "@/actions/send-reminder";
-import { Save, Pencil, X, Dumbbell, Layers, Bell } from "lucide-react";
+import { Save, Pencil, X, Dumbbell, Layers, Bell, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -239,6 +239,11 @@ export default function ClientDetail({
         <Link href={`/coach/clients/${client.id}/phases`}>
           <Button variant="outline" size="sm">
             <Layers size={14} /> Phase Manager
+          </Button>
+        </Link>
+        <Link href={`/coach/clients/${client.id}/meal-plan`}>
+          <Button variant="outline" size="sm">
+            <UtensilsCrossed size={14} /> Plan prehrane
           </Button>
         </Link>
       </div>

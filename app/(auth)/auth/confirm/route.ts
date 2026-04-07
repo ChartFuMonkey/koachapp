@@ -1,15 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
-  const rawNext = searchParams.get("next") ?? "/app";
-  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/app";
+  const token_hash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
   const origin = new URL(request.url).origin;
 
-  if (code) {
+  if (token_hash && type) {
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -33,19 +33,17 @@ export async function GET(request: Request) {
       }
     );
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.verifyOtp({ token_hash, type });
 
     if (!error) {
-      // For invited users landing here without an explicit next param
-      // (e.g. Supabase fell back to site URL), detect and route to /set-password
-      const user = data.session?.user;
-      const destination =
-        next === "/app" && user?.invited_at ? "/set-password" : next;
-
-      return NextResponse.redirect(new URL(destination, origin));
+      // Invited users need to set their password first
+      if (type === "invite") {
+        return NextResponse.redirect(new URL("/set-password", origin));
+      }
+      return NextResponse.redirect(new URL("/app", origin));
     }
   }
 
-  // If no code or error, redirect to login
+  // If no token_hash or verification failed, redirect to login
   return NextResponse.redirect(new URL("/login", origin));
 }

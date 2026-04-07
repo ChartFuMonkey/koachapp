@@ -23,7 +23,7 @@ export async function createNewClient(formData: FormData) {
   // 1. Invite user by email — Supabase sends them an invite to set their password
   const { data: authData, error: authError } =
     await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl}/auth/callback?next=/set-password`,
+      redirectTo: `${siteUrl}/auth/callback`,
       data: { full_name: fullName },
     });
 

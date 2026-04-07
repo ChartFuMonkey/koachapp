@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Users, Dumbbell, LogOut, Menu, X } from "lucide-react";
+import { Users, Dumbbell, LogOut, Menu, X, Apple, UtensilsCrossed } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
   { label: "Clients", icon: Users, route: "/coach" },
   { label: "Exercises", icon: Dumbbell, route: "/coach/exercises" },
+  { label: "Foods", icon: Apple, route: "/coach/foods" },
+  { label: "Meals", icon: UtensilsCrossed, route: "/coach/meals" },
 ];
 
 export default function CoachLayout({
