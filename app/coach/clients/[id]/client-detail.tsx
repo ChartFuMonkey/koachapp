@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,11 @@ export default function ClientDetail({
   measurements,
   photos,
 }: Props) {
+  const t = useTranslations("coach.clients.detail");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+
   const [editingTargets, setEditingTargets] = useState(false);
   const [notes, setNotes] = useState((client.notes as string) || "");
   const [injuries, setInjuries] = useState((client.injuries as string) || "");
@@ -88,7 +94,7 @@ export default function ClientDetail({
     if ("error" in result) {
       toast.error(result.error);
     } else {
-      toast.success(`Podsjetnik poslan (${result.sent})`);
+      toast.success(t("reminderSentToast", { count: result.sent }));
     }
     setSendingReminder(false);
   }
@@ -132,12 +138,12 @@ export default function ClientDetail({
   }
 
   const targetCards = [
-    { label: "Kalorije", value: targets.target_calories, unit: "kcal" },
-    { label: "Proteini", value: targets.target_protein_g, unit: "g" },
-    { label: "UH", value: targets.target_carbs_g, unit: "g" },
-    { label: "Masti", value: targets.target_fat_g, unit: "g" },
-    { label: "Koraci", value: targets.target_steps, unit: "" },
-    { label: "San", value: targets.target_sleep_h, unit: "h" },
+    { label: t("targetCalories"), value: targets.target_calories, unit: "kcal" },
+    { label: t("targetProtein"), value: targets.target_protein_g, unit: "g" },
+    { label: t("targetCarbs"), value: targets.target_carbs_g, unit: "g" },
+    { label: t("targetFat"), value: targets.target_fat_g, unit: "g" },
+    { label: t("targetSteps"), value: targets.target_steps, unit: "" },
+    { label: t("targetSleep"), value: targets.target_sleep_h, unit: "h" },
   ];
 
   return (
@@ -153,14 +159,14 @@ export default function ClientDetail({
               {phase.name as string}
             </Badge>
           )}
-          {!client.is_active && <Badge variant="secondary">Neaktivan</Badge>}
+          {!client.is_active && <Badge variant="secondary">{t("inactive")}</Badge>}
         </div>
         {client.start_date != null && (
           <p className="mt-1 text-sm text-gray-400">
-            Početak:{" "}
+            {t("startDate")}{" "}
             {new Date(
               (client.start_date as string) + "T00:00"
-            ).toLocaleDateString("hr-HR")}
+            ).toLocaleDateString(bcp47)}
           </p>
         )}
         <div className="mt-2">
@@ -171,21 +177,21 @@ export default function ClientDetail({
             disabled={sendingReminder}
           >
             <Bell size={14} />{" "}
-            {sendingReminder ? "Šaljem..." : "Pošalji podsjetnik"}
+            {sendingReminder ? t("sendReminderLoading") : t("sendReminder")}
           </Button>
         </div>
       </div>
 
       {/* Targets grid */}
       <div className="mb-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {targetCards.map((t) => (
-          <Card key={t.label} size="sm">
+        {targetCards.map((tc) => (
+          <Card key={tc.label} size="sm">
             <CardContent className="p-3 text-center">
-              <p className="text-xs text-gray-400">{t.label}</p>
+              <p className="text-xs text-gray-400">{tc.label}</p>
               <p className="text-lg font-semibold">
-                {t.value != null ? t.value : "—"}
-                {t.value != null && t.unit && (
-                  <span className="text-xs text-gray-500"> {t.unit}</span>
+                {tc.value != null ? tc.value : "—"}
+                {tc.value != null && tc.unit && (
+                  <span className="text-xs text-gray-500"> {tc.unit}</span>
                 )}
               </p>
             </CardContent>
@@ -201,28 +207,28 @@ export default function ClientDetail({
           onClick={() => setEditingTargets(true)}
           className="mb-6"
         >
-          <Pencil size={14} /> Uredi ciljeve
+          <Pencil size={14} /> {t("editTargets")}
         </Button>
       ) : (
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {targetField("Kalorije", "target_calories", "kcal")}
-              {targetField("Proteini", "target_protein_g", "g")}
-              {targetField("UH", "target_carbs_g", "g")}
-              {targetField("Masti", "target_fat_g", "g")}
-              {targetField("Koraci", "target_steps", "")}
-              {targetField("San", "target_sleep_h", "h")}
+              {targetField(t("targetCalories"), "target_calories", "kcal")}
+              {targetField(t("targetProtein"), "target_protein_g", "g")}
+              {targetField(t("targetCarbs"), "target_carbs_g", "g")}
+              {targetField(t("targetFat"), "target_fat_g", "g")}
+              {targetField(t("targetSteps"), "target_steps", "")}
+              {targetField(t("targetSleep"), "target_sleep_h", "h")}
             </div>
             <div className="mt-4 flex gap-2">
               <Button onClick={handleSaveTargets} disabled={saving}>
-                <Save size={14} /> Spremi
+                <Save size={14} /> {t("saveTargets")}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setEditingTargets(false)}
               >
-                <X size={14} /> Odustani
+                <X size={14} /> {t("cancelEdit")}
               </Button>
             </div>
           </CardContent>
@@ -233,17 +239,17 @@ export default function ClientDetail({
       <div className="mb-6 flex flex-wrap gap-2">
         <Link href={`/coach/clients/${client.id}/program`}>
           <Button variant="outline" size="sm">
-            <Dumbbell size={14} /> Program Builder
+            <Dumbbell size={14} /> {t("programBuilder")}
           </Button>
         </Link>
         <Link href={`/coach/clients/${client.id}/phases`}>
           <Button variant="outline" size="sm">
-            <Layers size={14} /> Phase Manager
+            <Layers size={14} /> {t("phaseManager")}
           </Button>
         </Link>
         <Link href={`/coach/clients/${client.id}/meal-plan`}>
           <Button variant="outline" size="sm">
-            <UtensilsCrossed size={14} /> Plan prehrane
+            <UtensilsCrossed size={14} /> {t("mealPlan")}
           </Button>
         </Link>
       </div>
@@ -251,18 +257,18 @@ export default function ClientDetail({
       {/* Tabs */}
       <Tabs defaultValue="logs">
         <TabsList variant="line" className="mb-4">
-          <TabsTrigger value="logs">Dnevni logovi</TabsTrigger>
-          <TabsTrigger value="checkins">Prijave</TabsTrigger>
-          <TabsTrigger value="measurements">Mjerenja</TabsTrigger>
-          <TabsTrigger value="notes">Bilješke</TabsTrigger>
-          <TabsTrigger value="photos">Fotografije</TabsTrigger>
+          <TabsTrigger value="logs">{t("tabLogs")}</TabsTrigger>
+          <TabsTrigger value="checkins">{t("tabCheckins")}</TabsTrigger>
+          <TabsTrigger value="measurements">{t("tabMeasurements")}</TabsTrigger>
+          <TabsTrigger value="notes">{t("tabNotes")}</TabsTrigger>
+          <TabsTrigger value="photos">{t("tabPhotos")}</TabsTrigger>
         </TabsList>
 
         {/* LOGS TAB */}
         <TabsContent value="logs">
           {weightData.length >= 2 && (
             <div className="mb-4 rounded-lg border border-gray-800 p-4">
-              <p className="mb-2 text-xs text-gray-400">Trend težine</p>
+              <p className="mb-2 text-xs text-gray-400">{t("weightTrend")}</p>
               <ResponsiveContainer width="100%" height={80}>
                 <LineChart data={weightData}>
                   <YAxis domain={["dataMin - 0.5", "dataMax + 0.5"]} hide />
@@ -273,9 +279,9 @@ export default function ClientDetail({
                       borderRadius: "8px",
                       fontSize: "12px",
                     }}
-                    formatter={(v) => [`${v} kg`, "Težina"]}
+                    formatter={(v) => [`${v} kg`, t("weightLabel")]}
                     labelFormatter={(l) =>
-                      new Date(String(l) + "T00:00").toLocaleDateString("hr-HR")
+                      new Date(String(l) + "T00:00").toLocaleDateString(bcp47)
                     }
                   />
                   <Line
@@ -291,29 +297,29 @@ export default function ClientDetail({
           )}
 
           {logs.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">Nema dnevnih logova.</p>
+            <p className="py-8 text-center text-gray-500">{t("noLogs")}</p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-gray-800">
               <table className="w-full text-sm">
                 <thead className="border-b border-gray-800 bg-gray-900/50">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium text-gray-400">
-                      Datum
+                      {t("colDate")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Težina
+                      {t("colWeight")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Kcal
+                      {t("colKcal")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Proteini
+                      {t("colProtein")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Koraci
+                      {t("colSteps")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      San
+                      {t("colSleep")}
                     </th>
                   </tr>
                 </thead>
@@ -326,7 +332,7 @@ export default function ClientDetail({
                       <td className="px-3 py-2 text-gray-300">
                         {new Date(
                           (l.log_date as string) + "T00:00"
-                        ).toLocaleDateString("hr-HR")}
+                        ).toLocaleDateString(bcp47)}
                       </td>
                       <td className="px-3 py-2 text-right text-gray-300">
                         {l.weight_kg != null ? `${l.weight_kg}` : "—"}
@@ -356,7 +362,7 @@ export default function ClientDetail({
         {/* CHECKINS TAB */}
         <TabsContent value="checkins">
           {checkins.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">Nema prijava.</p>
+            <p className="py-8 text-center text-gray-500">{t("noCheckins")}</p>
           ) : (
             <Accordion>
               {checkins.map((ci) => (
@@ -366,7 +372,7 @@ export default function ClientDetail({
                       <span>
                         {new Date(
                           (ci.checkin_date as string) + "T00:00"
-                        ).toLocaleDateString("hr-HR")}
+                        ).toLocaleDateString(bcp47)}
                       </span>
                       {ci.overall_rating != null && (
                         <Badge
@@ -382,37 +388,37 @@ export default function ClientDetail({
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
                       {ci.energy_level != null && (
                         <div>
-                          <span className="text-gray-500">Energija:</span>{" "}
+                          <span className="text-gray-500">{t("ciEnergy")}:</span>{" "}
                           {ci.energy_level as number}/10
                         </div>
                       )}
                       {ci.stress_level != null && (
                         <div>
-                          <span className="text-gray-500">Stres:</span>{" "}
+                          <span className="text-gray-500">{t("ciStress")}:</span>{" "}
                           {ci.stress_level as number}/10
                         </div>
                       )}
                       {ci.motivation != null && (
                         <div>
-                          <span className="text-gray-500">Motivacija:</span>{" "}
+                          <span className="text-gray-500">{t("ciMotivation")}:</span>{" "}
                           {ci.motivation as number}/10
                         </div>
                       )}
                       {ci.sleep_quality != null && (
                         <div>
-                          <span className="text-gray-500">Kvaliteta sna:</span>{" "}
+                          <span className="text-gray-500">{t("ciSleepQuality")}:</span>{" "}
                           {ci.sleep_quality as number}/10
                         </div>
                       )}
                       {ci.appetite != null && (
                         <div>
-                          <span className="text-gray-500">Apetit:</span>{" "}
+                          <span className="text-gray-500">{t("ciAppetite")}:</span>{" "}
                           {ci.appetite as number}/10
                         </div>
                       )}
                       {ci.adherence_diet_pct != null && (
                         <div>
-                          <span className="text-gray-500">Prehrana:</span>{" "}
+                          <span className="text-gray-500">{t("ciDiet")}:</span>{" "}
                           {ci.adherence_diet_pct as number}%
                         </div>
                       )}
@@ -420,7 +426,7 @@ export default function ClientDetail({
                     {ci.pain_discomfort && (
                       <div className="mt-3">
                         <span className="text-xs font-medium text-gray-500">
-                          Bol / nelagoda
+                          {t("ciPain")}
                         </span>
                         <p className="text-gray-300">
                           {ci.pain_discomfort as string}
@@ -430,7 +436,7 @@ export default function ClientDetail({
                     {ci.what_went_well && (
                       <div className="mt-3">
                         <span className="text-xs font-medium text-gray-500">
-                          Što je bilo dobro
+                          {t("ciWhatWentWell")}
                         </span>
                         <p className="text-gray-300">
                           {ci.what_went_well as string}
@@ -440,7 +446,7 @@ export default function ClientDetail({
                     {ci.challenges && (
                       <div className="mt-3">
                         <span className="text-xs font-medium text-gray-500">
-                          Izazovi
+                          {t("ciChallenges")}
                         </span>
                         <p className="text-gray-300">
                           {ci.challenges as string}
@@ -450,7 +456,7 @@ export default function ClientDetail({
                     {ci.goals_next_week && (
                       <div className="mt-3">
                         <span className="text-xs font-medium text-gray-500">
-                          Ciljevi za sljedeći tjedan
+                          {t("ciGoalsNextWeek")}
                         </span>
                         <p className="text-gray-300">
                           {ci.goals_next_week as string}
@@ -460,7 +466,7 @@ export default function ClientDetail({
                     {ci.questions_for_coach && (
                       <div className="mt-3">
                         <span className="text-xs font-medium text-gray-500">
-                          Pitanja za trenera
+                          {t("ciQuestionsForCoach")}
                         </span>
                         <p className="text-gray-300">
                           {ci.questions_for_coach as string}
@@ -477,41 +483,41 @@ export default function ClientDetail({
         {/* MEASUREMENTS TAB */}
         <TabsContent value="measurements">
           {measurements.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">Nema mjerenja.</p>
+            <p className="py-8 text-center text-gray-500">{t("noMeasurements")}</p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-gray-800">
               <table className="w-full text-sm">
                 <thead className="border-b border-gray-800 bg-gray-900/50">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium text-gray-400">
-                      Datum
+                      {t("colDate")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Vrat
+                      {t("colNeck")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Prsa
+                      {t("colChest")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Struk
+                      {t("colWaist")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Bokovi
+                      {t("colHips")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Ruka L
+                      {t("colArmL")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Ruka D
+                      {t("colArmR")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Bedro L
+                      {t("colThighL")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      Bedro D
+                      {t("colThighR")}
                     </th>
                     <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      BF%
+                      {t("colBfPct")}
                     </th>
                   </tr>
                 </thead>
@@ -524,7 +530,7 @@ export default function ClientDetail({
                       <td className="px-3 py-2 text-gray-300">
                         {new Date(
                           (m.meas_date as string) + "T00:00"
-                        ).toLocaleDateString("hr-HR")}
+                        ).toLocaleDateString(bcp47)}
                       </td>
                       <td className="px-3 py-2 text-right text-gray-300">
                         {m.neck_cm ?? "—"}
@@ -565,28 +571,28 @@ export default function ClientDetail({
         <TabsContent value="notes">
           <div className="max-w-2xl space-y-4">
             <div>
-              <Label className="mb-2">Bilješke</Label>
+              <Label className="mb-2">{t("notesLabel")}</Label>
               <Textarea
                 rows={6}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Bilješke o klijentu..."
+                placeholder={t("notesPlaceholder")}
               />
             </div>
             <div>
-              <Label className="mb-2">Ozljede</Label>
+              <Label className="mb-2">{t("injuriesLabel")}</Label>
               <Textarea
                 rows={4}
                 value={injuries}
                 onChange={(e) => setInjuries(e.target.value)}
-                placeholder="Ozljede, ograničenja..."
+                placeholder={t("injuriesPlaceholder")}
               />
             </div>
             <Button onClick={handleSaveNotes} disabled={saving}>
-              <Save size={14} /> {saving ? "Spremam..." : "Spremi"}
+              <Save size={14} /> {saving ? t("savingNotes") : t("saveNotes")}
             </Button>
             {notesSaved && (
-              <span className="ml-3 text-sm text-green-400">Spremljeno!</span>
+              <span className="ml-3 text-sm text-green-400">{t("notesSaved")}</span>
             )}
           </div>
         </TabsContent>
@@ -594,7 +600,7 @@ export default function ClientDetail({
         {/* PHOTOS TAB */}
         <TabsContent value="photos">
           {photos.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">Nema fotografija.</p>
+            <p className="py-8 text-center text-gray-500">{t("noPhotos")}</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {photos.map((p) => (
@@ -608,7 +614,7 @@ export default function ClientDetail({
                     <p className="text-xs text-gray-400">
                       {new Date(
                         (p.photo_date as string) + "T00:00"
-                      ).toLocaleDateString("hr-HR")}
+                      ).toLocaleDateString(bcp47)}
                     </p>
                     {p.angle && (
                       <p className="text-xs text-gray-500">{p.angle as string}</p>
