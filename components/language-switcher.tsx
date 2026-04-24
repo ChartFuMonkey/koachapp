@@ -20,6 +20,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
           key={code}
           type="button"
           disabled={pending}
+          aria-pressed={locale === code}
           onClick={() => change(code)}
           className={`px-2 py-1 text-xs rounded border ${
             locale === code ? "bg-foreground text-background" : "bg-background"

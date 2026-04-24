@@ -47,7 +47,8 @@ export async function resolveLocale(): Promise<Locale> {
         .single();
       if (isLocale(profile?.language)) return profile.language;
     }
-  } catch {
+  } catch (e) {
+    console.error("[i18n] profile lookup failed, falling back to cookie/Accept-Language", e);
     // fall through
   }
 
