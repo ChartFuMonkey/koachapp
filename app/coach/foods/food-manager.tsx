@@ -13,6 +13,7 @@ import { Plus, Pencil, Trash2, Check, X, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { foodDisplayName } from "@/lib/food-display";
+import { translateError } from "@/lib/translate-error";
 import type { Locale } from "@/i18n/request";
 
 type Food = {
@@ -53,6 +54,8 @@ export default function FoodManager({
   const router = useRouter();
   const t = useTranslations("coach.foods");
   const tCat = useTranslations("coach.foods.categories");
+  const tErr = useTranslations("coach.foods.errors");
+  const tCommonErr = useTranslations("errors");
   const tCommon = useTranslations("common");
   const locale = useLocale() as Locale;
   const [showAddForm, setShowAddForm] = useState(false);
@@ -90,7 +93,7 @@ export default function FoodManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -107,7 +110,7 @@ export default function FoodManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -120,7 +123,7 @@ export default function FoodManager({
     const res = await deleteFood(id);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 

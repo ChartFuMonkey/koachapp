@@ -98,7 +98,7 @@ export async function updateClientNotes(
     .eq("id", clientId);
 
   if (error) {
-    return { error: "Greška pri spremanju bilješki." };
+    return { error: "saveNotesFailed" as const };
   }
   return { success: true };
 }
@@ -123,7 +123,7 @@ export async function updateClientTargets(
     .eq("id", clientId);
 
   if (error) {
-    return { error: "Greška pri ažuriranju ciljeva." };
+    return { error: "saveTargetsFailed" as const };
   }
   return { success: true };
 }

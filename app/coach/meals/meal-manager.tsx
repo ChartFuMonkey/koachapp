@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { foodDisplayName } from "@/lib/food-display";
+import { translateError } from "@/lib/translate-error";
 import type { Locale } from "@/i18n/request";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -94,6 +95,8 @@ export default function MealManager({
 }) {
   const router = useRouter();
   const t = useTranslations("coach.meals");
+  const tErr = useTranslations("coach.meals.errors");
+  const tCommonErr = useTranslations("errors");
   const tCommon = useTranslations("common");
   const locale = useLocale() as Locale;
   const [showNewMeal, setShowNewMeal] = useState(false);
@@ -128,7 +131,7 @@ export default function MealManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -145,7 +148,7 @@ export default function MealManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -157,7 +160,7 @@ export default function MealManager({
   async function handleDeleteMeal(id: string) {
     const res = await deleteMeal(id);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
     toast.success(t("mealDeletedToast"));
@@ -172,7 +175,7 @@ export default function MealManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -187,7 +190,7 @@ export default function MealManager({
   async function handleRemoveFood(mfId: string) {
     const res = await removeMealFood(mfId);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
     router.refresh();

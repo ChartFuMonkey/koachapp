@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { translateError } from "@/lib/translate-error";
 
 type Phase = {
   id: string;
@@ -69,6 +70,8 @@ export default function PhaseManager({
   const router = useRouter();
   const t = useTranslations("coach.phases");
   const tTypes = useTranslations("coach.phases.types");
+  const tErr = useTranslations("coach.phases.errors");
+  const tCommonErr = useTranslations("errors");
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
@@ -103,7 +106,7 @@ export default function PhaseManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -118,7 +121,7 @@ export default function PhaseManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -130,7 +133,7 @@ export default function PhaseManager({
     const res = await deletePhase(phaseId);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 

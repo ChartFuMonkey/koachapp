@@ -14,7 +14,7 @@ export async function getExercises() {
 
   if (error) {
     console.error("Exercises fetch error:", error);
-    return { error: "Greška pri dohvaćanju vježbi." };
+    return { error: "loadFailed" as const };
   }
 
   return { data: data ?? [] };
@@ -25,7 +25,7 @@ export async function createExercise(formData: FormData) {
   if (auth.error) return { error: auth.error };
 
   const name = (formData.get("name") as string)?.trim();
-  if (!name) return { error: "Naziv vježbe je obavezan." };
+  if (!name) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin.from("exercises").insert({
     name,
@@ -38,9 +38,9 @@ export async function createExercise(formData: FormData) {
   });
 
   if (error) {
-    if (error.code === "23505") return { error: "Vježba s tim nazivom već postoji." };
+    if (error.code === "23505") return { error: "duplicateName" as const };
     console.error("Exercise create error:", error);
-    return { error: "Greška pri kreiranju vježbe." };
+    return { error: "createFailed" as const };
   }
 
   return { success: true };
@@ -51,7 +51,7 @@ export async function updateExercise(id: string, formData: FormData) {
   if (auth.error) return { error: auth.error };
 
   const name = (formData.get("name") as string)?.trim();
-  if (!name) return { error: "Naziv vježbe je obavezan." };
+  if (!name) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin
     .from("exercises")
@@ -67,9 +67,9 @@ export async function updateExercise(id: string, formData: FormData) {
     .eq("created_by", auth.user.id);
 
   if (error) {
-    if (error.code === "23505") return { error: "Vježba s tim nazivom već postoji." };
+    if (error.code === "23505") return { error: "duplicateName" as const };
     console.error("Exercise update error:", error);
-    return { error: "Greška pri ažuriranju vježbe." };
+    return { error: "updateFailed" as const };
   }
 
   return { success: true };
@@ -87,10 +87,10 @@ export async function deleteExercise(id: string) {
 
   if (error) {
     if (error.code === "23503") {
-      return { error: "Vježba se koristi u programu — najprije ju uklonite iz programa." };
+      return { error: "exerciseInUse" as const };
     }
     console.error("Exercise delete error:", error);
-    return { error: "Greška pri brisanju vježbe." };
+    return { error: "deleteFailed" as const };
   }
 
   return { success: true };

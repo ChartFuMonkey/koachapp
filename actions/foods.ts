@@ -14,7 +14,7 @@ export async function getFoods() {
 
   if (error) {
     console.error("Foods fetch error:", error);
-    return { error: "Greška pri dohvaćanju namirnica." };
+    return { error: "loadFailed" as const };
   }
 
   return { data: data ?? [] };
@@ -25,7 +25,7 @@ export async function createFood(formData: FormData) {
   if (auth.error) return { error: auth.error };
 
   const name = (formData.get("name") as string)?.trim();
-  if (!name) return { error: "Naziv namirnice je obavezan." };
+  if (!name) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin.from("foods").insert({
     name,
@@ -40,7 +40,7 @@ export async function createFood(formData: FormData) {
 
   if (error) {
     console.error("Food create error:", error);
-    return { error: "Greška pri kreiranju namirnice." };
+    return { error: "createFailed" as const };
   }
 
   return { success: true };
@@ -51,7 +51,7 @@ export async function updateFood(id: string, formData: FormData) {
   if (auth.error) return { error: auth.error };
 
   const name = (formData.get("name") as string)?.trim();
-  if (!name) return { error: "Naziv namirnice je obavezan." };
+  if (!name) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin
     .from("foods")
@@ -68,7 +68,7 @@ export async function updateFood(id: string, formData: FormData) {
 
   if (error) {
     console.error("Food update error:", error);
-    return { error: "Greška pri ažuriranju namirnice." };
+    return { error: "updateFailed" as const };
   }
 
   return { success: true };
@@ -86,10 +86,10 @@ export async function deleteFood(id: string) {
 
   if (error) {
     if (error.code === "23503") {
-      return { error: "Namirnica se koristi u obroku — najprije ju uklonite iz obroka." };
+      return { error: "foodInUse" as const };
     }
     console.error("Food delete error:", error);
-    return { error: "Greška pri brisanju namirnice." };
+    return { error: "deleteFailed" as const };
   }
 
   return { success: true };

@@ -24,7 +24,7 @@ export async function getClientMealPlans(clientId: string) {
 
   if (error) {
     console.error("Meal plans fetch error:", error);
-    return { error: "Greška pri dohvaćanju planova prehrane." };
+    return { error: "loadFailed" as const };
   }
 
   // Normalize nested join
@@ -43,7 +43,7 @@ export async function createMealPlan(clientId: string, name: string) {
   const auth = await requireCoachOwnsClient(clientId);
   if (auth.error) return { error: auth.error };
 
-  if (!name.trim()) return { error: "Naziv plana je obavezan." };
+  if (!name.trim()) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin.from("meal_plans").insert({
     name: name.trim(),
@@ -53,7 +53,7 @@ export async function createMealPlan(clientId: string, name: string) {
 
   if (error) {
     console.error("Meal plan create error:", error);
-    return { error: "Greška pri kreiranju plana prehrane." };
+    return { error: "createFailed" as const };
   }
 
   return { success: true };
@@ -70,7 +70,7 @@ export async function deleteMealPlan(planId: string) {
 
   if (error) {
     console.error("Meal plan delete error:", error);
-    return { error: "Greška pri brisanju plana prehrane." };
+    return { error: "deleteFailed" as const };
   }
 
   return { success: true };
@@ -88,7 +88,7 @@ export async function activateMealPlan(clientId: string, planId: string) {
 
   if (deactivateErr) {
     console.error("Deactivate error:", deactivateErr);
-    return { error: "Greška pri deaktivaciji planova." };
+    return { error: "deactivateFailed" as const };
   }
 
   // Activate the selected one
@@ -100,7 +100,7 @@ export async function activateMealPlan(clientId: string, planId: string) {
 
   if (error) {
     console.error("Activate error:", error);
-    return { error: "Greška pri aktivaciji plana." };
+    return { error: "activateFailed" as const };
   }
 
   return { success: true };
@@ -127,7 +127,7 @@ export async function setMealPlanEntry(
 
   if (error) {
     console.error("Set meal plan entry error:", error);
-    return { error: "Greška pri dodavanju obroka u plan." };
+    return { error: "addMealFailed" as const };
   }
 
   return { success: true };
@@ -144,7 +144,7 @@ export async function removeMealPlanEntry(entryId: string) {
 
   if (error) {
     console.error("Remove meal plan entry error:", error);
-    return { error: "Greška pri uklanjanju obroka iz plana." };
+    return { error: "removeMealFailed" as const };
   }
 
   return { success: true };
@@ -172,7 +172,7 @@ export async function addMealPlanOverride(
 
   if (error) {
     console.error("Add override error:", error);
-    return { error: "Greška pri dodavanju override-a." };
+    return { error: "addOverrideFailed" as const };
   }
 
   return { success: true };
@@ -191,7 +191,7 @@ export async function removeMealPlanOverride(overrideId: string) {
 
   if (error) {
     console.error("Remove override error:", error);
-    return { error: "Greška pri uklanjanju override-a." };
+    return { error: "removeOverrideFailed" as const };
   }
 
   return { success: true };
@@ -211,7 +211,7 @@ async function requireCoachOwnsMealPlanEntry(entryId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { translateError } from "@/lib/translate-error";
 
 type Exercise = {
   id: string;
@@ -48,6 +49,8 @@ export default function ExerciseManager({
 }) {
   const router = useRouter();
   const t = useTranslations("coach.exercises");
+  const tErr = useTranslations("coach.exercises.errors");
+  const tCommonErr = useTranslations("errors");
   const tCommon = useTranslations("common");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export default function ExerciseManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -94,7 +97,7 @@ export default function ExerciseManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
@@ -107,7 +110,7 @@ export default function ExerciseManager({
     const res = await deleteExercise(id);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 

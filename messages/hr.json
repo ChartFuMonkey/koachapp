@@ -272,7 +272,19 @@
       "addFood": "Dodaj namirnicu",
       "gramsSuffix": "g",
       "confirmDeleteTitle": "Obriši \"{name}\"?",
-      "confirmDeleteDesc": "Ovaj obrok će biti trajno obrisan."
+      "confirmDeleteDesc": "Ovaj obrok će biti trajno obrisan.",
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju obroka.",
+        "createFailed": "Greška pri kreiranju obroka.",
+        "updateFailed": "Greška pri ažuriranju obroka.",
+        "deleteFailed": "Greška pri brisanju obroka.",
+        "nameRequired": "Naziv obroka je obavezan.",
+        "mealInUse": "Obrok se koristi u planu prehrane — najprije ga uklonite iz plana.",
+        "addFoodFailed": "Greška pri dodavanju namirnice u obrok.",
+        "updateQuantityFailed": "Greška pri ažuriranju količine.",
+        "removeFoodFailed": "Greška pri uklanjanju namirnice iz obroka.",
+        "reorderFailed": "Greška pri promjeni redoslijeda."
+      }
     },
     "foods": {
       "title": "Baza namirnica",
@@ -313,6 +325,14 @@
         "vegetables": "Povrće",
         "fatsOils": "Masti/Ulja",
         "other": "Ostalo"
+      },
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju namirnica.",
+        "createFailed": "Greška pri kreiranju namirnice.",
+        "updateFailed": "Greška pri ažuriranju namirnice.",
+        "deleteFailed": "Greška pri brisanju namirnice.",
+        "nameRequired": "Naziv namirnice je obavezan.",
+        "foodInUse": "Namirnica se koristi u obroku — najprije ju uklonite iz obroka."
       }
     },
     "exercises": {
@@ -345,7 +365,16 @@
       "colActions": "Akcije",
       "emptyList": "Nema vježbi. Dodajte prvu iznad.",
       "confirmDeleteTitle": "Obriši \"{name}\"?",
-      "confirmDeleteDesc": "Ova vježba će biti trajno obrisana."
+      "confirmDeleteDesc": "Ova vježba će biti trajno obrisana.",
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju vježbi.",
+        "createFailed": "Greška pri kreiranju vježbe.",
+        "updateFailed": "Greška pri ažuriranju vježbe.",
+        "deleteFailed": "Greška pri brisanju vježbe.",
+        "nameRequired": "Naziv vježbe je obavezan.",
+        "duplicateName": "Vježba s tim nazivom već postoji.",
+        "exerciseInUse": "Vježba se koristi u programu — najprije ju uklonite iz programa."
+      }
     },
     "mealPlan": {
       "title": "Plan prehrane",
@@ -366,7 +395,19 @@
       "pickMeal": "Odaberi obrok...",
       "addMeal": "Dodaj obrok",
       "confirmDeleteTitle": "Obriši \"{name}\"?",
-      "confirmDeleteDesc": "Ovaj plan prehrane će biti trajno obrisan sa svim unosima."
+      "confirmDeleteDesc": "Ovaj plan prehrane će biti trajno obrisan sa svim unosima.",
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju planova prehrane.",
+        "createFailed": "Greška pri kreiranju plana prehrane.",
+        "deleteFailed": "Greška pri brisanju plana prehrane.",
+        "activateFailed": "Greška pri aktivaciji plana.",
+        "deactivateFailed": "Greška pri deaktivaciji planova.",
+        "nameRequired": "Naziv plana je obavezan.",
+        "addMealFailed": "Greška pri dodavanju obroka u plan.",
+        "removeMealFailed": "Greška pri uklanjanju obroka iz plana.",
+        "addOverrideFailed": "Greška pri dodavanju override-a.",
+        "removeOverrideFailed": "Greška pri uklanjanju override-a."
+      }
     },
     "phases": {
       "title": "Phase Manager",
@@ -396,6 +437,15 @@
         "strength": "Snaga",
         "rest": "Odmor",
         "other": "Ostalo"
+      },
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju faza.",
+        "createFailed": "Greška pri kreiranju faze.",
+        "deleteFailed": "Greška pri brisanju faze.",
+        "activateFailed": "Greška pri aktivaciji faze.",
+        "deactivateFailed": "Greška pri deaktivaciji faza.",
+        "nameRequired": "Naziv faze je obavezan.",
+        "startDateRequired": "Datum početka je obavezan."
       }
     },
     "program": {
@@ -433,7 +483,19 @@
       "confirmDeleteProgram": "Obriši \"{name}\"?",
       "confirmDeleteProgramDesc": "Svi dani i vježbe će biti obrisani.",
       "confirmDeleteDay": "Obriši \"{name}\"?",
-      "confirmDeleteDayDesc": "Sve vježbe u ovom danu će biti obrisane."
+      "confirmDeleteDayDesc": "Sve vježbe u ovom danu će biti obrisane.",
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju programa.",
+        "createFailed": "Greška pri kreiranju programa.",
+        "deleteFailed": "Greška pri brisanju programa.",
+        "activateFailed": "Greška pri aktivaciji programa.",
+        "deactivateFailed": "Greška pri deaktivaciji programa.",
+        "addDayFailed": "Greška pri dodavanju dana.",
+        "deleteDayFailed": "Greška pri brisanju dana.",
+        "addExerciseFailed": "Greška pri dodavanju vježbe.",
+        "removeExerciseFailed": "Greška pri uklanjanju vježbe.",
+        "reorderFailed": "Greška pri promjeni redoslijeda."
+      }
     },
     "clients": {
       "detail": {
@@ -498,7 +560,12 @@
         "saveNotes": "Spremi",
         "savingNotes": "Spremam...",
         "notesSaved": "Spremljeno!",
-        "unknownClient": "Klijent"
+        "unknownClient": "Klijent",
+        "errors": {
+          "saveNotesFailed": "Greška pri spremanju bilješki.",
+          "saveTargetsFailed": "Greška pri ažuriranju ciljeva.",
+          "sendFailed": "Greška pri slanju podsjetnika."
+        }
       },
       "new": {
         "title": "Novi klijent",

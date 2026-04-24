@@ -20,7 +20,7 @@ export async function getMeals() {
 
   if (error) {
     console.error("Meals fetch error:", error);
-    return { error: "Greška pri dohvaćanju obroka." };
+    return { error: "loadFailed" as const };
   }
 
   // Sort meal_foods by sort_order and normalize nested join
@@ -41,7 +41,7 @@ export async function createMeal(name: string, notes: string | null) {
   const auth = await requireCoach();
   if (auth.error) return { error: auth.error };
 
-  if (!name.trim()) return { error: "Naziv obroka je obavezan." };
+  if (!name.trim()) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin.from("meals").insert({
     name: name.trim(),
@@ -51,7 +51,7 @@ export async function createMeal(name: string, notes: string | null) {
 
   if (error) {
     console.error("Meal create error:", error);
-    return { error: "Greška pri kreiranju obroka." };
+    return { error: "createFailed" as const };
   }
 
   return { success: true };
@@ -61,7 +61,7 @@ export async function updateMeal(id: string, name: string, notes: string | null)
   const auth = await requireCoach();
   if (auth.error) return { error: auth.error };
 
-  if (!name.trim()) return { error: "Naziv obroka je obavezan." };
+  if (!name.trim()) return { error: "nameRequired" as const };
 
   const { error } = await supabaseAdmin
     .from("meals")
@@ -75,7 +75,7 @@ export async function updateMeal(id: string, name: string, notes: string | null)
 
   if (error) {
     console.error("Meal update error:", error);
-    return { error: "Greška pri ažuriranju obroka." };
+    return { error: "updateFailed" as const };
   }
 
   return { success: true };
@@ -93,10 +93,10 @@ export async function deleteMeal(id: string) {
 
   if (error) {
     if (error.code === "23503") {
-      return { error: "Obrok se koristi u planu prehrane — najprije ga uklonite iz plana." };
+      return { error: "mealInUse" as const };
     }
     console.error("Meal delete error:", error);
-    return { error: "Greška pri brisanju obroka." };
+    return { error: "deleteFailed" as const };
   }
 
   return { success: true };
@@ -125,7 +125,7 @@ export async function addMealFood(mealId: string, foodId: string, quantityG: num
 
   if (error) {
     console.error("Add meal food error:", error);
-    return { error: "Greška pri dodavanju namirnice u obrok." };
+    return { error: "addFoodFailed" as const };
   }
 
   return { success: true };
@@ -142,7 +142,7 @@ export async function updateMealFood(id: string, quantityG: number) {
 
   if (error) {
     console.error("Update meal food error:", error);
-    return { error: "Greška pri ažuriranju količine." };
+    return { error: "updateQuantityFailed" as const };
   }
 
   return { success: true };
@@ -159,7 +159,7 @@ export async function removeMealFood(id: string) {
 
   if (error) {
     console.error("Remove meal food error:", error);
-    return { error: "Greška pri uklanjanju namirnice iz obroka." };
+    return { error: "removeFoodFailed" as const };
   }
 
   return { success: true };
@@ -179,10 +179,10 @@ export async function reorderMealFood(
     .eq("meal_id", mealId)
     .order("sort_order", { ascending: true });
 
-  if (!items) return { error: "Greška." };
+  if (!items) return { error: "reorderFailed" as const };
 
   const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return { error: "Greška." };
+  if (idx === -1) return { error: "reorderFailed" as const };
 
   const swapIdx = direction === "up" ? idx - 1 : idx + 1;
   if (swapIdx < 0 || swapIdx >= items.length) return { success: true };

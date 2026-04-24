@@ -33,7 +33,7 @@ export async function getClientPrograms(clientId: string) {
 
   if (error) {
     console.error("Programs fetch error:", error);
-    return { error: "Greška pri dohvaćanju programa." };
+    return { error: "loadFailed" as const };
   }
 
   // Sort days and exercises within each program
@@ -72,7 +72,7 @@ export async function createProgram(clientId: string, name: string) {
 
   if (error) {
     console.error("Program create error:", error);
-    return { error: "Greška pri kreiranju programa." };
+    return { error: "createFailed" as const };
   }
 
   return { data };
@@ -108,7 +108,7 @@ export async function deleteProgram(programId: string) {
 
   if (error) {
     console.error("Program delete error:", error);
-    return { error: "Greška pri brisanju programa." };
+    return { error: "deleteFailed" as const };
   }
 
   return { success: true };
@@ -126,7 +126,7 @@ export async function activateProgram(clientId: string, programId: string) {
 
   if (deactivateErr) {
     console.error("Deactivate error:", deactivateErr);
-    return { error: "Greška pri deaktivaciji programa." };
+    return { error: "deactivateFailed" as const };
   }
 
   // Activate the selected one
@@ -138,7 +138,7 @@ export async function activateProgram(clientId: string, programId: string) {
 
   if (error) {
     console.error("Activate error:", error);
-    return { error: "Greška pri aktivaciji programa." };
+    return { error: "activateFailed" as const };
   }
 
   return { success: true };
@@ -172,7 +172,7 @@ export async function addProgramDay(programId: string, dayLabel: string) {
 
   if (error) {
     console.error("Day create error:", error);
-    return { error: "Greška pri dodavanju dana." };
+    return { error: "addDayFailed" as const };
   }
 
   return { data };
@@ -194,7 +194,7 @@ export async function deleteProgramDay(dayId: string) {
 
   if (error) {
     console.error("Day delete error:", error);
-    return { error: "Greška pri brisanju dana." };
+    return { error: "deleteDayFailed" as const };
   }
 
   return { success: true };
@@ -235,7 +235,7 @@ export async function addProgramExercise(
 
   if (error) {
     console.error("Program exercise add error:", error);
-    return { error: "Greška pri dodavanju vježbe." };
+    return { error: "addExerciseFailed" as const };
   }
 
   return { success: true };
@@ -252,7 +252,7 @@ export async function removeProgramExercise(id: string) {
 
   if (error) {
     console.error("Program exercise remove error:", error);
-    return { error: "Greška pri uklanjanju vježbe." };
+    return { error: "removeExerciseFailed" as const };
   }
 
   return { success: true };
@@ -274,11 +274,11 @@ export async function reorderProgramExercise(
     .order("sort_order", { ascending: true });
 
   if (error || !exercises) {
-    return { error: "Greška pri dohvaćanju vježbi." };
+    return { error: "reorderFailed" as const };
   }
 
   const idx = exercises.findIndex((e) => e.id === id);
-  if (idx === -1) return { error: "Vježba nije pronađena." };
+  if (idx === -1) return { error: "reorderFailed" as const };
 
   const swapIdx = direction === "up" ? idx - 1 : idx + 1;
   if (swapIdx < 0 || swapIdx >= exercises.length) return { success: true }; // Already at boundary
@@ -301,7 +301,7 @@ export async function reorderProgramExercise(
   const reorderError = results.find((r) => r.error);
   if (reorderError?.error) {
     console.error("Reorder error:", reorderError.error);
-    return { error: "Greška pri promjeni redoslijeda." };
+    return { error: "reorderFailed" as const };
   }
 
   return { success: true };

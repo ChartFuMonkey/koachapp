@@ -272,7 +272,19 @@
       "addFood": "Add food",
       "gramsSuffix": "g",
       "confirmDeleteTitle": "Delete \"{name}\"?",
-      "confirmDeleteDesc": "This meal will be permanently deleted."
+      "confirmDeleteDesc": "This meal will be permanently deleted.",
+      "errors": {
+        "loadFailed": "Couldn't load meals.",
+        "createFailed": "Couldn't create meal.",
+        "updateFailed": "Couldn't update meal.",
+        "deleteFailed": "Couldn't delete meal.",
+        "nameRequired": "Meal name is required.",
+        "mealInUse": "This meal is used in a meal plan — remove it from the plan first.",
+        "addFoodFailed": "Couldn't add food to meal.",
+        "updateQuantityFailed": "Couldn't update quantity.",
+        "removeFoodFailed": "Couldn't remove food from meal.",
+        "reorderFailed": "Couldn't reorder."
+      }
     },
     "foods": {
       "title": "Food database",
@@ -313,6 +325,14 @@
         "vegetables": "Vegetables",
         "fatsOils": "Fats/Oils",
         "other": "Other"
+      },
+      "errors": {
+        "loadFailed": "Couldn't load foods.",
+        "createFailed": "Couldn't create food.",
+        "updateFailed": "Couldn't update food.",
+        "deleteFailed": "Couldn't delete food.",
+        "nameRequired": "Food name is required.",
+        "foodInUse": "This food is used in a meal — remove it from the meal first."
       }
     },
     "exercises": {
@@ -345,7 +365,16 @@
       "colActions": "Actions",
       "emptyList": "No exercises yet. Add your first one above.",
       "confirmDeleteTitle": "Delete \"{name}\"?",
-      "confirmDeleteDesc": "This exercise will be permanently deleted."
+      "confirmDeleteDesc": "This exercise will be permanently deleted.",
+      "errors": {
+        "loadFailed": "Couldn't load exercises.",
+        "createFailed": "Couldn't create exercise.",
+        "updateFailed": "Couldn't update exercise.",
+        "deleteFailed": "Couldn't delete exercise.",
+        "nameRequired": "Exercise name is required.",
+        "duplicateName": "An exercise with that name already exists.",
+        "exerciseInUse": "This exercise is used in a program — remove it from the program first."
+      }
     },
     "mealPlan": {
       "title": "Meal plan",
@@ -366,7 +395,19 @@
       "pickMeal": "Pick a meal...",
       "addMeal": "Add meal",
       "confirmDeleteTitle": "Delete \"{name}\"?",
-      "confirmDeleteDesc": "This meal plan and all its entries will be permanently deleted."
+      "confirmDeleteDesc": "This meal plan and all its entries will be permanently deleted.",
+      "errors": {
+        "loadFailed": "Couldn't load meal plans.",
+        "createFailed": "Couldn't create meal plan.",
+        "deleteFailed": "Couldn't delete meal plan.",
+        "activateFailed": "Couldn't activate meal plan.",
+        "deactivateFailed": "Couldn't deactivate meal plans.",
+        "nameRequired": "Plan name is required.",
+        "addMealFailed": "Couldn't add meal to plan.",
+        "removeMealFailed": "Couldn't remove meal from plan.",
+        "addOverrideFailed": "Couldn't add override.",
+        "removeOverrideFailed": "Couldn't remove override."
+      }
     },
     "phases": {
       "title": "Phase manager",
@@ -396,6 +437,15 @@
         "strength": "Strength",
         "rest": "Rest",
         "other": "Other"
+      },
+      "errors": {
+        "loadFailed": "Couldn't load phases.",
+        "createFailed": "Couldn't create phase.",
+        "deleteFailed": "Couldn't delete phase.",
+        "activateFailed": "Couldn't activate phase.",
+        "deactivateFailed": "Couldn't deactivate phases.",
+        "nameRequired": "Phase name is required.",
+        "startDateRequired": "Start date is required."
       }
     },
     "program": {
@@ -433,7 +483,19 @@
       "confirmDeleteProgram": "Delete \"{name}\"?",
       "confirmDeleteProgramDesc": "All days and exercises will be deleted.",
       "confirmDeleteDay": "Delete \"{name}\"?",
-      "confirmDeleteDayDesc": "All exercises in this day will be deleted."
+      "confirmDeleteDayDesc": "All exercises in this day will be deleted.",
+      "errors": {
+        "loadFailed": "Couldn't load programs.",
+        "createFailed": "Couldn't create program.",
+        "deleteFailed": "Couldn't delete program.",
+        "activateFailed": "Couldn't activate program.",
+        "deactivateFailed": "Couldn't deactivate programs.",
+        "addDayFailed": "Couldn't add day.",
+        "deleteDayFailed": "Couldn't delete day.",
+        "addExerciseFailed": "Couldn't add exercise.",
+        "removeExerciseFailed": "Couldn't remove exercise.",
+        "reorderFailed": "Couldn't reorder."
+      }
     },
     "clients": {
       "detail": {
@@ -498,7 +560,12 @@
         "saveNotes": "Save",
         "savingNotes": "Saving...",
         "notesSaved": "Saved!",
-        "unknownClient": "Client"
+        "unknownClient": "Client",
+        "errors": {
+          "saveNotesFailed": "Couldn't save notes.",
+          "saveTargetsFailed": "Couldn't update targets.",
+          "sendFailed": "Couldn't send reminder."
+        }
       },
       "new": {
         "title": "Add client",
