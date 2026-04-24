@@ -251,6 +251,27 @@
       "active": "Aktivan",
       "inactive": "Neaktivan"
     },
+    "mealPlan": {
+      "title": "Plan prehrane",
+      "newPlan": "Novi plan",
+      "planNameLabel": "Naziv plana",
+      "planNamePlaceholder": "npr. Cut plan",
+      "createPlan": "Kreiraj",
+      "planCreatedToast": "Plan kreiran",
+      "planDeletedToast": "Plan obrisan",
+      "planActivatedToast": "Plan aktiviran",
+      "mealAddedToast": "Obrok dodan",
+      "emptyTitle": "Nema planova prehrane",
+      "emptyHint": "Kreirajte prvi plan iznad",
+      "active": "Aktivan",
+      "activate": "Aktiviraj",
+      "mealCount": "{count, plural, one {# obrok} few {# obroka} other {# obroka}}",
+      "mealSlotPrefix": "Obrok",
+      "pickMeal": "Odaberi obrok...",
+      "addMeal": "Dodaj obrok",
+      "confirmDeleteTitle": "Obriši \"{name}\"?",
+      "confirmDeleteDesc": "Ovaj plan prehrane će biti trajno obrisan sa svim unosima."
+    },
     "phases": {
       "title": "Phase Manager",
       "addPhase": "Dodaj fazu",

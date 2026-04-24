@@ -251,6 +251,27 @@
       "active": "Active",
       "inactive": "Inactive"
     },
+    "mealPlan": {
+      "title": "Meal plan",
+      "newPlan": "New plan",
+      "planNameLabel": "Plan name",
+      "planNamePlaceholder": "e.g. Cut plan",
+      "createPlan": "Create",
+      "planCreatedToast": "Plan created",
+      "planDeletedToast": "Plan deleted",
+      "planActivatedToast": "Plan activated",
+      "mealAddedToast": "Meal added",
+      "emptyTitle": "No meal plans yet",
+      "emptyHint": "Create the first plan above",
+      "active": "Active",
+      "activate": "Activate",
+      "mealCount": "{count, plural, one {# meal} other {# meals}}",
+      "mealSlotPrefix": "Meal",
+      "pickMeal": "Pick a meal...",
+      "addMeal": "Add meal",
+      "confirmDeleteTitle": "Delete \"{name}\"?",
+      "confirmDeleteDesc": "This meal plan and all its entries will be permanently deleted."
+    },
     "phases": {
       "title": "Phase manager",
       "addPhase": "Add phase",
