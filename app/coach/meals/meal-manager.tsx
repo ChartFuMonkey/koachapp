@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,12 +28,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { foodDisplayName } from "@/lib/food-display";
+import type { Locale } from "@/i18n/request";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type FoodRef = {
   id: string;
   name: string;
+  name_en: string | null;
   calories_per_100g: number;
   protein_per_100g: number;
   carbs_per_100g: number;
@@ -92,6 +95,7 @@ export default function MealManager({
   const router = useRouter();
   const t = useTranslations("coach.meals");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [showNewMeal, setShowNewMeal] = useState(false);
   const [newMealName, setNewMealName] = useState("");
   const [newMealNotes, setNewMealNotes] = useState("");
@@ -195,7 +199,13 @@ export default function MealManager({
   }
 
   const filteredFoods = foodSearch.trim()
-    ? allFoods.filter((f) => f.name.toLowerCase().includes(foodSearch.toLowerCase()))
+    ? allFoods.filter((f) => {
+        const q = foodSearch.toLowerCase();
+        return (
+          foodDisplayName(f, locale).toLowerCase().includes(q) ||
+          f.name.toLowerCase().includes(q)
+        );
+      })
     : allFoods;
 
   return (
@@ -347,7 +357,7 @@ export default function MealManager({
                               >
                                 <div className="min-w-0 flex-1">
                                   <span className="font-medium text-gray-300">
-                                    {mf.foods.name}
+                                    {foodDisplayName(mf.foods, locale)}
                                   </span>
                                   <span className="ml-2 text-gray-500">
                                     {mf.quantity_g}g
@@ -413,7 +423,7 @@ export default function MealManager({
                             <option value="">{t("pickFood")}</option>
                             {filteredFoods.map((f) => (
                               <option key={f.id} value={f.id}>
-                                {f.name} ({f.calories_per_100g} kcal/100g)
+                                {foodDisplayName(f, locale)} ({f.calories_per_100g} kcal/100g)
                               </option>
                             ))}
                           </select>

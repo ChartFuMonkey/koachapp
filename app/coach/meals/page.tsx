@@ -12,13 +12,13 @@ export default async function MealDatabasePage() {
         id, name, notes, created_at,
         meal_foods (
           id, quantity_g, sort_order,
-          foods ( id, name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g )
+          foods ( id, name, name_en, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g )
         )
       `)
       .order("name", { ascending: true }),
     supabaseAdmin
       .from("foods")
-      .select("id, name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, category")
+      .select("id, name, name_en, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, category")
       .order("name", { ascending: true }),
   ]);
 

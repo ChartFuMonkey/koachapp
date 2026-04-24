@@ -7,7 +7,7 @@ export default async function FoodDatabasePage() {
   const tErrors = await getTranslations("errors");
   const { data, error } = await supabaseAdmin
     .from("foods")
-    .select("id, name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, category, is_preset")
+    .select("id, name, name_en, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, category, is_preset")
     .order("name", { ascending: true });
 
   if (error) {

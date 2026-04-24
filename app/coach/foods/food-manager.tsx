@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,13 @@ import { createFood, updateFood, deleteFood } from "@/actions/foods";
 import { Plus, Pencil, Trash2, Check, X, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { foodDisplayName } from "@/lib/food-display";
+import type { Locale } from "@/i18n/request";
 
 type Food = {
   id: string;
   name: string;
+  name_en: string | null;
   calories_per_100g: number;
   protein_per_100g: number;
   carbs_per_100g: number;
@@ -51,6 +54,7 @@ export default function FoodManager({
   const t = useTranslations("coach.foods");
   const tCat = useTranslations("coach.foods.categories");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -72,10 +76,11 @@ export default function FoodManager({
     const q = search.toLowerCase();
     return initialFoods.filter(
       (f) =>
+        foodDisplayName(f, locale).toLowerCase().includes(q) ||
         f.name.toLowerCase().includes(q) ||
         f.category?.toLowerCase().includes(q)
     );
-  }, [initialFoods, search]);
+  }, [initialFoods, search, locale]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -291,7 +296,7 @@ export default function FoodManager({
                     <tr key={f.id} className="border-b border-gray-800/50 last:border-0">
                       <td className="px-3 py-2 font-medium text-gray-200">
                         <span className="flex items-center gap-2">
-                          {f.name}
+                          {foodDisplayName(f, locale)}
                           {f.is_preset && (
                             <Badge variant="outline" className="text-[10px]">
                               {t("presetBadge")}
@@ -312,7 +317,7 @@ export default function FoodManager({
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            onClick={() => setDeleteTarget({ id: f.id, name: f.name })}
+                            onClick={() => setDeleteTarget({ id: f.id, name: foodDisplayName(f, locale) })}
                             className="text-red-400 hover:text-red-300"
                           >
                             <Trash2 size={12} />
@@ -342,7 +347,7 @@ export default function FoodManager({
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-200">{f.name}</h3>
+                          <h3 className="font-medium text-gray-200">{foodDisplayName(f, locale)}</h3>
                           {f.is_preset && (
                             <Badge variant="outline" className="text-[10px]">
                               {t("presetBadge")}
@@ -368,7 +373,7 @@ export default function FoodManager({
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          onClick={() => setDeleteTarget({ id: f.id, name: f.name })}
+                          onClick={() => setDeleteTarget({ id: f.id, name: foodDisplayName(f, locale) })}
                           className="text-red-400 hover:text-red-300"
                         >
                           <Trash2 size={12} />
