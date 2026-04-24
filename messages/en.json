@@ -1,9 +1,14 @@
 {
   "common": {
-    "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "save": "Save"
+  },
+  "landing": {
+    "loginAsClient": "Log in as client",
+    "loginAsCoach": "Log in as coach",
+    "tagline": "Your personal trainer in your pocket — track nutrition, training, and progress."
   }
 }
