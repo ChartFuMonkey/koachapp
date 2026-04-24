@@ -565,5 +565,9 @@
     "loginAsClient": "Prijava kao klijent",
     "loginAsCoach": "Prijava kao trener",
     "tagline": "Tvoj osobni trener u džepu — praćenje prehrane, treninga i napretka."
+  },
+  "metadata": {
+    "title": "KoachApp",
+    "description": "Tvoj osobni trener u džepu — praćenje prehrane, treninga i napretka."
   }
 }
