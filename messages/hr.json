@@ -79,6 +79,32 @@
     "meals": {
       "slotPrefix": "Obrok {n}"
     },
+    "photos": {
+      "addFirstPhoto": "Nema fotografija. Dodaj prvu!",
+      "addPhoto": "Dodaj fotografiju",
+      "angleBack": "Straga",
+      "angleFront": "Sprijeda",
+      "angleOther": "Ostalo",
+      "angleSide": "Postrance",
+      "chooseAngle": "Odaberi kut:",
+      "compareTitle": "Usporedba",
+      "date1": "Datum 1",
+      "date2": "Datum 2",
+      "noUrl": "Nema URL-a",
+      "pickPlaceholder": "Odaberi...",
+      "savedToast": "Fotografija spremljena!",
+      "title": "Fotografije napretka",
+      "uploading": "Uploadam fotografiju...",
+      "errors": {
+        "fileTooLarge": "Datoteka je prevelika (maks. 10 MB).",
+        "insertFailed": "Greška pri spremanju fotografije.",
+        "invalidAngle": "Nevažeći kut fotografije.",
+        "invalidFileType": "Nedozvoljeni format datoteke (samo JPEG, PNG, WebP).",
+        "loadFailed": "Greška pri dohvaćanju fotografija.",
+        "noFile": "Nema datoteke.",
+        "uploadFailed": "Greška pri uploadu fotografije."
+      }
+    },
     "nav": {
       "checkin": "Prijava",
       "home": "Danas",

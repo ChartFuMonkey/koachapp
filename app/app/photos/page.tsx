@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Camera, X, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,16 +12,14 @@ import { getPhotos, uploadPhoto } from "@/actions/photos";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type PhotoRow = Record<string, any> & { signedUrl: string | null };
 
-const ANGLE_OPTIONS = [
-  { label: "Sprijeda", value: "front" },
-  { label: "Postrance", value: "side" },
-  { label: "Straga", value: "back" },
-  { label: "Ostalo", value: "other" },
-] as const;
-
 type UploadStep = "idle" | "selecting_angle" | "uploading";
 
 export default function PhotosPage() {
+  const t = useTranslations("app.photos");
+  const tErrors = useTranslations("app.photos.errors");
+  const tCommon = useTranslations("common");
+  const tCommonErrors = useTranslations("errors");
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
   const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
@@ -32,22 +31,53 @@ export default function PhotosPage() {
   const [compareDate1, setCompareDate1] = useState("");
   const [compareDate2, setCompareDate2] = useState("");
 
+  const ANGLE_OPTIONS = [
+    { label: t("angleFront"), value: "front" },
+    { label: t("angleSide"), value: "side" },
+    { label: t("angleBack"), value: "back" },
+    { label: t("angleOther"), value: "other" },
+  ] as const;
+
+  function angleLabel(angle: string | null | undefined): string {
+    switch (angle) {
+      case "front":
+        return t("angleFront");
+      case "side":
+        return t("angleSide");
+      case "back":
+        return t("angleBack");
+      case "other":
+        return t("angleOther");
+      default:
+        return "";
+    }
+  }
+
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericLoad");
+    }
+  }
+
   useEffect(() => {
     async function load() {
       const result = await getPhotos();
       if (result.error) {
-        toast.error(result.error);
+        toast.error(translateError(result.error));
       } else if (result.data) {
         setPhotos(result.data);
       }
       setLoading(false);
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleAngleSelect(angle: string) {
     setSelectedAngle(angle);
-    // Trigger file input after a tick so the ref is ready
     setTimeout(() => fileInputRef.current?.click(), 50);
   }
 
@@ -67,13 +97,12 @@ export default function PhotosPage() {
     const result = await uploadPhoto(formData);
 
     if (result.error) {
-      toast.error(result.error);
+      toast.error(translateError(result.error));
     } else if (result.data) {
       setPhotos((prev) => [result.data as PhotoRow, ...prev]);
-      toast.success("Fotografija spremljena!");
+      toast.success(t("savedToast"));
     }
 
-    // Reset
     setUploadStep("idle");
     setSelectedAngle("");
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -90,12 +119,11 @@ export default function PhotosPage() {
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   );
 
-  // Dates with photos for comparison dropdowns
   const uniqueDates = sortedDates;
-
-  // Comparison photos
   const comparePhotos1 = compareDate1 ? grouped[compareDate1] || [] : [];
   const comparePhotos2 = compareDate2 ? grouped[compareDate2] || [] : [];
+
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
 
   if (loading) {
     return (
@@ -107,7 +135,7 @@ export default function PhotosPage() {
 
   return (
     <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">Fotografije napretka</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
       {/* Upload Section */}
       <Card className="mb-6">
@@ -118,7 +146,7 @@ export default function PhotosPage() {
               className="w-full"
             >
               <Camera size={18} className="mr-2" />
-              Dodaj fotografiju
+              {t("addPhoto")}
             </Button>
           )}
 
@@ -126,7 +154,7 @@ export default function PhotosPage() {
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-medium text-gray-300">
-                  Odaberi kut:
+                  {t("chooseAngle")}
                 </p>
                 <button
                   onClick={() => setUploadStep("idle")}
@@ -153,7 +181,7 @@ export default function PhotosPage() {
           {uploadStep === "uploading" && (
             <div className="flex items-center justify-center gap-3 py-4">
               <Loader2 className="size-5 animate-spin text-blue-400" />
-              <span className="text-gray-300">Uploadam fotografiju...</span>
+              <span className="text-gray-300">{t("uploading")}</span>
             </div>
           )}
 
@@ -172,14 +200,14 @@ export default function PhotosPage() {
       {/* Gallery Section */}
       {sortedDates.length === 0 ? (
         <p className="py-8 text-center text-gray-500">
-          Nema fotografija. Dodaj prvu!
+          {t("addFirstPhoto")}
         </p>
       ) : (
         <div className="space-y-6">
           {sortedDates.map((date) => (
             <div key={date}>
               <p className="mb-2 text-sm font-medium text-gray-400">
-                {new Date(date + "T00:00").toLocaleDateString("hr-HR", {
+                {new Date(date + "T00:00").toLocaleDateString(bcp47, {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
@@ -200,14 +228,11 @@ export default function PhotosPage() {
                       />
                     ) : (
                       <div className="flex aspect-square items-center justify-center bg-gray-800 text-xs text-gray-500">
-                        Nema URL-a
+                        {t("noUrl")}
                       </div>
                     )}
                     <p className="p-1 text-center text-xs text-gray-500">
-                      {photo.angle === "front" && "Sprijeda"}
-                      {photo.angle === "side" && "Postrance"}
-                      {photo.angle === "back" && "Straga"}
-                      {photo.angle === "other" && "Ostalo"}
+                      {angleLabel(photo.angle as string)}
                     </p>
                   </button>
                 ))}
@@ -220,34 +245,34 @@ export default function PhotosPage() {
       {/* Comparison Section */}
       {uniqueDates.length >= 2 && (
         <div className="mt-8">
-          <h2 className="mb-4 text-lg font-semibold">Usporedba</h2>
+          <h2 className="mb-4 text-lg font-semibold">{t("compareTitle")}</h2>
           <div className="mb-4 grid grid-cols-2 gap-3">
             <div>
-              <Label className="mb-1 text-xs text-gray-400">Datum 1</Label>
+              <Label className="mb-1 text-xs text-gray-400">{t("date1")}</Label>
               <select
                 value={compareDate1}
                 onChange={(e) => setCompareDate1(e.target.value)}
                 className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-300"
               >
-                <option value="">Odaberi...</option>
+                <option value="">{t("pickPlaceholder")}</option>
                 {uniqueDates.map((d) => (
                   <option key={d} value={d}>
-                    {new Date(d + "T00:00").toLocaleDateString("hr-HR")}
+                    {new Date(d + "T00:00").toLocaleDateString(bcp47)}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <Label className="mb-1 text-xs text-gray-400">Datum 2</Label>
+              <Label className="mb-1 text-xs text-gray-400">{t("date2")}</Label>
               <select
                 value={compareDate2}
                 onChange={(e) => setCompareDate2(e.target.value)}
                 className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-300"
               >
-                <option value="">Odaberi...</option>
+                <option value="">{t("pickPlaceholder")}</option>
                 {uniqueDates.map((d) => (
                   <option key={d} value={d}>
-                    {new Date(d + "T00:00").toLocaleDateString("hr-HR")}
+                    {new Date(d + "T00:00").toLocaleDateString(bcp47)}
                   </option>
                 ))}
               </select>
@@ -258,7 +283,7 @@ export default function PhotosPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="mb-1 text-center text-xs text-gray-400">
-                  {new Date(compareDate1 + "T00:00").toLocaleDateString("hr-HR")}
+                  {new Date(compareDate1 + "T00:00").toLocaleDateString(bcp47)}
                 </p>
                 <div className="space-y-2">
                   {comparePhotos1.map((p) => (
@@ -279,7 +304,7 @@ export default function PhotosPage() {
               </div>
               <div>
                 <p className="mb-1 text-center text-xs text-gray-400">
-                  {new Date(compareDate2 + "T00:00").toLocaleDateString("hr-HR")}
+                  {new Date(compareDate2 + "T00:00").toLocaleDateString(bcp47)}
                 </p>
                 <div className="space-y-2">
                   {comparePhotos2.map((p) => (
@@ -314,7 +339,7 @@ export default function PhotosPage() {
             className="absolute left-4 top-4 flex min-h-[44px] min-w-[44px] items-center gap-1 text-sm text-gray-400 hover:text-white"
           >
             <ChevronLeft size={20} />
-            Natrag
+            {tCommon("back")}
           </button>
           {fullViewPhoto.signedUrl && (
             <img

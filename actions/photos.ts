@@ -13,7 +13,7 @@ export async function getPhotos() {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
-  if (authError || !user) return { error: "Nisi prijavljen/a." };
+  if (authError || !user) return { error: "unauthenticated" };
 
   const { data: photos, error } = await supabase
     .from("progress_photos")
@@ -23,7 +23,7 @@ export async function getPhotos() {
 
   if (error) {
     console.error("Photos fetch error:", error);
-    return { error: "Greška pri dohvaćanju fotografija." };
+    return { error: "loadFailed" };
   }
 
   // Generate signed URLs for all photos
@@ -48,26 +48,26 @@ export async function uploadPhoto(formData: FormData) {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
-  if (authError || !user) return { error: "Nisi prijavljen/a." };
+  if (authError || !user) return { error: "unauthenticated" };
 
   const file = formData.get("file") as File | null;
   const angle = formData.get("angle") as string;
 
-  if (!file) return { error: "Nema datoteke." };
+  if (!file) return { error: "noFile" };
 
   // Validate angle
   if (!ALLOWED_ANGLES.includes(angle as typeof ALLOWED_ANGLES[number])) {
-    return { error: "Nevažeći kut fotografije." };
+    return { error: "invalidAngle" };
   }
 
   // Validate file size
   if (file.size > MAX_FILE_SIZE) {
-    return { error: "Datoteka je prevelika (maks. 10 MB)." };
+    return { error: "fileTooLarge" };
   }
 
   // Validate file type
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: "Nedozvoljeni format datoteke (samo JPEG, PNG, WebP)." };
+    return { error: "invalidFileType" };
   }
 
   const timestamp = Date.now();
@@ -79,7 +79,7 @@ export async function uploadPhoto(formData: FormData) {
 
   if (uploadError) {
     console.error("Upload error:", uploadError);
-    return { error: "Greška pri uploadu fotografije." };
+    return { error: "uploadFailed" };
   }
 
   const today = todayCET();
@@ -97,7 +97,7 @@ export async function uploadPhoto(formData: FormData) {
 
   if (insertError) {
     console.error("Photo insert error:", insertError);
-    return { error: "Greška pri spremanju fotografije." };
+    return { error: "insertFailed" };
   }
 
   // Generate signed URL for the new photo

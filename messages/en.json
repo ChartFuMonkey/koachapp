@@ -79,6 +79,32 @@
     "meals": {
       "slotPrefix": "Meal {n}"
     },
+    "photos": {
+      "addFirstPhoto": "No photos yet. Add your first!",
+      "addPhoto": "Add photo",
+      "angleBack": "Back",
+      "angleFront": "Front",
+      "angleOther": "Other",
+      "angleSide": "Side",
+      "chooseAngle": "Pick an angle:",
+      "compareTitle": "Compare",
+      "date1": "Date 1",
+      "date2": "Date 2",
+      "noUrl": "No URL",
+      "pickPlaceholder": "Select...",
+      "savedToast": "Photo saved!",
+      "title": "Progress photos",
+      "uploading": "Uploading photo...",
+      "errors": {
+        "fileTooLarge": "File is too large (max 10 MB).",
+        "insertFailed": "Couldn't save photo.",
+        "invalidAngle": "Invalid photo angle.",
+        "invalidFileType": "Unsupported file type (JPEG, PNG, or WebP only).",
+        "loadFailed": "Couldn't load photos.",
+        "noFile": "No file selected.",
+        "uploadFailed": "Upload failed."
+      }
+    },
     "nav": {
       "checkin": "Check-in",
       "home": "Today",
