@@ -79,6 +79,16 @@
     "meals": {
       "slotPrefix": "Obrok {n}"
     },
+    "progress": {
+      "caloriesLabel": "Kalorije",
+      "caloriesTitle": "Kalorije (kcal)",
+      "noData": "Nema dovoljno podataka za prikaz grafa",
+      "stepsLabel": "Koraci",
+      "stepsTitle": "Koraci",
+      "title": "Napredak",
+      "weightLabel": "Težina",
+      "weightTitle": "Težina (kg)"
+    },
     "photos": {
       "addFirstPhoto": "Nema fotografija. Dodaj prvu!",
       "addPhoto": "Dodaj fotografiju",
