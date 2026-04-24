@@ -569,5 +569,11 @@
   "metadata": {
     "title": "KoachApp",
     "description": "Tvoj osobni trener u džepu — praćenje prehrane, treninga i napretka."
+  },
+  "installBanner": {
+    "iosHintPrefix": "Dodaj na početni zaslon: tapni",
+    "iosHintSuffix": "\"Dodaj na početni zaslon\"",
+    "installPrompt": "Instaliraj KoachApp na početni zaslon za bolje iskustvo",
+    "installCta": "Instaliraj"
   }
 }

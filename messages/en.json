@@ -569,5 +569,11 @@
   "metadata": {
     "title": "KoachApp",
     "description": "Your personal trainer in your pocket — track nutrition, training, and progress."
+  },
+  "installBanner": {
+    "iosHintPrefix": "Add to Home Screen: tap",
+    "iosHintSuffix": "\"Add to Home Screen\"",
+    "installPrompt": "Install KoachApp on your home screen for a better experience",
+    "installCta": "Install"
   }
 }
