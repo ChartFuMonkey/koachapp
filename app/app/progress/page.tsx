@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import {
   LineChart,
@@ -27,15 +28,12 @@ function formatDate(dateStr: string) {
   return `${d.getDate()}.${d.getMonth() + 1}.`;
 }
 
-function NoData() {
-  return (
-    <p className="py-8 text-center text-sm text-gray-500">
-      Nema dovoljno podataka za prikaz grafa
-    </p>
-  );
+function NoData({ text }: { text: string }) {
+  return <p className="py-8 text-center text-sm text-gray-500">{text}</p>;
 }
 
 export default function ProgressPage() {
+  const t = useTranslations("app.progress");
   const [data, setData] = useState<LogEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -71,13 +69,13 @@ export default function ProgressPage() {
 
   return (
     <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">Napredak</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
       {/* Weight chart */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Težina (kg)</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("weightTitle")}</h2>
         {weightData.length < 3 ? (
-          <NoData />
+          <NoData text={t("noData")} />
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={weightData}>
@@ -107,7 +105,7 @@ export default function ProgressPage() {
                 stroke="#3b82f6"
                 strokeWidth={2}
                 dot={{ r: 3, fill: "#3b82f6" }}
-                name="Težina"
+                name={t("weightLabel")}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -116,9 +114,9 @@ export default function ProgressPage() {
 
       {/* Calories chart */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Kalorije (kcal)</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("caloriesTitle")}</h2>
         {caloriesData.length < 3 ? (
-          <NoData />
+          <NoData text={t("noData")} />
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={caloriesData}>
@@ -147,7 +145,7 @@ export default function ProgressPage() {
                 stroke="#f97316"
                 strokeWidth={2}
                 dot={{ r: 3, fill: "#f97316" }}
-                name="Kalorije"
+                name={t("caloriesLabel")}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -156,9 +154,9 @@ export default function ProgressPage() {
 
       {/* Steps chart */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Koraci</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("stepsTitle")}</h2>
         {stepsData.length < 3 ? (
-          <NoData />
+          <NoData text={t("noData")} />
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={stepsData}>
@@ -185,7 +183,7 @@ export default function ProgressPage() {
                 dataKey="steps"
                 fill="#22c55e"
                 radius={[4, 4, 0, 0]}
-                name="Koraci"
+                name={t("stepsLabel")}
               />
             </BarChart>
           </ResponsiveContainer>

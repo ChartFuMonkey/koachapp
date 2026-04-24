@@ -18,7 +18,7 @@ export async function getClientPhases(clientId: string) {
 
   if (error) {
     console.error("Phases fetch error:", error);
-    return { error: "Greška pri dohvaćanju faza." };
+    return { error: "loadFailed" as const };
   }
 
   return { data: data ?? [] };
@@ -29,10 +29,10 @@ export async function createPhase(clientId: string, formData: FormData) {
   if (auth.error) return { error: auth.error };
 
   const name = (formData.get("name") as string)?.trim();
-  if (!name) return { error: "Naziv faze je obavezan." };
+  if (!name) return { error: "nameRequired" as const };
 
   const startDate = formData.get("start_date") as string;
-  if (!startDate) return { error: "Datum početka je obavezan." };
+  if (!startDate) return { error: "startDateRequired" as const };
 
   const targetKcal = formData.get("target_kcal") as string;
 
@@ -49,7 +49,7 @@ export async function createPhase(clientId: string, formData: FormData) {
 
   if (error) {
     console.error("Phase create error:", error);
-    return { error: "Greška pri kreiranju faze." };
+    return { error: "createFailed" as const };
   }
 
   return { success: true };
@@ -67,7 +67,7 @@ export async function activatePhase(clientId: string, phaseId: string) {
 
   if (deactivateErr) {
     console.error("Phase deactivate error:", deactivateErr);
-    return { error: "Greška pri deaktivaciji faza." };
+    return { error: "deactivateFailed" as const };
   }
 
   // Activate the selected phase
@@ -81,7 +81,7 @@ export async function activatePhase(clientId: string, phaseId: string) {
 
   if (activateErr) {
     console.error("Phase activate error:", activateErr);
-    return { error: "Greška pri aktivaciji faze." };
+    return { error: "activateFailed" as const };
   }
 
   // Update client's target_calories if phase has target_kcal
@@ -109,7 +109,7 @@ export async function deletePhase(phaseId: string) {
 
   if (error) {
     console.error("Phase delete error:", error);
-    return { error: "Greška pri brisanju faze." };
+    return { error: "deleteFailed" as const };
   }
 
   return { success: true };

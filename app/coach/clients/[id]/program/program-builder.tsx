@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,6 +70,8 @@ export default function ProgramBuilder({
   allExercises: Exercise[];
 }) {
   const router = useRouter();
+  const t = useTranslations("coach.program");
+  const tCommon = useTranslations("common");
   const [showNewProgram, setShowNewProgram] = useState(false);
   const [newProgramName, setNewProgramName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -105,7 +108,7 @@ export default function ProgramBuilder({
       return;
     }
 
-    toast.success("Program kreiran");
+    toast.success(t("programCreatedToast"));
     setShowNewProgram(false);
     setNewProgramName("");
     router.refresh();
@@ -117,7 +120,7 @@ export default function ProgramBuilder({
       toast.error(res.error);
       return;
     }
-    toast.success("Program obrisan");
+    toast.success(t("programDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -132,7 +135,7 @@ export default function ProgramBuilder({
       return;
     }
 
-    toast.success("Program aktiviran");
+    toast.success(t("programActivatedToast"));
     router.refresh();
   }
 
@@ -147,7 +150,7 @@ export default function ProgramBuilder({
       return;
     }
 
-    toast.success("Dan dodan");
+    toast.success(t("dayAddedToast"));
     setAddingDayFor(null);
     setNewDayLabel("");
     router.refresh();
@@ -159,7 +162,7 @@ export default function ProgramBuilder({
       toast.error(res.error);
       return;
     }
-    toast.success("Dan obrisan");
+    toast.success(t("dayDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -193,14 +196,14 @@ export default function ProgramBuilder({
           <ChevronLeft size={14} /> {clientName}
         </Link>
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-xl font-bold sm:text-2xl">Program Builder</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">{t("title")}</h1>
           {!showNewProgram && (
             <Button
               onClick={() => setShowNewProgram(true)}
               size="sm"
               className="shrink-0 sm:size-default"
             >
-              <Plus size={14} /> <span className="hidden sm:inline">Novi</span> program
+              <Plus size={14} /> <span className="hidden sm:inline">{t("newProgramShort")}</span> {t("newProgram")}
             </Button>
           )}
         </div>
@@ -215,11 +218,11 @@ export default function ProgramBuilder({
               className="flex flex-col gap-3 sm:flex-row sm:items-end"
             >
               <div className="flex-1">
-                <Label className="mb-1 text-xs">Naziv programa</Label>
+                <Label className="mb-1 text-xs">{t("programNameLabel")}</Label>
                 <Input
                   value={newProgramName}
                   onChange={(e) => setNewProgramName(e.target.value)}
-                  placeholder="e.g. Push/Pull/Legs"
+                  placeholder={t("programNamePlaceholder")}
                   required
                   autoFocus
                 />
@@ -231,7 +234,7 @@ export default function ProgramBuilder({
                   ) : (
                     <Plus size={14} />
                   )}
-                  Kreiraj
+                  {t("createProgram")}
                 </Button>
                 <Button
                   type="button"
@@ -249,7 +252,7 @@ export default function ProgramBuilder({
       {/* Programs list */}
       {programs.length === 0 && !showNewProgram ? (
         <p className="py-8 text-center text-gray-500">
-          Nema programa. Kreirajte prvi program za ovog klijenta.
+          {t("emptyPrograms")}
         </p>
       ) : (
         <div className="space-y-6">
@@ -271,7 +274,7 @@ export default function ProgramBuilder({
                     </h2>
                     {prog.is_active && (
                       <Badge className="border-green-500/30 bg-green-500/20 text-green-400">
-                        Aktivan
+                        {t("active")}
                       </Badge>
                     )}
                   </div>
@@ -283,7 +286,7 @@ export default function ProgramBuilder({
                         onClick={() => handleActivate(prog.id)}
                         disabled={saving}
                       >
-                        <Zap size={12} /> Aktiviraj
+                        <Zap size={12} /> {t("activate")}
                       </Button>
                     )}
                     <Button
@@ -317,8 +320,9 @@ export default function ProgramBuilder({
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">
-                            {day.program_exercises.length} vježb
-                            {day.program_exercises.length === 1 ? "a" : "i"}
+                            {t("exerciseCount", {
+                              count: day.program_exercises.length,
+                            })}
                           </span>
                           <ChevronDown
                             size={14}
@@ -334,7 +338,7 @@ export default function ProgramBuilder({
                         <div className="border-t border-gray-800 px-2 py-2 sm:px-3">
                           {day.program_exercises.length === 0 ? (
                             <p className="py-2 text-sm text-gray-500">
-                              Nema vježbi u ovom danu.
+                              {t("noExercisesInDay")}
                             </p>
                           ) : (
                             <div className="space-y-1">
@@ -347,7 +351,7 @@ export default function ProgramBuilder({
                                     {idx + 1}
                                   </span>
                                   <span className="min-w-0 flex-1 truncate font-medium text-gray-200">
-                                    {pe.exercises?.name ?? "Unknown"}
+                                    {pe.exercises?.name ?? t("unknown")}
                                   </span>
                                   <span className="shrink-0 text-xs text-gray-400 sm:text-sm">
                                     {pe.sets && pe.reps
@@ -426,7 +430,7 @@ export default function ProgramBuilder({
                                 size="xs"
                                 onClick={() => setAddingExerciseFor(day.id)}
                               >
-                                <Plus size={12} /> Dodaj vježbu
+                                <Plus size={12} /> {t("addExercise")}
                               </Button>
                               <Button
                                 variant="ghost"
@@ -436,7 +440,7 @@ export default function ProgramBuilder({
                                 }
                                 className="text-red-400 hover:text-red-300"
                               >
-                                <Trash2 size={12} /> Obriši dan
+                                <Trash2 size={12} /> {t("deleteDay")}
                               </Button>
                             </div>
                           )}
@@ -450,11 +454,11 @@ export default function ProgramBuilder({
                 {addingDayFor === prog.id ? (
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
                     <div className="flex-1">
-                      <Label className="mb-1 text-xs">Naziv dana</Label>
+                      <Label className="mb-1 text-xs">{t("dayNameLabel")}</Label>
                       <Input
                         value={newDayLabel}
                         onChange={(e) => setNewDayLabel(e.target.value)}
-                        placeholder='e.g. "Dan A — Noge"'
+                        placeholder={t("dayNamePlaceholder")}
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -470,7 +474,7 @@ export default function ProgramBuilder({
                         onClick={() => handleAddDay(prog.id)}
                         disabled={saving}
                       >
-                        Dodaj
+                        {t("addDay")}
                       </Button>
                       <Button
                         variant="ghost"
@@ -491,7 +495,7 @@ export default function ProgramBuilder({
                     className="mt-3"
                     onClick={() => setAddingDayFor(prog.id)}
                   >
-                    <Plus size={14} /> Dodaj dan
+                    <Plus size={14} /> {t("addDay")}
                   </Button>
                 )}
               </CardContent>
@@ -502,12 +506,18 @@ export default function ProgramBuilder({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={`Obriši "${deleteTarget?.label}"?`}
+        title={
+          deleteTarget?.type === "program"
+            ? t("confirmDeleteProgram", { name: deleteTarget?.label ?? "" })
+            : t("confirmDeleteDay", { name: deleteTarget?.label ?? "" })
+        }
         description={
           deleteTarget?.type === "program"
-            ? "Svi dani i vježbe će biti obrisani."
-            : "Sve vježbe u ovom danu će biti obrisane."
+            ? t("confirmDeleteProgramDesc")
+            : t("confirmDeleteDayDesc")
         }
+        confirmLabel={tCommon("delete")}
+        cancelLabel={tCommon("cancel")}
         onConfirm={() => {
           if (!deleteTarget) return;
           if (deleteTarget.type === "program") handleDeleteProgram(deleteTarget.id);
@@ -532,6 +542,8 @@ function AddExerciseForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("coach.program");
+  const tCommon = useTranslations("common");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [sets, setSets] = useState("");
@@ -546,7 +558,7 @@ function AddExerciseForm({
 
   async function handleSubmit() {
     if (!selectedId) {
-      toast.error("Odaberite vježbu.");
+      toast.error(t("pickExerciseError"));
       return;
     }
     setSaving(true);
@@ -565,7 +577,7 @@ function AddExerciseForm({
       return;
     }
 
-    toast.success("Vježba dodana");
+    toast.success(t("exerciseAddedToast"));
     onDone();
   }
 
@@ -574,14 +586,14 @@ function AddExerciseForm({
       {!selectedId ? (
         <div>
           <Input
-            placeholder="Pretraži vježbe..."
+            placeholder={t("searchExercises")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
           />
           <div className="mt-2 max-h-40 overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className="py-2 text-sm text-gray-500">Nema rezultata.</p>
+              <p className="py-2 text-sm text-gray-500">{t("noSearchResults")}</p>
             ) : (
               filtered.map((ex) => (
                 <button
@@ -601,7 +613,7 @@ function AddExerciseForm({
             className="mt-2"
             onClick={onCancel}
           >
-            <X size={12} /> Odustani
+            <X size={12} /> {tCommon("cancel")}
           </Button>
         </div>
       ) : (
@@ -620,7 +632,7 @@ function AddExerciseForm({
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div>
-              <Label className="mb-1 text-xs">Setovi</Label>
+              <Label className="mb-1 text-xs">{t("setsLabel")}</Label>
               <Input
                 type="number"
                 value={sets}
@@ -629,7 +641,7 @@ function AddExerciseForm({
               />
             </div>
             <div>
-              <Label className="mb-1 text-xs">Ponavljanja</Label>
+              <Label className="mb-1 text-xs">{t("repsLabel")}</Label>
               <Input
                 value={reps}
                 onChange={(e) => setReps(e.target.value)}
@@ -637,7 +649,7 @@ function AddExerciseForm({
               />
             </div>
             <div>
-              <Label className="mb-1 text-xs">Odmor (s)</Label>
+              <Label className="mb-1 text-xs">{t("restLabel")}</Label>
               <Input
                 type="number"
                 value={restSec}
@@ -646,7 +658,7 @@ function AddExerciseForm({
               />
             </div>
             <div>
-              <Label className="mb-1 text-xs">RPE</Label>
+              <Label className="mb-1 text-xs">{t("rpeLabel")}</Label>
               <Input
                 type="number"
                 min="1"
@@ -664,10 +676,10 @@ function AddExerciseForm({
               ) : (
                 <Plus size={14} />
               )}
-              Spremi
+              {t("saveExercise")}
             </Button>
             <Button variant="ghost" size="sm" onClick={onCancel}>
-              <X size={14} /> Odustani
+              <X size={14} /> {tCommon("cancel")}
             </Button>
           </div>
         </div>

@@ -13,12 +13,12 @@ export async function requireCoach() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   const coachId = process.env.NEXT_PUBLIC_COACH_UUID!;
   if (user.id !== coachId) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user };
@@ -39,7 +39,7 @@ export async function requireCoachOwnsClient(clientId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };
@@ -60,7 +60,7 @@ export async function requireCoachOwnsProgram(programId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };
@@ -81,7 +81,7 @@ export async function requireCoachOwnsProgramDay(dayId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };
@@ -102,7 +102,7 @@ export async function requireCoachOwnsProgramExercise(exerciseId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };
@@ -123,7 +123,7 @@ export async function requireCoachOwnsMealPlan(planId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };
@@ -144,7 +144,7 @@ export async function requireCoachOwnsPhase(phaseId: string) {
     .maybeSingle();
 
   if (!data) {
-    return { error: "Neautorizirani pristup." as const };
+    return { error: "unauthenticated" as const };
   }
 
   return { user: auth.user };

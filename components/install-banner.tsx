@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Download, Share, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 type BeforeInstallPromptEvent = Event & {
@@ -10,6 +11,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 export default function InstallBanner() {
+  const t = useTranslations("installBanner");
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showIOSHint, setShowIOSHint] = useState(false);
@@ -73,20 +75,20 @@ export default function InstallBanner() {
           <>
             <Share size={20} className="shrink-0 text-blue-400" />
             <p className="flex-1 text-sm text-gray-300">
-              Dodaj na početni zaslon: tapni{" "}
-              <Share size={14} className="mb-0.5 inline" /> ikonu dijeljenja
+              {t("iosHintPrefix")}{" "}
+              <Share size={14} className="mb-0.5 inline" />
               {" \u2192 "}
-              &quot;Dodaj na početni zaslon&quot;
+              {t("iosHintSuffix")}
             </p>
           </>
         ) : (
           <>
             <Download size={20} className="shrink-0 text-blue-400" />
             <p className="flex-1 text-sm text-gray-300">
-              Instaliraj KoachApp na početni zaslon za bolje iskustvo
+              {t("installPrompt")}
             </p>
             <Button size="sm" onClick={handleInstall}>
-              Instaliraj
+              {t("installCta")}
             </Button>
           </>
         )}

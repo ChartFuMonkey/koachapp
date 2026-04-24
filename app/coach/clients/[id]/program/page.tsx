@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import ProgramBuilder from "./program-builder";
 
 export default async function ProgramBuilderPage({
@@ -9,7 +10,7 @@ export default async function ProgramBuilderPage({
 }) {
   const { id } = await params;
 
-  const [clientRes, profileRes, programsRes, exercisesRes] = await Promise.all([
+  const [clientRes, profileRes, programsRes, exercisesRes, t] = await Promise.all([
     supabaseAdmin.from("clients").select("id").eq("id", id).maybeSingle(),
     supabaseAdmin.from("profiles").select("full_name").eq("id", id).maybeSingle(),
     supabaseAdmin
@@ -32,6 +33,7 @@ export default async function ProgramBuilderPage({
       .from("exercises")
       .select("id, name")
       .order("name", { ascending: true }),
+    getTranslations("coach.clients.detail"),
   ]);
 
   if (!clientRes.data) notFound();
@@ -57,7 +59,7 @@ export default async function ProgramBuilderPage({
   return (
     <ProgramBuilder
       clientId={id}
-      clientName={profileRes.data?.full_name ?? "Client"}
+      clientName={profileRes.data?.full_name ?? t("unknownClient")}
       programs={programs}
       allExercises={exercisesRes.data ?? []}
     />

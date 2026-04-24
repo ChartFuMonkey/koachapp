@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Home,
   ClipboardList,
@@ -14,16 +15,17 @@ import PushBanner from "@/components/push-banner";
 import InstallBanner from "@/components/install-banner";
 
 const tabs = [
-  { label: "Danas", icon: Home, route: "/app" },
-  { label: "Dnevnik", icon: ClipboardList, route: "/app/log" },
-  { label: "Trening", icon: Dumbbell, route: "/app/workout" },
-  { label: "Prijava", icon: CheckSquare, route: "/app/checkin" },
-  { label: "Foto", icon: Camera, route: "/app/photos" },
-  { label: "Profil", icon: User, route: "/app/profile" },
-];
+  { key: "home", icon: Home, route: "/app" },
+  { key: "log", icon: ClipboardList, route: "/app/log" },
+  { key: "workout", icon: Dumbbell, route: "/app/workout" },
+  { key: "checkin", icon: CheckSquare, route: "/app/checkin" },
+  { key: "photos", icon: Camera, route: "/app/photos" },
+  { key: "profile", icon: User, route: "/app/profile" },
+] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const t = useTranslations("app.nav");
 
   return (
     <>
@@ -51,7 +53,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Icon size={20} />
-                <span className="text-xs">{tab.label}</span>
+                <span className="text-xs">{t(tab.key)}</span>
               </Link>
             );
           })}

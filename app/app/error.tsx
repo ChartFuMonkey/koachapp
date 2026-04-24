@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 export default function Error({
@@ -10,18 +11,20 @@ export default function Error({
   error: Error & { digest?: string };
   unstable_retry: () => void;
 }) {
+  const t = useTranslations("errors");
+
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center">
-      <h2 className="text-xl font-bold">Nešto je pošlo po krivu</h2>
+      <h2 className="text-xl font-bold">{t("somethingWentWrong")}</h2>
       <p className="mt-2 text-sm text-gray-400">
-        Došlo je do neočekivane greške.
+        {t("unexpectedError")}
       </p>
       <Button onClick={() => unstable_retry()} className="mt-4">
-        Pokušaj ponovo
+        {t("tryAgain")}
       </Button>
     </div>
   );

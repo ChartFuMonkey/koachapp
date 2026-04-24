@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,11 @@ import {
 type CheckinRow = Record<string, any>;
 
 export default function CheckinPage() {
+  const t = useTranslations("app.checkin");
+  const tErrors = useTranslations("app.checkin.errors");
+  const tCommon = useTranslations("common");
+  const tCommonErrors = useTranslations("errors");
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState<CheckinRow | null>(null);
@@ -35,6 +41,15 @@ export default function CheckinPage() {
   const [goalsNextWeek, setGoalsNextWeek] = useState("");
   const [questionsForCoach, setQuestionsForCoach] = useState("");
   const [overallRating, setOverallRating] = useState(5);
+
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericLoad");
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -71,9 +86,9 @@ export default function CheckinPage() {
     const result = await submitCheckin(data);
 
     if (result.error) {
-      toast.error(result.error);
+      toast.error(translateError(result.error));
     } else {
-      toast.success("Tjedna prijava poslana!");
+      toast.success(t("submittedToast"));
       setSubmitted({
         ...data,
         checkin_date: new Date().toISOString().split("T")[0],
@@ -91,15 +106,17 @@ export default function CheckinPage() {
     );
   }
 
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+
   // Read-only view for already-submitted check-in
   if (submitted) {
     return (
       <div className="p-4 pb-8">
         <div className="mb-6 flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Tjedna prijava</h1>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
           <Badge className="border-green-500/30 bg-green-500/20 text-green-400">
             <CheckCircle size={14} className="mr-1" />
-            Prijava predana
+            {t("badgeSubmitted")}
           </Badge>
         </div>
 
@@ -107,31 +124,31 @@ export default function CheckinPage() {
           <p className="mb-4 text-sm text-gray-400">
             {new Date(
               (submitted.checkin_date as string) + "T00:00"
-            ).toLocaleDateString("hr-HR")}
+            ).toLocaleDateString(bcp47)}
           </p>
         )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <MetricCard label="Energija" value={submitted.energy_level} max={10} />
-          <MetricCard label="Stres" value={submitted.stress_level} max={10} />
-          <MetricCard label="Motivacija" value={submitted.motivation} max={10} />
+          <MetricCard label={t("energy")} value={submitted.energy_level} max={10} />
+          <MetricCard label={t("stress")} value={submitted.stress_level} max={10} />
+          <MetricCard label={t("motivation")} value={submitted.motivation} max={10} />
           <MetricCard
-            label="Kvaliteta sna"
+            label={t("sleepQuality")}
             value={submitted.sleep_quality}
             max={10}
           />
-          <MetricCard label="Apetit" value={submitted.appetite} max={10} />
+          <MetricCard label={t("appetite")} value={submitted.appetite} max={10} />
           <MetricCard
-            label="Prehrana"
+            label={t("dietPct")}
             value={submitted.adherence_diet_pct}
             unit="%"
           />
           <MetricCard
-            label="Plan treninga"
-            value={submitted.adherence_training ? "Da" : "Ne"}
+            label={t("trainingPlan")}
+            value={submitted.adherence_training ? tCommon("yes") : tCommon("no")}
           />
           <MetricCard
-            label="Ocjena tjedna"
+            label={t("overallRating")}
             value={submitted.overall_rating}
             max={10}
           />
@@ -140,25 +157,25 @@ export default function CheckinPage() {
         <div className="mt-6 space-y-4">
           {submitted.what_went_well && (
             <TextBlock
-              label="Sto je islo dobro"
+              label={t("whatWentWell")}
               text={submitted.what_went_well as string}
             />
           )}
           {submitted.challenges && (
             <TextBlock
-              label="Izazovi"
+              label={t("challenges")}
               text={submitted.challenges as string}
             />
           )}
           {submitted.goals_next_week && (
             <TextBlock
-              label="Ciljevi za sljedeci tjedan"
+              label={t("goalsNextWeek")}
               text={submitted.goals_next_week as string}
             />
           )}
           {submitted.questions_for_coach && (
             <TextBlock
-              label="Pitanja za trenera"
+              label={t("questionsForCoach")}
               text={submitted.questions_for_coach as string}
             />
           )}
@@ -170,38 +187,38 @@ export default function CheckinPage() {
   // Form view
   return (
     <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">Tjedna prijava</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <SliderField
-          label="Razina energije"
+          label={t("energyLevel")}
           value={energyLevel}
           onChange={setEnergyLevel}
         />
         <SliderField
-          label="Razina stresa"
+          label={t("stressLevel")}
           value={stressLevel}
           onChange={setStressLevel}
         />
         <SliderField
-          label="Motivacija"
+          label={t("motivation")}
           value={motivation}
           onChange={setMotivation}
         />
         <SliderField
-          label="Kvaliteta sna"
+          label={t("sleepQuality")}
           value={sleepQuality}
           onChange={setSleepQuality}
         />
         <SliderField
-          label="Apetit"
+          label={t("appetite")}
           value={appetite}
           onChange={setAppetite}
         />
 
         {/* Diet adherence */}
         <div>
-          <Label htmlFor="diet-pct">Uskladenost s prehranom (%)</Label>
+          <Label htmlFor="diet-pct">{t("adherenceDietLabel")}</Label>
           <Input
             id="diet-pct"
             type="number"
@@ -210,7 +227,7 @@ export default function CheckinPage() {
             inputMode="numeric"
             value={adherenceDietPct}
             onChange={(e) => setAdherenceDietPct(e.target.value)}
-            placeholder="npr. 80"
+            placeholder={t("adherenceDietPlaceholder")}
             className="mt-1 h-10 text-base"
           />
         </div>
@@ -225,35 +242,39 @@ export default function CheckinPage() {
             className="size-5 rounded border-gray-600 bg-gray-800 accent-blue-500"
           />
           <Label htmlFor="training" className="cursor-pointer">
-            Jesi li pratio/la plan treninga?
+            {t("adherenceTrainingLabel")}
           </Label>
         </div>
 
         {/* Textareas */}
         <TextareaField
-          label="Sto je ove tjedne islo dobro?"
+          label={t("whatWentWellPrompt")}
           value={whatWentWell}
           onChange={setWhatWentWell}
+          placeholder={t("textareaPlaceholder")}
         />
         <TextareaField
-          label="Koji su bili izazovi?"
+          label={t("challengesPrompt")}
           value={challenges}
           onChange={setChallenges}
+          placeholder={t("textareaPlaceholder")}
         />
         <TextareaField
-          label="Ciljevi za sljedeci tjedan"
+          label={t("goalsNextWeek")}
           value={goalsNextWeek}
           onChange={setGoalsNextWeek}
+          placeholder={t("textareaPlaceholder")}
         />
         <TextareaField
-          label="Pitanja za trenera"
+          label={t("questionsForCoach")}
           value={questionsForCoach}
           onChange={setQuestionsForCoach}
+          placeholder={t("textareaPlaceholder")}
         />
 
         {/* Overall rating */}
         <SliderField
-          label="Sveukupna ocjena tjedna"
+          label={t("overallRatingPrompt")}
           value={overallRating}
           onChange={setOverallRating}
         />
@@ -267,10 +288,10 @@ export default function CheckinPage() {
           {saving ? (
             <>
               <Loader2 className="mr-2 size-5 animate-spin" />
-              Saljem...
+              {t("sendLoading")}
             </>
           ) : (
-            "Posalji prijavu"
+            t("submit")
           )}
         </Button>
       </form>
@@ -313,10 +334,12 @@ function TextareaField({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  placeholder: string;
 }) {
   return (
     <div>
@@ -325,7 +348,7 @@ function TextareaField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
-        placeholder="Opcionalno..."
+        placeholder={placeholder}
         className="mt-1 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
       />
     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +12,14 @@ import { createFood, updateFood, deleteFood } from "@/actions/foods";
 import { Plus, Pencil, Trash2, Check, X, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { foodDisplayName } from "@/lib/food-display";
+import { translateError } from "@/lib/translate-error";
+import type { Locale } from "@/i18n/request";
 
 type Food = {
   id: string;
   name: string;
+  name_en: string | null;
   calories_per_100g: number;
   protein_per_100g: number;
   carbs_per_100g: number;
@@ -23,17 +28,19 @@ type Food = {
   is_preset: boolean;
 };
 
-const CATEGORY_OPTIONS = [
-  "",
-  "Meso/Riba",
-  "Jaja",
-  "Mliječni",
-  "Žitarice",
-  "Mahunarke",
-  "Voće",
-  "Povrće",
-  "Masti/Ulja",
-  "Ostalo",
+// DB-side values stay Croatian (phase 2 will handle localization of food content).
+// The UI chrome is translated; category labels are mapped from DB values to the active locale.
+const CATEGORY_VALUES = [
+  { value: "", key: "none" as const },
+  { value: "Meso/Riba", key: "meatFish" as const },
+  { value: "Jaja", key: "eggs" as const },
+  { value: "Mliječni", key: "dairy" as const },
+  { value: "Žitarice", key: "grains" as const },
+  { value: "Mahunarke", key: "legumes" as const },
+  { value: "Voće", key: "fruit" as const },
+  { value: "Povrće", key: "vegetables" as const },
+  { value: "Masti/Ulja", key: "fatsOils" as const },
+  { value: "Ostalo", key: "other" as const },
 ];
 
 const selectClass =
@@ -45,6 +52,12 @@ export default function FoodManager({
   initialFoods: Food[];
 }) {
   const router = useRouter();
+  const t = useTranslations("coach.foods");
+  const tCat = useTranslations("coach.foods.categories");
+  const tErr = useTranslations("coach.foods.errors");
+  const tCommonErr = useTranslations("errors");
+  const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -54,15 +67,23 @@ export default function FoodManager({
   } | null>(null);
   const [search, setSearch] = useState("");
 
+  function categoryLabel(value: string | null | undefined) {
+    if (!value) return tCat("none");
+    const match = CATEGORY_VALUES.find((c) => c.value === value);
+    if (match) return tCat(match.key);
+    return value;
+  }
+
   const filtered = useMemo(() => {
     if (!search.trim()) return initialFoods;
     const q = search.toLowerCase();
     return initialFoods.filter(
       (f) =>
+        foodDisplayName(f, locale).toLowerCase().includes(q) ||
         f.name.toLowerCase().includes(q) ||
         f.category?.toLowerCase().includes(q)
     );
-  }, [initialFoods, search]);
+  }, [initialFoods, search, locale]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -72,11 +93,11 @@ export default function FoodManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Namirnica dodana");
+    toast.success(t("foodAddedToast"));
     setShowAddForm(false);
     router.refresh();
   }
@@ -89,11 +110,11 @@ export default function FoodManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Namirnica ažurirana");
+    toast.success(t("foodUpdatedToast"));
     setEditingId(null);
     router.refresh();
   }
@@ -102,11 +123,11 @@ export default function FoodManager({
     const res = await deleteFood(id);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Namirnica obrisana");
+    toast.success(t("foodDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -126,24 +147,24 @@ export default function FoodManager({
           <CardContent className="space-y-3 p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="sm:col-span-2 lg:col-span-2">
-                <Label className="mb-1 text-xs">Naziv *</Label>
+                <Label className="mb-1 text-xs">{t("nameLabel")} *</Label>
                 <Input
                   name="name"
                   required
                   defaultValue={food?.name ?? ""}
-                  placeholder="npr. Piletina prsa"
+                  placeholder={t("namePlaceholder")}
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">Kategorija</Label>
+                <Label className="mb-1 text-xs">{t("categoryLabel")}</Label>
                 <select
                   name="category"
                   className={selectClass}
                   defaultValue={food?.category ?? ""}
                 >
-                  {CATEGORY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c || "—"}
+                  {CATEGORY_VALUES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {tCat(c.key)}
                     </option>
                   ))}
                 </select>
@@ -151,7 +172,7 @@ export default function FoodManager({
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
-                <Label className="mb-1 text-xs">Kalorije /100g</Label>
+                <Label className="mb-1 text-xs">{t("caloriesLabel")}</Label>
                 <Input
                   name="calories_per_100g"
                   type="number"
@@ -161,7 +182,7 @@ export default function FoodManager({
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">Proteini /100g</Label>
+                <Label className="mb-1 text-xs">{t("proteinLabel")}</Label>
                 <Input
                   name="protein_per_100g"
                   type="number"
@@ -171,7 +192,7 @@ export default function FoodManager({
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">UH /100g</Label>
+                <Label className="mb-1 text-xs">{t("carbsLabel")}</Label>
                 <Input
                   name="carbs_per_100g"
                   type="number"
@@ -181,7 +202,7 @@ export default function FoodManager({
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">Masti /100g</Label>
+                <Label className="mb-1 text-xs">{t("fatLabel")}</Label>
                 <Input
                   name="fat_per_100g"
                   type="number"
@@ -198,10 +219,10 @@ export default function FoodManager({
                 ) : (
                   <Check size={14} />
                 )}
-                {food ? "Spremi" : "Dodaj"}
+                {food ? t("saveLabel") : t("addSubmit")}
               </Button>
               <Button type="button" variant="ghost" onClick={onCancel}>
-                <X size={14} /> Odustani
+                <X size={14} /> {tCommon("cancel")}
               </Button>
             </div>
           </CardContent>
@@ -213,10 +234,10 @@ export default function FoodManager({
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Food Database</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         {!showAddForm && (
           <Button onClick={() => setShowAddForm(true)}>
-            <Plus size={14} /> Dodaj namirn.
+            <Plus size={14} /> {t("addFood")}
           </Button>
         )}
       </div>
@@ -237,14 +258,14 @@ export default function FoodManager({
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Pretraži namirnice..."
+          placeholder={t("searchPlaceholder")}
           className="pl-9"
         />
       </div>
 
       {filtered.length === 0 ? (
         <p className="py-8 text-center text-gray-500">
-          {search ? "Nema rezultata." : "Nema namirnica. Dodajte prvu iznad."}
+          {search ? t("noResults") : t("emptyList")}
         </p>
       ) : (
         <>
@@ -253,13 +274,13 @@ export default function FoodManager({
             <table className="w-full text-sm">
               <thead className="border-b border-gray-800 bg-gray-900/50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">Naziv</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">Kategorija</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">Kcal</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">P</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">UH</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">M</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">Akcije</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-400">{t("colName")}</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-400">{t("colCategory")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colKcal")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colProtein")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colCarbs")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colFat")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colActions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -278,15 +299,15 @@ export default function FoodManager({
                     <tr key={f.id} className="border-b border-gray-800/50 last:border-0">
                       <td className="px-3 py-2 font-medium text-gray-200">
                         <span className="flex items-center gap-2">
-                          {f.name}
+                          {foodDisplayName(f, locale)}
                           {f.is_preset && (
                             <Badge variant="outline" className="text-[10px]">
-                              Preset
+                              {t("presetBadge")}
                             </Badge>
                           )}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-gray-400">{f.category || "—"}</td>
+                      <td className="px-3 py-2 text-gray-400">{categoryLabel(f.category)}</td>
                       <td className="px-3 py-2 text-right text-gray-300">{f.calories_per_100g}</td>
                       <td className="px-3 py-2 text-right text-gray-300">{f.protein_per_100g}</td>
                       <td className="px-3 py-2 text-right text-gray-300">{f.carbs_per_100g}</td>
@@ -299,7 +320,7 @@ export default function FoodManager({
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            onClick={() => setDeleteTarget({ id: f.id, name: f.name })}
+                            onClick={() => setDeleteTarget({ id: f.id, name: foodDisplayName(f, locale) })}
                             className="text-red-400 hover:text-red-300"
                           >
                             <Trash2 size={12} />
@@ -329,23 +350,23 @@ export default function FoodManager({
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-200">{f.name}</h3>
+                          <h3 className="font-medium text-gray-200">{foodDisplayName(f, locale)}</h3>
                           {f.is_preset && (
                             <Badge variant="outline" className="text-[10px]">
-                              Preset
+                              {t("presetBadge")}
                             </Badge>
                           )}
                         </div>
                         <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-400">
                           {f.category && (
                             <Badge variant="secondary" className="text-xs">
-                              {f.category}
+                              {categoryLabel(f.category)}
                             </Badge>
                           )}
                           <span>{f.calories_per_100g} kcal</span>
-                          <span>{f.protein_per_100g}P</span>
-                          <span>{f.carbs_per_100g}UH</span>
-                          <span>{f.fat_per_100g}M</span>
+                          <span>{f.protein_per_100g}{t("colProtein")}</span>
+                          <span>{f.carbs_per_100g}{t("colCarbs")}</span>
+                          <span>{f.fat_per_100g}{t("colFat")}</span>
                         </div>
                       </div>
                       <div className="ml-2 flex shrink-0 gap-1">
@@ -355,7 +376,7 @@ export default function FoodManager({
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          onClick={() => setDeleteTarget({ id: f.id, name: f.name })}
+                          onClick={() => setDeleteTarget({ id: f.id, name: foodDisplayName(f, locale) })}
                           className="text-red-400 hover:text-red-300"
                         >
                           <Trash2 size={12} />
@@ -372,9 +393,8 @@ export default function FoodManager({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={`Obriši "${deleteTarget?.name}"?`}
-        description="Ova namirnica će biti trajno obrisana."
-        confirmLabel="Obriši"
+        title={t("confirmDeleteTitle", { name: deleteTarget?.name ?? "" })}
+        description={t("confirmDeleteDesc")}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
       />

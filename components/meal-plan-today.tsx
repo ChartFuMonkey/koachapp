@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { MealSlot } from "@/actions/client-meal-plan";
 
 export default function MealPlanToday({ meals }: { meals: MealSlot[] }) {
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const t = useTranslations("app.meals");
 
   function toggle(slot: number) {
     setExpanded((prev) => {
@@ -31,7 +33,7 @@ export default function MealPlanToday({ meals }: { meals: MealSlot[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
                     <span className="text-xs font-semibold text-gray-500">
-                      Obrok {meal.slot_number}
+                      {t("slotPrefix", { n: meal.slot_number })}
                     </span>
                     <span className="font-medium text-gray-200">
                       {meal.meal_name}

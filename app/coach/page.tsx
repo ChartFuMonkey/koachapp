@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { UserPlus } from "lucide-react";
+import { getTranslations, getLocale } from "next-intl/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default async function CoachPage() {
+  const t = await getTranslations("coach.home");
+  const locale = await getLocale();
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+
   // 1. Fetch clients first
   const clientsRes = await supabaseAdmin
     .from("clients")
@@ -16,12 +21,10 @@ export default async function CoachPage() {
   if (clients.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24">
-        <p className="text-lg text-gray-400">
-          Nema klijenata. Dodaj prvog klijenta.
-        </p>
+        <p className="text-lg text-gray-400">{t("emptyState")}</p>
         <Link href="/coach/clients/new" className="mt-4">
           <Button>
-            <UserPlus size={16} /> Novi klijent
+            <UserPlus size={16} /> {t("newClient")}
           </Button>
         </Link>
       </div>
@@ -81,10 +84,10 @@ export default async function CoachPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Klijenti</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         <Link href="/coach/clients/new">
           <Button>
-            <UserPlus size={16} /> Novi klijent
+            <UserPlus size={16} /> {t("newClient")}
           </Button>
         </Link>
       </div>
@@ -94,22 +97,22 @@ export default async function CoachPage() {
           <thead className="border-b border-gray-800 bg-gray-900/50">
             <tr>
               <th className="px-4 py-3 text-left font-medium text-gray-400">
-                Ime
+                {t("colName")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-gray-400">
-                Faza
+                {t("colPhase")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-gray-400">
-                Zadnji log
+                {t("colLastLog")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-gray-400">
-                Težina
+                {t("colWeight")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-gray-400">
-                Ovaj tjedan
+                {t("colThisWeek")}
               </th>
               <th className="px-4 py-3 text-left font-medium text-gray-400">
-                Status
+                {t("colStatus")}
               </th>
             </tr>
           </thead>
@@ -131,23 +134,23 @@ export default async function CoachPage() {
                 <td className="px-4 py-3 text-gray-400">
                   {c.lastLogDate
                     ? new Date(c.lastLogDate + "T00:00").toLocaleDateString(
-                        "hr-HR"
+                        bcp47
                       )
-                    : "Nikad"}
+                    : t("never")}
                 </td>
                 <td className="px-4 py-3 text-gray-400">
                   {c.lastWeight != null ? `${c.lastWeight} kg` : "—"}
                 </td>
                 <td className="px-4 py-3 text-gray-400">
-                  {c.weekLogs}/7 dana
+                  {t("daysSuffix", { count: c.weekLogs })}
                 </td>
                 <td className="px-4 py-3">
                   {c.isActive ? (
                     <Badge className="border-green-500/30 bg-green-500/20 text-green-400">
-                      Aktivan
+                      {t("active")}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary">Neaktivan</Badge>
+                    <Badge variant="secondary">{t("inactive")}</Badge>
                   )}
                 </td>
               </tr>

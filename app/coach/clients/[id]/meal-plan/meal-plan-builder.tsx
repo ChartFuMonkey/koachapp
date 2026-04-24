@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,16 +31,6 @@ import Link from "next/link";
 import ConfirmDialog from "@/components/confirm-dialog";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-const DAY_LABELS = [
-  "Ponedjeljak",
-  "Utorak",
-  "Srijeda",
-  "Četvrtak",
-  "Petak",
-  "Subota",
-  "Nedjelja",
-];
 
 type MealRef = {
   id: string;
@@ -76,6 +67,23 @@ export default function MealPlanBuilder({
   allMeals: MealRef[];
 }) {
   const router = useRouter();
+  const t = useTranslations("coach.mealPlan");
+  const locale = useLocale();
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+
+  // Build day labels using Intl.DateTimeFormat. day_of_week 1=Mon..7=Sun.
+  // Use a reference week that starts on Monday 2024-01-01 (a Monday).
+  const dayLabels = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(bcp47, { weekday: "long" });
+    const result: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(Date.UTC(2024, 0, 1 + i)); // Jan 1 2024 = Mon
+      const label = fmt.format(d);
+      result.push(label.charAt(0).toUpperCase() + label.slice(1));
+    }
+    return result;
+  }, [bcp47]);
+
   const [showNewPlan, setShowNewPlan] = useState(false);
   const [newPlanName, setNewPlanName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -107,7 +115,7 @@ export default function MealPlanBuilder({
       return;
     }
 
-    toast.success("Plan kreiran");
+    toast.success(t("planCreatedToast"));
     setNewPlanName("");
     setShowNewPlan(false);
     router.refresh();
@@ -119,7 +127,7 @@ export default function MealPlanBuilder({
       toast.error(res.error);
       return;
     }
-    toast.success("Plan obrisan");
+    toast.success(t("planDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -132,7 +140,7 @@ export default function MealPlanBuilder({
       toast.error(res.error);
       return;
     }
-    toast.success("Plan aktiviran");
+    toast.success(t("planActivatedToast"));
     router.refresh();
   }
 
@@ -159,7 +167,7 @@ export default function MealPlanBuilder({
       return;
     }
 
-    toast.success("Obrok dodan");
+    toast.success(t("mealAddedToast"));
     setAddingSlotFor(null);
     setSelectedMealId("");
     router.refresh();
@@ -200,10 +208,10 @@ export default function MealPlanBuilder({
           <ChevronLeft size={14} /> {clientName}
         </Link>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Plan prehrane</h1>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
           {!showNewPlan && (
             <Button onClick={() => setShowNewPlan(true)}>
-              <Plus size={14} /> Novi plan
+              <Plus size={14} /> {t("newPlan")}
             </Button>
           )}
         </div>
@@ -215,11 +223,11 @@ export default function MealPlanBuilder({
           <Card className="mb-4">
             <CardContent className="flex items-end gap-3 p-4">
               <div className="flex-1">
-                <Label className="mb-1 text-xs">Naziv plana *</Label>
+                <Label className="mb-1 text-xs">{t("planNameLabel")} *</Label>
                 <Input
                   value={newPlanName}
                   onChange={(e) => setNewPlanName(e.target.value)}
-                  placeholder="npr. Cut plan"
+                  placeholder={t("planNamePlaceholder")}
                   required
                 />
               </div>
@@ -229,7 +237,7 @@ export default function MealPlanBuilder({
                 ) : (
                   <Plus size={14} />
                 )}
-                Kreiraj
+                {t("createPlan")}
               </Button>
               <Button
                 type="button"
@@ -247,9 +255,9 @@ export default function MealPlanBuilder({
         <Card>
           <CardContent className="flex flex-col items-center py-8 text-center">
             <UtensilsCrossed className="mb-3 size-10 text-gray-500" />
-            <p className="text-lg font-medium">Nema planova prehrane</p>
+            <p className="text-lg font-medium">{t("emptyTitle")}</p>
             <p className="mt-1 text-sm text-gray-400">
-              Kreirajte prvi plan iznad
+              {t("emptyHint")}
             </p>
           </CardContent>
         </Card>
@@ -263,14 +271,14 @@ export default function MealPlanBuilder({
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold">{plan.name}</h2>
                     {plan.is_active ? (
-                      <Badge className="bg-green-600 text-white">Aktivan</Badge>
+                      <Badge className="bg-green-600 text-white">{t("active")}</Badge>
                     ) : (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleActivate(plan.id)}
                       >
-                        <Zap size={12} /> Aktiviraj
+                        <Zap size={12} /> {t("activate")}
                       </Button>
                     )}
                   </div>
@@ -288,7 +296,7 @@ export default function MealPlanBuilder({
 
                 {/* 7-day grid */}
                 <div className="space-y-2">
-                  {DAY_LABELS.map((dayLabel, idx) => {
+                  {dayLabels.map((dayLabel, idx) => {
                     const dayOfWeek = idx + 1;
                     const dayKey = `${plan.id}-${dayOfWeek}`;
                     const isExpanded = expandedDays.has(dayKey);
@@ -314,7 +322,7 @@ export default function MealPlanBuilder({
                               {dayLabel}
                             </span>
                             <span className="ml-2 text-xs text-gray-500">
-                              {dayEntries.length} obrok(a)
+                              {t("mealCount", { count: dayEntries.length })}
                             </span>
                             {dayEntries.length > 0 && (
                               <span className="ml-2 text-xs text-gray-500">
@@ -343,7 +351,7 @@ export default function MealPlanBuilder({
                                 >
                                   <div>
                                     <span className="font-medium text-gray-300">
-                                      Obrok {entry.slot_number}:
+                                      {t("mealSlotPrefix")} {entry.slot_number}:
                                     </span>{" "}
                                     <span className="text-gray-400">
                                       {entry.meals?.name ?? "—"}
@@ -376,7 +384,7 @@ export default function MealPlanBuilder({
                                   }
                                   className="h-8 flex-1 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none dark:bg-input/30"
                                 >
-                                  <option value="">Odaberi obrok...</option>
+                                  <option value="">{t("pickMeal")}</option>
                                   {allMeals.map((m) => (
                                     <option key={m.id} value={m.id}>
                                       {m.name} ({m.cal} kcal)
@@ -420,7 +428,7 @@ export default function MealPlanBuilder({
                                 size="sm"
                                 onClick={() => setAddingSlotFor(dayKey)}
                               >
-                                <Plus size={12} /> Dodaj obrok
+                                <Plus size={12} /> {t("addMeal")}
                               </Button>
                             )}
                           </div>
@@ -437,9 +445,8 @@ export default function MealPlanBuilder({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={`Obriši "${deleteTarget?.name}"?`}
-        description="Ovaj plan prehrane će biti trajno obrisan sa svim unosima."
-        confirmLabel="Obriši"
+        title={t("confirmDeleteTitle", { name: deleteTarget?.name ?? "" })}
+        description={t("confirmDeleteDesc")}
         onConfirm={() => deleteTarget && handleDeletePlan(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
       />

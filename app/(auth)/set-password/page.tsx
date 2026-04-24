@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,25 +10,28 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
 
+type SetPasswordErrorCode = "tooShort" | "passwordsDoNotMatch" | "updateError";
+
 export default function SetPasswordPage() {
   const router = useRouter();
+  const t = useTranslations("auth.setPassword");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState<SetPasswordErrorCode | "">("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrorCode("");
 
     if (password.length < 6) {
-      setError("Lozinka mora imati najmanje 6 znakova.");
+      setErrorCode("tooShort");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Lozinke se ne podudaraju.");
+      setErrorCode("passwordsDoNotMatch");
       return;
     }
 
@@ -39,7 +43,7 @@ export default function SetPasswordPage() {
     });
 
     if (updateError) {
-      setError("Greška pri postavljanju lozinke. Pokušaj ponovo.");
+      setErrorCode("updateError");
       setLoading(false);
       return;
     }
@@ -55,15 +59,15 @@ export default function SetPasswordPage() {
         <Card className="w-full max-w-sm border-gray-800 bg-gray-900">
           <CardContent className="flex flex-col items-center gap-4 p-6">
             <CheckCircle size={48} className="text-green-400" />
-            <h2 className="text-xl font-bold text-white">Lozinka postavljena!</h2>
+            <h2 className="text-xl font-bold text-white">{t("successTitle")}</h2>
             <p className="text-center text-sm text-gray-400">
-              Sada se možeš prijaviti sa svojom novom lozinkom.
+              {t("successDescription")}
             </p>
             <Button
               onClick={() => router.push("/login?role=client")}
               className="mt-2 h-11 w-full text-base"
             >
-              Prijavi se
+              {t("goToLogin")}
             </Button>
           </CardContent>
         </Card>
@@ -76,17 +80,17 @@ export default function SetPasswordPage() {
       <Card className="w-full max-w-sm border-gray-800 bg-gray-900">
         <CardHeader>
           <h1 className="text-center text-2xl font-bold text-white">
-            Postavi lozinku
+            {t("title")}
           </h1>
           <p className="text-center text-sm text-gray-400">
-            Odaberi lozinku za svoj KoachApp račun.
+            {t("description")}
           </p>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="password" className="text-gray-300">
-                Nova lozinka
+                {t("newPasswordLabel")}
               </Label>
               <Input
                 id="password"
@@ -94,13 +98,13 @@ export default function SetPasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Najmanje 6 znakova"
+                placeholder={t("newPasswordPlaceholder")}
                 className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
               />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword" className="text-gray-300">
-                Potvrdi lozinku
+                {t("confirmLabel")}
               </Label>
               <Input
                 id="confirmPassword"
@@ -108,12 +112,12 @@ export default function SetPasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                placeholder="Ponovi lozinku"
+                placeholder={t("confirmPlaceholder")}
                 className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
               />
             </div>
-            {error && (
-              <p className="text-sm text-red-500">{error}</p>
+            {errorCode && (
+              <p className="text-sm text-red-500">{t(errorCode)}</p>
             )}
           </CardContent>
           <CardFooter>
@@ -121,10 +125,10 @@ export default function SetPasswordPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Spremam...
+                  {t("loading")}
                 </>
               ) : (
-                "Postavi lozinku"
+                t("submit")
               )}
             </Button>
           </CardFooter>

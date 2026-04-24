@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { todayCET } from "@/lib/date";
+import { resolveLocale } from "@/i18n/request";
+import { foodDisplayName } from "@/lib/food-display";
 
 type FoodInfo = {
   name: string;
@@ -35,6 +37,8 @@ export async function getTodayMeals(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) return { error: "Nisi prijavljen/a." };
+
+  const locale = await resolveLocale();
 
   // 1. Get active meal plan
   const { data: plan } = await supabase
@@ -95,7 +99,7 @@ export async function getTodayMeals(): Promise<{
       id, name,
       meal_foods (
         quantity_g, sort_order,
-        foods ( name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g )
+        foods ( name, name_en, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g )
       )
     `)
     .in("id", uniqueMealIds);
@@ -134,7 +138,7 @@ export async function getTodayMeals(): Promise<{
       const fat = Math.round(f.fat_per_100g * factor * 10) / 10;
 
       foods.push({
-        name: f.name,
+        name: foodDisplayName(f, locale),
         quantity_g: mf.quantity_g,
         calories: cal,
         protein,

@@ -24,7 +24,7 @@ export async function getThisWeekCheckin() {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
-  if (authError || !user) return { error: "Nisi prijavljen/a." };
+  if (authError || !user) return { error: "unauthenticated" };
 
   // Calculate last Monday (ISO week starts Monday) using CET date
   const todayStr = todayCET();
@@ -45,7 +45,7 @@ export async function getThisWeekCheckin() {
 
   if (error) {
     console.error("Checkin fetch error:", error);
-    return { error: "Greška pri dohvaćanju prijave." };
+    return { error: "loadFailed" };
   }
 
   return { data };
@@ -57,7 +57,7 @@ export async function submitCheckin(formData: CheckinData) {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
-  if (authError || !user) return { error: "Nisi prijavljen/a." };
+  if (authError || !user) return { error: "unauthenticated" };
 
   const today = todayCET();
 
@@ -83,7 +83,7 @@ export async function submitCheckin(formData: CheckinData) {
 
   if (error) {
     console.error("Checkin submit error:", error);
-    return { error: "Greška pri slanju prijave. Pokušaj ponovo." };
+    return { error: "submitFailed" };
   }
 
   return { success: true };

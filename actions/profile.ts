@@ -11,7 +11,7 @@ export async function getProfile() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const { data, error } = await supabase
@@ -22,7 +22,7 @@ export async function getProfile() {
 
   if (error) {
     console.error("Profile fetch error:", error);
-    return { error: "Greška pri dohvaćanju profila." };
+    return { error: "loadFailed" };
   }
 
   return { data: { ...data, email: user.email } };
@@ -42,7 +42,7 @@ export async function updateProfile(formData: {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const { error } = await supabase
@@ -57,7 +57,7 @@ export async function updateProfile(formData: {
 
   if (error) {
     console.error("Profile update error:", error);
-    return { error: "Greška pri ažuriranju profila." };
+    return { error: "updateFailed" };
   }
 
   return { success: true };
@@ -72,7 +72,7 @@ export async function getProfileDashboard() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const [{ data: client }, { data: phase }] = await Promise.all([

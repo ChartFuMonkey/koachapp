@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,32 +10,37 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
-function translateAuthError(message: string): string {
-  if (message.includes("Invalid login credentials"))
-    return "Pogrešan email ili lozinka.";
-  if (message.includes("Email not confirmed"))
-    return "Email adresa nije potvrđena.";
-  if (message.includes("Too many requests"))
-    return "Previše pokušaja. Pokušaj ponovo za par minuta.";
-  if (message.includes("User not found"))
-    return "Korisnik nije pronađen.";
-  if (message.includes("Network"))
-    return "Greška s mrežom. Provjeri internetsku vezu.";
-  return "Greška pri prijavi. Pokušaj ponovo.";
+type AuthErrorCode =
+  | "invalidCredentials"
+  | "emailConfirmationRequired"
+  | "tooManyRequests"
+  | "userNotFound"
+  | "networkError"
+  | "genericError";
+
+function classifyAuthError(message: string): AuthErrorCode {
+  if (message.includes("Invalid login credentials")) return "invalidCredentials";
+  if (message.includes("Email not confirmed")) return "emailConfirmationRequired";
+  if (message.includes("Too many requests")) return "tooManyRequests";
+  if (message.includes("User not found")) return "userNotFound";
+  if (message.includes("Network")) return "networkError";
+  return "genericError";
 }
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get("role");
+  const t = useTranslations("auth.login");
+  const tCommon = useTranslations("common");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState<AuthErrorCode | "">("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrorCode("");
     setLoading(true);
 
     const supabase = createClient();
@@ -44,7 +50,7 @@ function LoginForm() {
     });
 
     if (authError) {
-      setError(translateAuthError(authError.message));
+      setErrorCode(classifyAuthError(authError.message));
       setLoading(false);
       return;
     }
@@ -64,14 +70,14 @@ function LoginForm() {
       <Card className="w-full max-w-sm border-gray-800 bg-gray-900">
         <CardHeader>
           <h1 className="text-center text-2xl font-bold text-white">
-            KoachApp
+            {t("title")}
           </h1>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="text-gray-300">
-                Email
+                {tCommon("email")}
               </Label>
               <Input
                 id="email"
@@ -79,13 +85,13 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="email@primjer.com"
+                placeholder={t("emailPlaceholder")}
                 className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
               />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password" className="text-gray-300">
-                Lozinka
+                {tCommon("password")}
               </Label>
               <Input
                 id="password"
@@ -93,12 +99,12 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="********"
+                placeholder={t("passwordPlaceholder")}
                 className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
               />
             </div>
-            {error && (
-              <p className="text-sm text-red-500">{error}</p>
+            {errorCode && (
+              <p className="text-sm text-red-500">{t(errorCode)}</p>
             )}
           </CardContent>
           <CardFooter>
@@ -106,10 +112,10 @@ function LoginForm() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Prijava...
+                  {t("loading")}
                 </>
               ) : (
-                "Prijava"
+                t("submit")
               )}
             </Button>
           </CardFooter>

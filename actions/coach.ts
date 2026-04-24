@@ -5,13 +5,13 @@ import { requireCoach, requireCoachOwnsClient } from "@/lib/auth/require-coach";
 
 export async function createNewClient(formData: FormData) {
   const auth = await requireCoach();
-  if (auth.error) return { error: auth.error };
+  if (auth.error) return { error: "unauthenticated" as const };
 
   const email = formData.get("email") as string;
   const fullName = formData.get("full_name") as string;
 
   if (!email || !fullName) {
-    return { error: "Email i ime su obavezni." };
+    return { error: "missingFields" as const };
   }
 
   const coachId = auth.user.id;
@@ -29,9 +29,10 @@ export async function createNewClient(formData: FormData) {
 
   if (authError || !authData.user) {
     if (authError?.message?.includes("already been registered")) {
-      return { error: "Korisnik s ovim emailom već postoji." };
+      return { error: "emailAlreadyUsed" as const };
     }
-    return { error: authError?.message || "Greška pri kreiranju korisnika." };
+    console.error("Invite user error:", authError);
+    return { error: "authCreateFailed" as const };
   }
 
   const userId = authData.user.id;
@@ -49,7 +50,8 @@ export async function createNewClient(formData: FormData) {
   });
 
   if (profileError) {
-    return { error: "Greška pri kreiranju profila: " + profileError.message };
+    console.error("Profile create error:", profileError);
+    return { error: "profileCreateFailed" as const };
   }
 
   // 3. Insert client
@@ -75,7 +77,8 @@ export async function createNewClient(formData: FormData) {
   });
 
   if (clientError) {
-    return { error: "Greška pri kreiranju klijenta: " + clientError.message };
+    console.error("Client create error:", clientError);
+    return { error: "clientCreateFailed" as const };
   }
 
   return { id: userId, email };
@@ -95,7 +98,7 @@ export async function updateClientNotes(
     .eq("id", clientId);
 
   if (error) {
-    return { error: "Greška pri spremanju bilješki." };
+    return { error: "saveNotesFailed" as const };
   }
   return { success: true };
 }
@@ -120,7 +123,7 @@ export async function updateClientTargets(
     .eq("id", clientId);
 
   if (error) {
-    return { error: "Greška pri ažuriranju ciljeva." };
+    return { error: "saveTargetsFailed" as const };
   }
   return { success: true };
 }

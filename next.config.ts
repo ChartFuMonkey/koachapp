@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 // @ts-expect-error -- next-pwa lacks TypeScript declarations
 import withPWAInit from "next-pwa";
 
@@ -8,8 +9,10 @@ const withPWA = withPWAInit({
   customWorkerDir: "worker",
 });
 
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
 const nextConfig: NextConfig = {
   turbopack: {},
 };
 
-export default withPWA(nextConfig);
+export default withNextIntl(withPWA(nextConfig));

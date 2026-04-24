@@ -29,7 +29,7 @@ export async function saveDailyLog(data: DailyLogData) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const today = todayCET();
@@ -45,7 +45,7 @@ export async function saveDailyLog(data: DailyLogData) {
 
   if (error) {
     console.error("Daily log save error:", error);
-    return { error: "Greška pri spremanju. Pokušaj ponovo." };
+    return { error: "saveFailed" };
   }
 
   return { success: true };
@@ -60,7 +60,7 @@ export async function getTodayLog() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const today = todayCET();
@@ -74,7 +74,7 @@ export async function getTodayLog() {
 
   if (error) {
     console.error("Daily log fetch error:", error);
-    return { error: "Greška pri dohvaćanju loga." };
+    return { error: "loadFailed" };
   }
 
   return { data };
@@ -89,7 +89,7 @@ export async function getClientTargets() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const { data, error } = await supabase
@@ -102,7 +102,7 @@ export async function getClientTargets() {
 
   if (error) {
     console.error("Client targets fetch error:", error);
-    return { error: "Greška pri dohvaćanju ciljeva." };
+    return { error: "loadTargetsFailed" };
   }
 
   return { data };
@@ -117,7 +117,7 @@ export async function getProgressData() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return { error: "Nisi prijavljen/a." };
+    return { error: "unauthenticated" };
   }
 
   const { data, error } = await supabase
@@ -129,7 +129,7 @@ export async function getProgressData() {
 
   if (error) {
     console.error("Progress data fetch error:", error);
-    return { error: "Greška pri dohvaćanju podataka." };
+    return { error: "loadProgressFailed" };
   }
 
   return { data };

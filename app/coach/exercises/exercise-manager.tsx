@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { translateError } from "@/lib/translate-error";
 
 type Exercise = {
   id: string;
@@ -35,12 +37,7 @@ type Exercise = {
   video_url: string | null;
 };
 
-const DIFFICULTY_OPTIONS = [
-  { value: "", label: "—" },
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
-];
+const DIFFICULTY_VALUES = ["", "beginner", "intermediate", "advanced"] as const;
 
 const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
@@ -51,10 +48,29 @@ export default function ExerciseManager({
   initialExercises: Exercise[];
 }) {
   const router = useRouter();
+  const t = useTranslations("coach.exercises");
+  const tErr = useTranslations("coach.exercises.errors");
+  const tCommonErr = useTranslations("errors");
+  const tCommon = useTranslations("common");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
+  function difficultyLabel(value: string) {
+    switch (value) {
+      case "":
+        return t("difficultyNone");
+      case "beginner":
+        return t("difficultyBeginner");
+      case "intermediate":
+        return t("difficultyIntermediate");
+      case "advanced":
+        return t("difficultyAdvanced");
+      default:
+        return value;
+    }
+  }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,11 +80,11 @@ export default function ExerciseManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Exercise added");
+    toast.success(t("exerciseAddedToast"));
     setShowAddForm(false);
     router.refresh();
   }
@@ -81,11 +97,11 @@ export default function ExerciseManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Exercise updated");
+    toast.success(t("exerciseUpdatedToast"));
     setEditingId(null);
     router.refresh();
   }
@@ -94,11 +110,11 @@ export default function ExerciseManager({
     const res = await deleteExercise(id);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Exercise deleted");
+    toast.success(t("exerciseDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -118,48 +134,48 @@ export default function ExerciseManager({
           <CardContent className="space-y-3 p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="sm:col-span-2">
-                <Label className="mb-1 text-xs">Name *</Label>
+                <Label className="mb-1 text-xs">{t("nameLabel")} *</Label>
                 <Input
                   name="name"
                   required
                   defaultValue={exercise?.name ?? ""}
-                  placeholder="e.g. Barbell Squat"
+                  placeholder={t("namePlaceholder")}
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">Muscle Group</Label>
+                <Label className="mb-1 text-xs">{t("muscleGroupLabel")}</Label>
                 <Input
                   name="muscle_group"
                   defaultValue={exercise?.muscle_group ?? ""}
-                  placeholder="e.g. Legs"
+                  placeholder={t("muscleGroupPlaceholder")}
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">Equipment</Label>
+                <Label className="mb-1 text-xs">{t("equipmentLabel")}</Label>
                 <Input
                   name="equipment"
                   defaultValue={exercise?.equipment ?? ""}
-                  placeholder="e.g. Barbell"
+                  placeholder={t("equipmentPlaceholder")}
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <Label className="mb-1 text-xs">Difficulty</Label>
+                <Label className="mb-1 text-xs">{t("difficultyLabel")}</Label>
                 <select
                   name="difficulty"
                   className={selectClass}
                   defaultValue={exercise?.difficulty ?? ""}
                 >
-                  {DIFFICULTY_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
+                  {DIFFICULTY_VALUES.map((v) => (
+                    <option key={v} value={v}>
+                      {difficultyLabel(v)}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="sm:col-span-1 lg:col-span-3">
-                <Label className="mb-1 text-xs">Video URL</Label>
+                <Label className="mb-1 text-xs">{t("videoUrlLabel")}</Label>
                 <Input
                   name="video_url"
                   type="url"
@@ -169,12 +185,12 @@ export default function ExerciseManager({
               </div>
             </div>
             <div>
-              <Label className="mb-1 text-xs">Notes</Label>
+              <Label className="mb-1 text-xs">{t("notesLabel")}</Label>
               <Textarea
                 name="notes"
                 rows={2}
                 defaultValue={exercise?.notes ?? ""}
-                placeholder="Cues, tips..."
+                placeholder={t("notesPlaceholder")}
               />
             </div>
             <div className="flex gap-2">
@@ -184,10 +200,10 @@ export default function ExerciseManager({
                 ) : (
                   <Check size={14} />
                 )}
-                {exercise ? "Save" : "Add Exercise"}
+                {exercise ? t("saveLabel") : t("addExerciseSubmit")}
               </Button>
               <Button type="button" variant="ghost" onClick={onCancel}>
-                <X size={14} /> Cancel
+                <X size={14} /> {tCommon("cancel")}
               </Button>
             </div>
           </CardContent>
@@ -199,10 +215,10 @@ export default function ExerciseManager({
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Exercise Database</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         {!showAddForm && (
           <Button onClick={() => setShowAddForm(true)}>
-            <Plus size={14} /> Add Exercise
+            <Plus size={14} /> {t("addExercise")}
           </Button>
         )}
       </div>
@@ -216,7 +232,7 @@ export default function ExerciseManager({
 
       {initialExercises.length === 0 ? (
         <p className="py-8 text-center text-gray-500">
-          No exercises yet. Add your first one above.
+          {t("emptyList")}
         </p>
       ) : (
         <>
@@ -226,22 +242,22 @@ export default function ExerciseManager({
               <thead className="border-b border-gray-800 bg-gray-900/50">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium text-gray-400">
-                    Name
+                    {t("colName")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-400">
-                    Muscle Group
+                    {t("colMuscleGroup")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-400">
-                    Equipment
+                    {t("colEquipment")}
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-400">
-                    Difficulty
+                    {t("colDifficulty")}
                   </th>
                   <th className="px-3 py-2 text-center font-medium text-gray-400">
-                    Video
+                    {t("colVideo")}
                   </th>
                   <th className="px-3 py-2 text-right font-medium text-gray-400">
-                    Actions
+                    {t("colActions")}
                   </th>
                 </tr>
               </thead>
@@ -271,8 +287,8 @@ export default function ExerciseManager({
                       <td className="px-3 py-2 text-gray-400">
                         {ex.equipment || "—"}
                       </td>
-                      <td className="px-3 py-2 text-gray-400 capitalize">
-                        {ex.difficulty || "—"}
+                      <td className="px-3 py-2 text-gray-400">
+                        {ex.difficulty ? difficultyLabel(ex.difficulty) : "—"}
                       </td>
                       <td className="px-3 py-2 text-center">
                         {ex.video_url ? (
@@ -345,8 +361,8 @@ export default function ExerciseManager({
                             </Badge>
                           )}
                           {ex.difficulty && (
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {ex.difficulty}
+                            <Badge variant="outline" className="text-xs">
+                              {difficultyLabel(ex.difficulty)}
                             </Badge>
                           )}
                         </div>
@@ -379,9 +395,8 @@ export default function ExerciseManager({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={`Delete "${deleteTarget?.name}"?`}
-        description="This exercise will be permanently deleted."
-        confirmLabel="Delete"
+        title={t("confirmDeleteTitle", { name: deleteTarget?.name ?? "" })}
+        description={t("confirmDeleteDesc")}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
       />

@@ -3,15 +3,13 @@
 import { Suspense } from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Check,
-  ChevronRight,
-  ExternalLink,
   Loader2,
   Play,
   SkipForward,
   Trophy,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -49,6 +47,7 @@ function RestTimer({
   onDone: () => void;
   onSkip: () => void;
 }) {
+  const t = useTranslations("app.workout");
   const [remaining, setRemaining] = useState(seconds);
   const total = seconds;
 
@@ -68,7 +67,7 @@ function RestTimer({
   return (
     <div className="flex flex-col items-center py-8">
       <p className="mb-4 text-sm font-medium uppercase tracking-wider text-gray-400">
-        Odmor
+        {t("restLabel")}
       </p>
 
       {/* Circular progress */}
@@ -107,7 +106,7 @@ function RestTimer({
         onClick={onSkip}
       >
         <SkipForward className="mr-2 size-4" />
-        Preskoči odmor
+        {t("skipRest")}
       </Button>
     </div>
   );
@@ -119,6 +118,9 @@ function WorkoutLogInner() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const dayId = searchParams.get("day_id");
+  const t = useTranslations("app.workout");
+  const tErrors = useTranslations("app.workout.errors");
+  const tCommonErrors = useTranslations("errors");
 
   const [exercises, setExercises] = useState<ProgramExercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,13 +144,23 @@ function WorkoutLogInner() {
   // Timer for session duration
   const sessionStartRef = useRef(Date.now());
 
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericLoad");
+    }
+  }
+
   // Load exercises
   useEffect(() => {
     if (!dayId) return;
 
     getDayExercises(dayId).then((res) => {
       if (res.error) {
-        toast.error(res.error);
+        toast.error(translateError(res.error));
         setLoading(false);
         return;
       }
@@ -171,6 +183,7 @@ function WorkoutLogInner() {
 
       setLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dayId]);
 
   // Parse target reps — handles "8-12" (takes first number), "8", etc.
@@ -190,8 +203,6 @@ function WorkoutLogInner() {
 
   // Check if this is the very last set of the very last exercise
   const isLastExercise = currentExIdx === totalExercises - 1;
-  const isLastSet =
-    currentExercise && currentSetNum >= currentExercise.sets;
 
   // When advancing to next exercise, pre-fill inputs
   function advanceToNextExercise() {
@@ -218,6 +229,7 @@ function WorkoutLogInner() {
       advanceToNextExercise();
     }
     // Otherwise stay on same exercise for next set
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentExDone, currentExIdx, totalExercises, exercises, prevWeights]);
 
   async function handleSaveSet() {
@@ -227,7 +239,7 @@ function WorkoutLogInner() {
     const weight = parseFloat(weightInput) || 0;
 
     if (!reps || reps <= 0) {
-      toast.error("Unesi broj ponavljanja.");
+      toast.error(t("needReps"));
       return;
     }
 
@@ -245,7 +257,7 @@ function WorkoutLogInner() {
     setSaving(false);
 
     if (res.error) {
-      toast.error(res.error);
+      toast.error(translateError(res.error));
       return;
     }
 
@@ -292,11 +304,11 @@ function WorkoutLogInner() {
     setSaving(false);
 
     if (res.error) {
-      toast.error(res.error);
+      toast.error(translateError(res.error));
       return;
     }
 
-    toast.success("Trening završen! 💪");
+    toast.success(t("workoutDoneToast") + " 💪");
     router.push("/app/workout");
   }
 
@@ -305,7 +317,7 @@ function WorkoutLogInner() {
   if (!sessionId || !dayId) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-6 text-center">
-        <p className="text-gray-400">Nevažeća sesija treninga.</p>
+        <p className="text-gray-400">{t("invalidSession")}</p>
       </div>
     );
   }
@@ -321,7 +333,7 @@ function WorkoutLogInner() {
   if (exercises.length === 0) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-6 text-center">
-        <p className="text-gray-400">Nema vježbi za ovaj dan.</p>
+        <p className="text-gray-400">{t("noExercisesForDay")}</p>
       </div>
     );
   }
@@ -336,9 +348,9 @@ function WorkoutLogInner() {
         <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-green-500/20">
           <Trophy className="size-10 text-green-400" />
         </div>
-        <h2 className="text-2xl font-bold">Sve vježbe gotove!</h2>
+        <h2 className="text-2xl font-bold">{t("allDone")}</h2>
         <p className="mt-2 text-gray-400">
-          Trajanje: {durationMin} min
+          {t("durationMinutes", { min: durationMin })}
         </p>
         <Button
           className="mt-8 h-14 px-10 text-lg font-bold"
@@ -350,7 +362,7 @@ function WorkoutLogInner() {
           ) : (
             <Trophy className="mr-2 size-5" />
           )}
-          Završi trening
+          {t("finishWorkout")}
         </Button>
       </div>
     );
@@ -367,14 +379,17 @@ function WorkoutLogInner() {
         {/* Progress bar */}
         <div className="mb-2 flex items-center justify-between text-sm text-gray-400">
           <span>
-            Vježba {currentExIdx + 1}/{totalExercises}
+            {t("exerciseCount", {
+              current: currentExIdx + 1,
+              total: totalExercises,
+            })}
           </span>
           <button
             type="button"
             className="text-red-400"
             onClick={handleFinishWorkout}
           >
-            Završi ranije
+            {t("finishEarly")}
           </button>
         </div>
         <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-gray-800">
@@ -401,14 +416,17 @@ function WorkoutLogInner() {
       {/* Top progress */}
       <div className="mb-2 flex items-center justify-between text-sm text-gray-400">
         <span>
-          Vježba {currentExIdx + 1}/{totalExercises}
+          {t("exerciseCount", {
+            current: currentExIdx + 1,
+            total: totalExercises,
+          })}
         </span>
         <button
           type="button"
           className="text-red-400"
           onClick={handleFinishWorkout}
         >
-          Završi ranije
+          {t("finishEarly")}
         </button>
       </div>
       <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-gray-800">
@@ -423,7 +441,10 @@ function WorkoutLogInner() {
       {/* Exercise heading */}
       <h1 className="text-2xl font-bold">{ex.name}</h1>
       <p className="mt-1 text-gray-400">
-        Cilj: {currentExercise.sets} x {currentExercise.reps}
+        {t("goal", {
+          sets: currentExercise.sets,
+          reps: currentExercise.reps,
+        })}
       </p>
 
       <div className="mt-2 flex flex-wrap gap-3">
@@ -439,7 +460,7 @@ function WorkoutLogInner() {
         )}
         {prevWeight != null && (
           <span className="inline-flex items-center rounded-md bg-gray-800 px-2.5 py-1.5 text-xs text-gray-300">
-            Zadnji put: {prevWeight} kg
+            {t("lastTimeWeight", { kg: prevWeight })}
           </span>
         )}
       </div>
@@ -478,14 +499,14 @@ function WorkoutLogInner() {
       {/* Current set input */}
       <div className="mt-6 rounded-xl bg-gray-800/50 p-5">
         <p className="mb-4 text-center text-lg font-semibold">
-          Serija {currentSetNum}
+          {t("setLabel", { n: currentSetNum })}
         </p>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Reps */}
           <div>
             <label className="mb-1 block text-sm text-gray-400">
-              Ponavljanja
+              {t("repsLabel")}
             </label>
             <input
               type="number"
@@ -499,7 +520,7 @@ function WorkoutLogInner() {
           {/* Weight */}
           <div>
             <label className="mb-1 block text-sm text-gray-400">
-              Težina (kg)
+              {t("weightLabel")}
             </label>
             <input
               type="number"
@@ -531,8 +552,8 @@ function WorkoutLogInner() {
             className="mt-1 w-full accent-orange-500"
           />
           <div className="flex justify-between text-xs text-gray-600">
-            <span>Lako</span>
-            <span>Maks</span>
+            <span>{t("easy")}</span>
+            <span>{t("max")}</span>
           </div>
         </div>
 
@@ -547,7 +568,7 @@ function WorkoutLogInner() {
           ) : (
             <Check className="mr-2 size-5" />
           )}
-          Spremi seriju
+          {t("saveSet")}
         </Button>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,12 +28,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { foodDisplayName } from "@/lib/food-display";
+import { translateError } from "@/lib/translate-error";
+import type { Locale } from "@/i18n/request";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 type FoodRef = {
   id: string;
   name: string;
+  name_en: string | null;
   calories_per_100g: number;
   protein_per_100g: number;
   carbs_per_100g: number;
@@ -89,6 +94,11 @@ export default function MealManager({
   allFoods: FoodRef[];
 }) {
   const router = useRouter();
+  const t = useTranslations("coach.meals");
+  const tErr = useTranslations("coach.meals.errors");
+  const tCommonErr = useTranslations("errors");
+  const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [showNewMeal, setShowNewMeal] = useState(false);
   const [newMealName, setNewMealName] = useState("");
   const [newMealNotes, setNewMealNotes] = useState("");
@@ -121,11 +131,11 @@ export default function MealManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Obrok kreiran");
+    toast.success(t("mealCreatedToast"));
     setNewMealName("");
     setNewMealNotes("");
     setShowNewMeal(false);
@@ -138,11 +148,11 @@ export default function MealManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Obrok ažuriran");
+    toast.success(t("mealUpdatedToast"));
     setEditingMealId(null);
     router.refresh();
   }
@@ -150,10 +160,10 @@ export default function MealManager({
   async function handleDeleteMeal(id: string) {
     const res = await deleteMeal(id);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
-    toast.success("Obrok obrisan");
+    toast.success(t("mealDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -165,11 +175,11 @@ export default function MealManager({
     setSaving(false);
 
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
 
-    toast.success("Namirnica dodana");
+    toast.success(t("foodAddedToast"));
     setAddingFoodFor(null);
     setSelectedFoodId("");
     setFoodQuantity("100");
@@ -177,21 +187,10 @@ export default function MealManager({
     router.refresh();
   }
 
-  async function handleUpdateQuantity(mfId: string, qty: string) {
-    const num = Number(qty);
-    if (!num || num <= 0) return;
-    const res = await updateMealFood(mfId, num);
-    if ("error" in res) {
-      toast.error(res.error);
-      return;
-    }
-    router.refresh();
-  }
-
   async function handleRemoveFood(mfId: string) {
     const res = await removeMealFood(mfId);
     if ("error" in res) {
-      toast.error(res.error);
+      toast.error(translateError(res.error, tErr, tCommonErr));
       return;
     }
     router.refresh();
@@ -203,16 +202,22 @@ export default function MealManager({
   }
 
   const filteredFoods = foodSearch.trim()
-    ? allFoods.filter((f) => f.name.toLowerCase().includes(foodSearch.toLowerCase()))
+    ? allFoods.filter((f) => {
+        const q = foodSearch.toLowerCase();
+        return (
+          foodDisplayName(f, locale).toLowerCase().includes(q) ||
+          f.name.toLowerCase().includes(q)
+        );
+      })
     : allFoods;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Meals</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         {!showNewMeal && (
           <Button onClick={() => setShowNewMeal(true)}>
-            <Plus size={14} /> Novi obrok
+            <Plus size={14} /> {t("newMeal")}
           </Button>
         )}
       </div>
@@ -223,29 +228,29 @@ export default function MealManager({
           <Card className="mb-4">
             <CardContent className="space-y-3 p-4">
               <div>
-                <Label className="mb-1 text-xs">Naziv obroka *</Label>
+                <Label className="mb-1 text-xs">{t("nameLabel")} *</Label>
                 <Input
                   value={newMealName}
                   onChange={(e) => setNewMealName(e.target.value)}
-                  placeholder="npr. Zobene s bananom"
+                  placeholder={t("namePlaceholder")}
                   required
                 />
               </div>
               <div>
-                <Label className="mb-1 text-xs">Bilješke</Label>
+                <Label className="mb-1 text-xs">{t("notesLabel")}</Label>
                 <Input
                   value={newMealNotes}
                   onChange={(e) => setNewMealNotes(e.target.value)}
-                  placeholder="Opcionalno..."
+                  placeholder={t("notesPlaceholder")}
                 />
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={saving}>
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                  Kreiraj
+                  {t("createSubmit")}
                 </Button>
                 <Button type="button" variant="ghost" onClick={() => setShowNewMeal(false)}>
-                  <X size={14} /> Odustani
+                  <X size={14} /> {tCommon("cancel")}
                 </Button>
               </div>
             </CardContent>
@@ -255,7 +260,7 @@ export default function MealManager({
 
       {initialMeals.length === 0 ? (
         <p className="py-8 text-center text-gray-500">
-          Nema obroka. Kreirajte prvi iznad.
+          {t("emptyList")}
         </p>
       ) : (
         <div className="space-y-3">
@@ -299,9 +304,9 @@ export default function MealManager({
                         <h3 className="font-medium text-gray-200">{meal.name}</h3>
                       )}
                       <p className="mt-0.5 text-xs text-gray-500">
-                        {meal.meal_foods.length} namirnica &middot;{" "}
+                        {t("mealMeta", { count: meal.meal_foods.length })} &middot;{" "}
                         {totals.cal} kcal &middot; {totals.protein}P &middot;{" "}
-                        {totals.carbs}UH &middot; {totals.fat}M
+                        {totals.carbs}C &middot; {totals.fat}F
                       </p>
                     </div>
                     <div className="ml-2 flex items-center gap-1">
@@ -341,7 +346,7 @@ export default function MealManager({
                     <div className="border-t border-gray-800 p-4">
                       {meal.meal_foods.length === 0 ? (
                         <p className="mb-3 text-sm text-gray-500">
-                          Nema namirnica u obroku.
+                          {t("noFoodsInMeal")}
                         </p>
                       ) : (
                         <div className="mb-3 space-y-2">
@@ -355,13 +360,13 @@ export default function MealManager({
                               >
                                 <div className="min-w-0 flex-1">
                                   <span className="font-medium text-gray-300">
-                                    {mf.foods.name}
+                                    {foodDisplayName(mf.foods, locale)}
                                   </span>
                                   <span className="ml-2 text-gray-500">
                                     {mf.quantity_g}g
                                   </span>
                                   <span className="ml-2 text-xs text-gray-500">
-                                    {m.cal} kcal / {m.protein}P / {m.carbs}UH / {m.fat}M
+                                    {m.cal} kcal / {m.protein}P / {m.carbs}C / {m.fat}F
                                   </span>
                                 </div>
                                 <div className="flex shrink-0 gap-0.5">
@@ -396,9 +401,9 @@ export default function MealManager({
 
                           {/* Totals row */}
                           <div className="flex items-center rounded-lg bg-gray-800/50 p-2 text-sm font-medium">
-                            <span className="flex-1 text-gray-300">Ukupno</span>
+                            <span className="flex-1 text-gray-300">{t("totalLabel")}</span>
                             <span className="text-xs text-gray-400">
-                              {totals.cal} kcal / {totals.protein}P / {totals.carbs}UH / {totals.fat}M
+                              {totals.cal} kcal / {totals.protein}P / {totals.carbs}C / {totals.fat}F
                             </span>
                           </div>
                         </div>
@@ -410,7 +415,7 @@ export default function MealManager({
                           <Input
                             value={foodSearch}
                             onChange={(e) => setFoodSearch(e.target.value)}
-                            placeholder="Pretraži namirnice..."
+                            placeholder={t("searchFoods")}
                             className="h-8"
                           />
                           <select
@@ -418,10 +423,10 @@ export default function MealManager({
                             onChange={(e) => setSelectedFoodId(e.target.value)}
                             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring dark:bg-input/30"
                           >
-                            <option value="">Odaberi namirnicu...</option>
+                            <option value="">{t("pickFood")}</option>
                             {filteredFoods.map((f) => (
                               <option key={f.id} value={f.id}>
-                                {f.name} ({f.calories_per_100g} kcal/100g)
+                                {foodDisplayName(f, locale)} ({f.calories_per_100g} kcal/100g)
                               </option>
                             ))}
                           </select>
@@ -433,7 +438,7 @@ export default function MealManager({
                               placeholder="100"
                               className="h-8 w-24"
                             />
-                            <span className="text-xs text-gray-500">g</span>
+                            <span className="text-xs text-gray-500">{t("gramsSuffix")}</span>
                             <Button
                               size="sm"
                               disabled={!selectedFoodId || saving}
@@ -444,7 +449,7 @@ export default function MealManager({
                               ) : (
                                 <Plus size={12} />
                               )}
-                              Dodaj
+                              {t("addFood")}
                             </Button>
                             <Button
                               size="sm"
@@ -465,7 +470,7 @@ export default function MealManager({
                           size="sm"
                           onClick={() => setAddingFoodFor(meal.id)}
                         >
-                          <Plus size={12} /> Dodaj namirnicu
+                          <Plus size={12} /> {t("addFood")}
                         </Button>
                       )}
                     </div>
@@ -479,9 +484,8 @@ export default function MealManager({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={`Obriši "${deleteTarget?.name}"?`}
-        description="Ovaj obrok će biti trajno obrisan."
-        confirmLabel="Obriši"
+        title={t("confirmDeleteTitle", { name: deleteTarget?.name ?? "" })}
+        description={t("confirmDeleteDesc")}
         onConfirm={() => deleteTarget && handleDeleteMeal(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
       />
