@@ -12,6 +12,22 @@
       "title": "KoachApp",
       "tooManyRequests": "Too many attempts. Try again in a few minutes.",
       "userNotFound": "User not found."
+    },
+    "setPassword": {
+      "confirmLabel": "Confirm password",
+      "confirmPlaceholder": "Repeat password",
+      "description": "Choose a password for your KoachApp account.",
+      "goToLogin": "Log in",
+      "loading": "Saving...",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "At least 6 characters",
+      "passwordsDoNotMatch": "Passwords don't match.",
+      "submit": "Set password",
+      "successDescription": "You can now log in with your new password.",
+      "successTitle": "Password set!",
+      "title": "Set password",
+      "tooShort": "Password must be at least 6 characters.",
+      "updateError": "Couldn't set password. Try again."
     }
   },
   "common": {

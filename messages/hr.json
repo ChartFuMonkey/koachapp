@@ -12,6 +12,22 @@
       "title": "KoachApp",
       "tooManyRequests": "Previše pokušaja. Pokušaj ponovo za par minuta.",
       "userNotFound": "Korisnik nije pronađen."
+    },
+    "setPassword": {
+      "confirmLabel": "Potvrdi lozinku",
+      "confirmPlaceholder": "Ponovi lozinku",
+      "description": "Odaberi lozinku za svoj KoachApp račun.",
+      "goToLogin": "Prijavi se",
+      "loading": "Spremam...",
+      "newPasswordLabel": "Nova lozinka",
+      "newPasswordPlaceholder": "Najmanje 6 znakova",
+      "passwordsDoNotMatch": "Lozinke se ne podudaraju.",
+      "submit": "Postavi lozinku",
+      "successDescription": "Sada se možeš prijaviti sa svojom novom lozinkom.",
+      "successTitle": "Lozinka postavljena!",
+      "title": "Postavi lozinku",
+      "tooShort": "Lozinka mora imati najmanje 6 znakova.",
+      "updateError": "Greška pri postavljanju lozinke. Pokušaj ponovo."
     }
   },
   "common": {
