@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import MealPlanBuilder from "./meal-plan-builder";
 
 export default async function MealPlanBuilderPage({
@@ -8,6 +9,7 @@ export default async function MealPlanBuilderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("coach.clients.detail");
 
   const [clientRes, profileRes, plansRes, mealsRes] = await Promise.all([
     supabaseAdmin.from("clients").select("id").eq("id", id).maybeSingle(),
@@ -71,7 +73,7 @@ export default async function MealPlanBuilderPage({
   return (
     <MealPlanBuilder
       clientId={id}
-      clientName={profileRes.data?.full_name ?? "Klijent"}
+      clientName={profileRes.data?.full_name ?? t("unknownClient")}
       plans={plans}
       allMeals={meals}
     />

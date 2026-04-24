@@ -497,7 +497,8 @@
         "injuriesPlaceholder": "Ozljede, ograničenja...",
         "saveNotes": "Spremi",
         "savingNotes": "Spremam...",
-        "notesSaved": "Spremljeno!"
+        "notesSaved": "Spremljeno!",
+        "unknownClient": "Klijent"
       },
       "new": {
         "title": "Novi klijent",
@@ -551,7 +552,14 @@
   "errors": {
     "genericLoad": "Greška pri učitavanju. Pokušaj ponovo.",
     "genericSave": "Greška pri spremanju. Pokušaj ponovo.",
-    "unauthenticated": "Nisi prijavljen/a."
+    "unauthenticated": "Nisi prijavljen/a.",
+    "somethingWentWrong": "Nešto je pošlo po krivu",
+    "unexpectedError": "Došlo je do neočekivane greške.",
+    "tryAgain": "Pokušaj ponovo",
+    "notFoundTitle": "Stranica nije pronađena",
+    "notFoundDescription": "Tražena stranica ne postoji.",
+    "backToHome": "Vrati na početnu",
+    "backToDashboard": "Vrati na nadzornu ploču"
   },
   "landing": {
     "loginAsClient": "Prijava kao klijent",

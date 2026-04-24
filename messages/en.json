@@ -497,7 +497,8 @@
         "injuriesPlaceholder": "Injuries, limitations...",
         "saveNotes": "Save",
         "savingNotes": "Saving...",
-        "notesSaved": "Saved!"
+        "notesSaved": "Saved!",
+        "unknownClient": "Client"
       },
       "new": {
         "title": "Add client",
@@ -551,7 +552,14 @@
   "errors": {
     "genericLoad": "Couldn't load. Try again.",
     "genericSave": "Couldn't save. Try again.",
-    "unauthenticated": "You're not signed in."
+    "unauthenticated": "You're not signed in.",
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred.",
+    "tryAgain": "Try again",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you're looking for doesn't exist.",
+    "backToHome": "Back to home",
+    "backToDashboard": "Back to dashboard"
   },
   "landing": {
     "loginAsClient": "Log in as client",
