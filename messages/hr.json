@@ -225,6 +225,18 @@
       "updateError": "Greška pri postavljanju lozinke. Pokušaj ponovo."
     }
   },
+  "coach": {
+    "nav": {
+      "brand": "KoachApp",
+      "clients": "Klijenti",
+      "exercises": "Vježbe",
+      "foods": "Hrana",
+      "meals": "Obroci",
+      "signOut": "Odjava",
+      "openMenu": "Otvori izbornik",
+      "closeMenu": "Zatvori izbornik"
+    }
+  },
   "common": {
     "back": "Natrag",
     "cancel": "Odustani",

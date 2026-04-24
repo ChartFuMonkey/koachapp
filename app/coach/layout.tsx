@@ -3,15 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Users, Dumbbell, LogOut, Menu, X, Apple, UtensilsCrossed } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-
-const navLinks = [
-  { label: "Clients", icon: Users, route: "/coach" },
-  { label: "Exercises", icon: Dumbbell, route: "/coach/exercises" },
-  { label: "Foods", icon: Apple, route: "/coach/foods" },
-  { label: "Meals", icon: UtensilsCrossed, route: "/coach/meals" },
-];
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function CoachLayout({
   children,
@@ -20,7 +15,15 @@ export default function CoachLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("coach.nav");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navLinks = [
+    { labelKey: "clients" as const, icon: Users, route: "/coach" },
+    { labelKey: "exercises" as const, icon: Dumbbell, route: "/coach/exercises" },
+    { labelKey: "foods" as const, icon: Apple, route: "/coach/foods" },
+    { labelKey: "meals" as const, icon: UtensilsCrossed, route: "/coach/meals" },
+  ];
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -39,11 +42,12 @@ export default function CoachLayout({
       <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-800 bg-gray-950 px-4 md:hidden">
         <button
           onClick={() => setSidebarOpen(true)}
+          aria-label={t("openMenu")}
           className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
         >
           <Menu size={20} />
         </button>
-        <span className="ml-3 text-lg font-bold text-white">KoachApp</span>
+        <span className="ml-3 text-lg font-bold text-white">{t("brand")}</span>
       </div>
 
       {/* Overlay (mobile) */}
@@ -61,9 +65,10 @@ export default function CoachLayout({
         } md:translate-x-0`}
       >
         <div className="flex items-center justify-between p-6">
-          <h1 className="text-xl font-bold text-white">KoachApp</h1>
+          <h1 className="text-xl font-bold text-white">{t("brand")}</h1>
           <button
             onClick={() => setSidebarOpen(false)}
+            aria-label={t("closeMenu")}
             className="rounded-lg p-1 text-gray-400 hover:text-white md:hidden"
           >
             <X size={20} />
@@ -89,20 +94,25 @@ export default function CoachLayout({
                 }`}
               >
                 <Icon size={20} />
-                <span>{link.label}</span>
+                <span>{t(link.labelKey)}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="shrink-0 border-t border-gray-800 p-6">
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-3 text-gray-400 transition-colors hover:text-white"
-          >
-            <LogOut size={20} />
-            <span>Odjava</span>
-          </button>
+        <div className="shrink-0 border-t border-gray-800">
+          <div className="flex items-center justify-end px-6 pt-4 pb-2">
+            <LanguageSwitcher />
+          </div>
+          <div className="px-6 pb-6">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 text-gray-400 transition-colors hover:text-white"
+            >
+              <LogOut size={20} />
+              <span>{t("signOut")}</span>
+            </button>
+          </div>
         </div>
       </aside>
 

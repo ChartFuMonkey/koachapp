@@ -225,6 +225,18 @@
       "updateError": "Couldn't set password. Try again."
     }
   },
+  "coach": {
+    "nav": {
+      "brand": "KoachApp",
+      "clients": "Clients",
+      "exercises": "Exercises",
+      "foods": "Foods",
+      "meals": "Meals",
+      "signOut": "Log out",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    }
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",
