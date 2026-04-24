@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,15 +35,15 @@ type Phase = {
   is_active: boolean;
 };
 
-const PHASE_TYPES = [
-  { value: "", label: "—" },
-  { value: "fat_loss", label: "Gubitak masti" },
-  { value: "muscle_gain", label: "Dobivanje mišića" },
-  { value: "maintenance", label: "Održavanje" },
-  { value: "strength", label: "Snaga" },
-  { value: "rest", label: "Odmor" },
-  { value: "other", label: "Ostalo" },
-];
+const PHASE_TYPE_VALUES = [
+  "",
+  "fat_loss",
+  "muscle_gain",
+  "maintenance",
+  "strength",
+  "rest",
+  "other",
+] as const;
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
   fat_loss: "border-red-500/30 bg-red-500/20 text-red-400",
@@ -56,14 +57,6 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
 const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
-function formatDate(d: string) {
-  return new Date(d + "T00:00").toLocaleDateString("hr-HR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export default function PhaseManager({
   clientId,
   clientName,
@@ -74,9 +67,33 @@ export default function PhaseManager({
   phases: Phase[];
 }) {
   const router = useRouter();
+  const t = useTranslations("coach.phases");
+  const tTypes = useTranslations("coach.phases.types");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
+  function formatDate(d: string) {
+    return new Date(d + "T00:00").toLocaleDateString(bcp47, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  function typeLabel(value: string) {
+    if (!value) return tTypes("none");
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return tTypes(value as any);
+    } catch {
+      return value;
+    }
+  }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -90,7 +107,7 @@ export default function PhaseManager({
       return;
     }
 
-    toast.success("Faza kreirana");
+    toast.success(t("phaseCreatedToast"));
     setShowAddForm(false);
     router.refresh();
   }
@@ -105,7 +122,7 @@ export default function PhaseManager({
       return;
     }
 
-    toast.success("Faza aktivirana");
+    toast.success(t("phaseActivatedToast"));
     router.refresh();
   }
 
@@ -117,7 +134,7 @@ export default function PhaseManager({
       return;
     }
 
-    toast.success("Faza obrisana");
+    toast.success(t("phaseDeletedToast"));
     setDeleteTarget(null);
     router.refresh();
   }
@@ -133,14 +150,14 @@ export default function PhaseManager({
           <ChevronLeft size={14} /> {clientName}
         </Link>
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-xl font-bold sm:text-2xl">Phase Manager</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">{t("title")}</h1>
           {!showAddForm && (
             <Button
               onClick={() => setShowAddForm(true)}
               size="sm"
               className="shrink-0"
             >
-              <Plus size={14} /> Dodaj fazu
+              <Plus size={14} /> {t("addPhase")}
             </Button>
           )}
         </div>
@@ -153,42 +170,42 @@ export default function PhaseManager({
             <form onSubmit={handleCreate} className="space-y-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
-                  <Label className="mb-1 text-xs">Naziv faze *</Label>
+                  <Label className="mb-1 text-xs">{t("nameLabel")} *</Label>
                   <Input
                     name="name"
                     required
-                    placeholder='e.g. "Cut — Faza 1"'
+                    placeholder={t("namePlaceholder")}
                     autoFocus
                   />
                 </div>
                 <div>
-                  <Label className="mb-1 text-xs">Tip</Label>
+                  <Label className="mb-1 text-xs">{t("typeLabel")}</Label>
                   <select name="type" className={selectClass}>
-                    {PHASE_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
+                    {PHASE_TYPE_VALUES.map((v) => (
+                      <option key={v} value={v}>
+                        {typeLabel(v)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <Label className="mb-1 text-xs">Target kcal</Label>
+                  <Label className="mb-1 text-xs">{t("targetKcalLabel")}</Label>
                   <Input name="target_kcal" type="number" placeholder="2200" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1 text-xs">Početak *</Label>
+                  <Label className="mb-1 text-xs">{t("startDateLabel")} *</Label>
                   <Input name="start_date" type="date" required />
                 </div>
                 <div>
-                  <Label className="mb-1 text-xs">Kraj</Label>
+                  <Label className="mb-1 text-xs">{t("endDateLabel")}</Label>
                   <Input name="end_date" type="date" />
                 </div>
               </div>
               <div>
-                <Label className="mb-1 text-xs">Bilješke</Label>
-                <Textarea name="notes" rows={2} placeholder="Napomene..." />
+                <Label className="mb-1 text-xs">{t("notesLabel")}</Label>
+                <Textarea name="notes" rows={2} placeholder={t("notesPlaceholder")} />
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={saving}>
@@ -197,14 +214,14 @@ export default function PhaseManager({
                   ) : (
                     <Plus size={14} />
                   )}
-                  Kreiraj
+                  {t("createSubmit")}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setShowAddForm(false)}
                 >
-                  <X size={14} /> Odustani
+                  <X size={14} /> {tCommon("cancel")}
                 </Button>
               </div>
             </form>
@@ -215,7 +232,7 @@ export default function PhaseManager({
       {/* Timeline */}
       {phases.length === 0 && !showAddForm ? (
         <p className="py-8 text-center text-gray-500">
-          Nema faza. Dodajte prvu fazu za ovog klijenta.
+          {t("emptyPhases")}
         </p>
       ) : (
         <div className="relative space-y-0">
@@ -255,13 +272,12 @@ export default function PhaseManager({
                               TYPE_BADGE_COLORS.other
                             }`}
                           >
-                            {PHASE_TYPES.find((t) => t.value === phase.type)
-                              ?.label ?? phase.type}
+                            {typeLabel(phase.type)}
                           </Badge>
                         )}
                         {phase.is_active && (
                           <Badge className="border-green-500/30 bg-green-500/20 text-xs text-green-400">
-                            Aktivan
+                            {t("active")}
                           </Badge>
                         )}
                       </div>
@@ -296,7 +312,7 @@ export default function PhaseManager({
                           onClick={() => handleActivate(phase.id)}
                           disabled={saving}
                         >
-                          <Zap size={12} /> Aktiviraj
+                          <Zap size={12} /> {t("activate")}
                         </Button>
                       )}
                       <Button
@@ -318,8 +334,8 @@ export default function PhaseManager({
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={`Obriši fazu "${deleteTarget?.name}"?`}
-        description="Faza će biti trajno obrisana."
+        title={t("confirmDeleteTitle", { name: deleteTarget?.name ?? "" })}
+        description={t("confirmDeleteDesc")}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
         onCancel={() => setDeleteTarget(null)}
       />

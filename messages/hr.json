@@ -251,6 +251,36 @@
       "active": "Aktivan",
       "inactive": "Neaktivan"
     },
+    "phases": {
+      "title": "Phase Manager",
+      "addPhase": "Dodaj fazu",
+      "active": "Aktivan",
+      "activate": "Aktiviraj",
+      "phaseCreatedToast": "Faza kreirana",
+      "phaseActivatedToast": "Faza aktivirana",
+      "phaseDeletedToast": "Faza obrisana",
+      "emptyPhases": "Nema faza. Dodajte prvu fazu za ovog klijenta.",
+      "nameLabel": "Naziv faze",
+      "namePlaceholder": "npr. \"Cut — Faza 1\"",
+      "typeLabel": "Tip",
+      "targetKcalLabel": "Target kcal",
+      "startDateLabel": "Početak",
+      "endDateLabel": "Kraj",
+      "notesLabel": "Bilješke",
+      "notesPlaceholder": "Napomene...",
+      "createSubmit": "Kreiraj",
+      "confirmDeleteTitle": "Obriši fazu \"{name}\"?",
+      "confirmDeleteDesc": "Faza će biti trajno obrisana.",
+      "types": {
+        "none": "—",
+        "fat_loss": "Gubitak masti",
+        "muscle_gain": "Dobivanje mišića",
+        "maintenance": "Održavanje",
+        "strength": "Snaga",
+        "rest": "Odmor",
+        "other": "Ostalo"
+      }
+    },
     "program": {
       "title": "Program Builder",
       "newProgram": "program",

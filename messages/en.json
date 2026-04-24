@@ -251,6 +251,36 @@
       "active": "Active",
       "inactive": "Inactive"
     },
+    "phases": {
+      "title": "Phase manager",
+      "addPhase": "Add phase",
+      "active": "Active",
+      "activate": "Activate",
+      "phaseCreatedToast": "Phase created",
+      "phaseActivatedToast": "Phase activated",
+      "phaseDeletedToast": "Phase deleted",
+      "emptyPhases": "No phases yet. Add the first one for this client.",
+      "nameLabel": "Phase name",
+      "namePlaceholder": "e.g. \"Cut — Phase 1\"",
+      "typeLabel": "Type",
+      "targetKcalLabel": "Target kcal",
+      "startDateLabel": "Start",
+      "endDateLabel": "End",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Notes...",
+      "createSubmit": "Create",
+      "confirmDeleteTitle": "Delete phase \"{name}\"?",
+      "confirmDeleteDesc": "The phase will be permanently deleted.",
+      "types": {
+        "none": "—",
+        "fat_loss": "Fat loss",
+        "muscle_gain": "Muscle gain",
+        "maintenance": "Maintenance",
+        "strength": "Strength",
+        "rest": "Rest",
+        "other": "Other"
+      }
+    },
     "program": {
       "title": "Program builder",
       "newProgram": "program",
