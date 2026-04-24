@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ClipboardList,
   TrendingUp,
@@ -13,35 +14,21 @@ import { todayCET } from "@/lib/date";
 import { getTodayMeals } from "@/actions/client-meal-plan";
 import MealPlanToday from "@/components/meal-plan-today";
 
-function formatCroatianDate(date: Date): string {
-  const days = [
-    "Nedjelja",
-    "Ponedjeljak",
-    "Utorak",
-    "Srijeda",
-    "Četvrtak",
-    "Petak",
-    "Subota",
-  ];
-  const months = [
-    "siječnja",
-    "veljače",
-    "ožujka",
-    "travnja",
-    "svibnja",
-    "lipnja",
-    "srpnja",
-    "kolovoza",
-    "rujna",
-    "listopada",
-    "studenoga",
-    "prosinca",
-  ];
-  return `${days[date.getDay()]}, ${date.getDate()}. ${months[date.getMonth()]} ${date.getFullYear()}.`;
+function formatLocalizedDate(date: Date, locale: string): string {
+  // Use the active locale; fall back to hr-HR for "hr" and en-US for "en"
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+  return new Intl.DateTimeFormat(bcp47, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
 export default async function DanasPage() {
   const supabase = await createClient();
+  const locale = await getLocale();
+  const t = await getTranslations("app.home");
 
   const {
     data: { user },
@@ -76,8 +63,8 @@ export default async function DanasPage() {
         .maybeSingle(),
     ]);
 
-  const name = client?.first_name || "korisnik";
-  const dateStr = formatCroatianDate(new Date());
+  const name = client?.first_name || t("nameFallback");
+  const dateStr = formatLocalizedDate(new Date(), locale);
   const mealData = mealPlanResult.data;
 
   // Normalize workout session
@@ -86,7 +73,8 @@ export default async function DanasPage() {
         dayLabel:
           (Array.isArray(todaySession.program_days)
             ? todaySession.program_days[0]?.day_label
-            : (todaySession.program_days as any)?.day_label) ?? "Trening",
+            : (todaySession.program_days as any)?.day_label) ??
+          t("workoutFallback"),
         duration: todaySession.duration_min as number | null,
         exerciseCount: Array.isArray(todaySession.exercise_logs)
           ? todaySession.exercise_logs.length
@@ -96,14 +84,14 @@ export default async function DanasPage() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">Dobar dan, {name}!</h1>
+      <h1 className="text-2xl font-bold">{t("greeting", { name })}</h1>
       <p className="mt-1 text-sm text-gray-400">{dateStr}</p>
 
-      {/* ── Prehrana section ── */}
+      {/* ── Nutrition section ── */}
       <div className="mt-6">
         <div className="mb-3 flex items-center gap-2">
           <UtensilsCrossed size={18} className="text-orange-400" />
-          <h2 className="text-lg font-semibold">Prehrana</h2>
+          <h2 className="text-lg font-semibold">{t("nutrition")}</h2>
         </div>
 
         {mealData && mealData.meals.length > 0 ? (
@@ -112,7 +100,7 @@ export default async function DanasPage() {
             <Card size="sm" className="mb-3">
               <CardContent>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Dnevni plan</span>
+                  <span className="text-gray-400">{t("dailyPlan")}</span>
                   <div className="flex gap-3 text-xs">
                     <span className="text-orange-400">
                       {mealData.dailyTotals.cal} kcal
@@ -140,19 +128,19 @@ export default async function DanasPage() {
               <UtensilsCrossed className="mb-2 size-8 text-gray-600" />
               <p className="text-sm text-gray-400">
                 {mealData?.planName
-                  ? "Nema obroka za danas"
-                  : "Trener još nije postavio plan prehrane"}
+                  ? t("noMealsToday")
+                  : t("noPlanYet")}
               </p>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* ── Trening section ── */}
+      {/* ── Training section ── */}
       <div className="mt-6">
         <div className="mb-3 flex items-center gap-2">
           <Dumbbell size={18} className="text-green-400" />
-          <h2 className="text-lg font-semibold">Trening</h2>
+          <h2 className="text-lg font-semibold">{t("training")}</h2>
         </div>
 
         {workout ? (
@@ -167,13 +155,13 @@ export default async function DanasPage() {
                   <p className="text-xs text-gray-500">
                     {workout.duration != null
                       ? `${workout.duration} min`
-                      : "U tijeku"}
+                      : t("inProgress")}
                     {workout.exerciseCount > 0 &&
-                      ` · ${workout.exerciseCount} setova`}
+                      ` · ${workout.exerciseCount} ${t("setsSuffix")}`}
                   </p>
                 </div>
                 <span className="text-xs font-medium text-green-500">
-                  Završeno
+                  {t("done")}
                 </span>
               </CardContent>
             </Card>
@@ -182,7 +170,7 @@ export default async function DanasPage() {
           <Card>
             <CardContent className="flex flex-col items-center py-6 text-center">
               <Dumbbell className="mb-2 size-8 text-gray-600" />
-              <p className="text-sm text-gray-400">Nema treninga danas</p>
+              <p className="text-sm text-gray-400">{t("noWorkoutToday")}</p>
             </CardContent>
           </Card>
         )}
@@ -193,14 +181,14 @@ export default async function DanasPage() {
         <Link href="/app/log" className="block">
           <Button variant="outline" className="h-10 w-full">
             <ClipboardList className="mr-2 size-4" />
-            Upiši dnevni log
+            {t("logDay")}
           </Button>
         </Link>
 
         <Link href="/app/progress" className="block">
           <Button variant="outline" className="h-10 w-full">
             <TrendingUp className="mr-2 size-4" />
-            Vidi napredak
+            {t("seeProgress")}
           </Button>
         </Link>
       </div>

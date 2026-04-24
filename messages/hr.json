@@ -1,4 +1,33 @@
 {
+  "app": {
+    "home": {
+      "dailyPlan": "Dnevni plan",
+      "done": "Završeno",
+      "greeting": "Dobar dan, {name}!",
+      "inProgress": "U tijeku",
+      "logDay": "Upiši dnevni log",
+      "nameFallback": "korisnik",
+      "noMealsToday": "Nema obroka za danas",
+      "noPlanYet": "Trener još nije postavio plan prehrane",
+      "noWorkoutToday": "Nema treninga danas",
+      "nutrition": "Prehrana",
+      "seeProgress": "Vidi napredak",
+      "setsSuffix": "setova",
+      "training": "Trening",
+      "workoutFallback": "Trening"
+    },
+    "meals": {
+      "slotPrefix": "Obrok {n}"
+    },
+    "nav": {
+      "checkin": "Prijava",
+      "home": "Danas",
+      "log": "Dnevnik",
+      "photos": "Foto",
+      "profile": "Profil",
+      "workout": "Trening"
+    }
+  },
   "auth": {
     "login": {
       "emailConfirmationRequired": "Email adresa nije potvrđena.",
@@ -31,13 +60,22 @@
     }
   },
   "common": {
+    "back": "Natrag",
     "cancel": "Odustani",
     "delete": "Obriši",
     "edit": "Uredi",
     "email": "Email",
     "loading": "Učitavanje…",
+    "no": "Ne",
     "password": "Lozinka",
-    "save": "Spremi"
+    "save": "Spremi",
+    "saving": "Spremam...",
+    "yes": "Da"
+  },
+  "errors": {
+    "genericLoad": "Greška pri učitavanju. Pokušaj ponovo.",
+    "genericSave": "Greška pri spremanju. Pokušaj ponovo.",
+    "unauthenticated": "Nisi prijavljen/a."
   },
   "landing": {
     "loginAsClient": "Prijava kao klijent",

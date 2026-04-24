@@ -1,4 +1,33 @@
 {
+  "app": {
+    "home": {
+      "dailyPlan": "Daily plan",
+      "done": "Done",
+      "greeting": "Hi {name}!",
+      "inProgress": "In progress",
+      "logDay": "Log today",
+      "nameFallback": "there",
+      "noMealsToday": "No meals planned for today",
+      "noPlanYet": "Your coach hasn't set up a meal plan yet",
+      "noWorkoutToday": "No workout today",
+      "nutrition": "Nutrition",
+      "seeProgress": "See progress",
+      "setsSuffix": "sets",
+      "training": "Training",
+      "workoutFallback": "Workout"
+    },
+    "meals": {
+      "slotPrefix": "Meal {n}"
+    },
+    "nav": {
+      "checkin": "Check-in",
+      "home": "Today",
+      "log": "Log",
+      "photos": "Photos",
+      "profile": "Profile",
+      "workout": "Workout"
+    }
+  },
   "auth": {
     "login": {
       "emailConfirmationRequired": "Email address not confirmed.",
@@ -31,13 +60,22 @@
     }
   },
   "common": {
+    "back": "Back",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
     "email": "Email",
     "loading": "Loading…",
+    "no": "No",
     "password": "Password",
-    "save": "Save"
+    "save": "Save",
+    "saving": "Saving...",
+    "yes": "Yes"
+  },
+  "errors": {
+    "genericLoad": "Couldn't load. Try again.",
+    "genericSave": "Couldn't save. Try again.",
+    "unauthenticated": "You're not signed in."
   },
   "landing": {
     "loginAsClient": "Log in as client",
