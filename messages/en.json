@@ -235,6 +235,21 @@
       "signOut": "Log out",
       "openMenu": "Open menu",
       "closeMenu": "Close menu"
+    },
+    "home": {
+      "title": "Clients",
+      "newClient": "New client",
+      "emptyState": "No clients yet. Add your first one.",
+      "colName": "Name",
+      "colPhase": "Phase",
+      "colLastLog": "Last log",
+      "colWeight": "Weight",
+      "colThisWeek": "This week",
+      "colStatus": "Status",
+      "never": "Never",
+      "daysSuffix": "{count}/7 days",
+      "active": "Active",
+      "inactive": "Inactive"
     }
   },
   "common": {

@@ -235,6 +235,21 @@
       "signOut": "Odjava",
       "openMenu": "Otvori izbornik",
       "closeMenu": "Zatvori izbornik"
+    },
+    "home": {
+      "title": "Klijenti",
+      "newClient": "Novi klijent",
+      "emptyState": "Nema klijenata. Dodaj prvog klijenta.",
+      "colName": "Ime",
+      "colPhase": "Faza",
+      "colLastLog": "Zadnji log",
+      "colWeight": "Težina",
+      "colThisWeek": "Ovaj tjedan",
+      "colStatus": "Status",
+      "never": "Nikad",
+      "daysSuffix": "{count}/7 dana",
+      "active": "Aktivan",
+      "inactive": "Neaktivan"
     }
   },
   "common": {
