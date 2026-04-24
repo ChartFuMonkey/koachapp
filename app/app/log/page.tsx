@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,10 @@ type Targets = {
 };
 
 export default function LogPage() {
+  const t = useTranslations("app.log");
+  const tErrors = useTranslations("app.log.errors");
+  const tCommon = useTranslations("common");
+  const tCommonErrors = useTranslations("errors");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [targets, setTargets] = useState<Targets | null>(null);
@@ -41,6 +46,15 @@ export default function LogPage() {
   const [energyLevel, setEnergyLevel] = useState(5);
   const [notes, setNotes] = useState("");
   const [followedMealPlan, setFollowedMealPlan] = useState<boolean | null>(null);
+
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericLoad");
+    }
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -105,9 +119,9 @@ export default function LogPage() {
     const result = await saveDailyLog(data);
 
     if (result.error) {
-      toast.error(result.error);
+      toast.error(translateError(result.error));
     } else {
-      toast.success("Dnevni log spremljen!");
+      toast.success(t("savedToast"));
     }
 
     setSaving(false);
@@ -123,116 +137,109 @@ export default function LogPage() {
 
   return (
     <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">Dnevni log</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Kalorije */}
         <Field
-          label="Kalorije (kcal)"
+          label={t("calories")}
           value={caloriesKcal}
           onChange={setCaloriesKcal}
           inputMode="numeric"
           target={
             targets?.target_calories
-              ? `Cilj: ${targets.target_calories} kcal`
+              ? t("targetWithUnit", { v: targets.target_calories, unit: "kcal" })
               : null
           }
         />
 
-        {/* Proteini */}
         <Field
-          label="Proteini (g)"
+          label={t("protein")}
           value={proteinG}
           onChange={setProteinG}
           inputMode="numeric"
           target={
             targets?.target_protein_g
-              ? `Cilj: ${targets.target_protein_g} g`
+              ? t("targetWithUnit", { v: targets.target_protein_g, unit: "g" })
               : null
           }
         />
 
-        {/* Ugljikohidrati */}
         <Field
-          label="Ugljikohidrati (g)"
+          label={t("carbs")}
           value={carbsG}
           onChange={setCarbsG}
           inputMode="numeric"
           target={
             targets?.target_carbs_g
-              ? `Cilj: ${targets.target_carbs_g} g`
+              ? t("targetWithUnit", { v: targets.target_carbs_g, unit: "g" })
               : null
           }
         />
 
-        {/* Masti */}
         <Field
-          label="Masti (g)"
+          label={t("fat")}
           value={fatG}
           onChange={setFatG}
           inputMode="numeric"
           target={
-            targets?.target_fat_g ? `Cilj: ${targets.target_fat_g} g` : null
+            targets?.target_fat_g
+              ? t("targetWithUnit", { v: targets.target_fat_g, unit: "g" })
+              : null
           }
         />
 
-        {/* Vlakna */}
         <Field
-          label="Vlakna (g)"
+          label={t("fiber")}
           value={fiberG}
           onChange={setFiberG}
           inputMode="numeric"
           target={null}
         />
 
-        {/* Voda */}
         <Field
-          label="Voda (L)"
+          label={t("water")}
           value={waterL}
           onChange={setWaterL}
           inputMode="decimal"
           target={null}
         />
 
-        {/* Koraci */}
         <Field
-          label="Koraci"
+          label={t("steps")}
           value={steps}
           onChange={setSteps}
           inputMode="numeric"
           target={
             targets?.target_steps
-              ? `Cilj: ${targets.target_steps.toLocaleString()}`
+              ? t("target", { v: targets.target_steps.toLocaleString() })
               : null
           }
         />
 
-        {/* Kardio */}
         <Field
-          label="Kardio (min)"
+          label={t("cardio")}
           value={cardioMin}
           onChange={setCardioMin}
           inputMode="numeric"
           target={null}
         />
 
-        {/* San */}
         <Field
-          label="San (h)"
+          label={t("sleepHours")}
           value={sleepH}
           onChange={setSleepH}
           inputMode="decimal"
           target={
             targets?.target_sleep_h
-              ? `Cilj: ${targets.target_sleep_h} h`
+              ? t("targetWithUnit", { v: targets.target_sleep_h, unit: "h" })
               : null
           }
         />
 
-        {/* Kvaliteta sna — slider */}
+        {/* Sleep quality slider */}
         <div>
           <Label>
-            Kvaliteta sna:{" "}
+            {t("sleepQuality")}:{" "}
             <span className="text-blue-400">{sleepQuality}</span>/10
           </Label>
           <input
@@ -250,10 +257,10 @@ export default function LogPage() {
           </div>
         </div>
 
-        {/* Razina energije — slider */}
+        {/* Energy level slider */}
         <div>
           <Label>
-            Razina energije:{" "}
+            {t("energyLevel")}:{" "}
             <span className="text-blue-400">{energyLevel}</span>/10
           </Label>
           <input
@@ -271,22 +278,22 @@ export default function LogPage() {
           </div>
         </div>
 
-        {/* Bilješka */}
+        {/* Note */}
         <div>
-          <Label htmlFor="notes">Bilješka</Label>
+          <Label htmlFor="notes">{t("notesLabel")}</Label>
           <textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            placeholder="Opcionalno..."
+            placeholder={t("notesPlaceholder")}
             className="mt-1 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
           />
         </div>
 
-        {/* Plan prehrane */}
+        {/* Meal plan followed */}
         <div>
-          <Label>Jesi li pratio/la plan prehrane?</Label>
+          <Label>{t("followedPlanQuestion")}</Label>
           <div className="mt-2 flex gap-2">
             <button
               type="button"
@@ -299,7 +306,7 @@ export default function LogPage() {
                   : "border-gray-700 text-gray-400 hover:border-gray-600"
               }`}
             >
-              Da
+              {tCommon("yes")}
             </button>
             <button
               type="button"
@@ -312,12 +319,12 @@ export default function LogPage() {
                   : "border-gray-700 text-gray-400 hover:border-gray-600"
               }`}
             >
-              Ne
+              {tCommon("no")}
             </button>
           </div>
         </div>
 
-        {/* Spremi button */}
+        {/* Submit */}
         <Button
           type="submit"
           disabled={saving}
@@ -326,10 +333,10 @@ export default function LogPage() {
           {saving ? (
             <>
               <Loader2 className="mr-2 size-5 animate-spin" />
-              Spremam...
+              {tCommon("saving")}
             </>
           ) : (
-            "Spremi"
+            tCommon("save")
           )}
         </Button>
       </form>

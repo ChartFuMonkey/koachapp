@@ -16,6 +16,33 @@
       "training": "Training",
       "workoutFallback": "Workout"
     },
+    "log": {
+      "calories": "Calories (kcal)",
+      "cardio": "Cardio (min)",
+      "carbs": "Carbs (g)",
+      "energyLevel": "Energy level",
+      "energyLevelValue": "Energy level: {v}/10",
+      "fat": "Fat (g)",
+      "fiber": "Fiber (g)",
+      "followedPlanQuestion": "Did you follow your meal plan?",
+      "notesLabel": "Note",
+      "notesPlaceholder": "Optional...",
+      "protein": "Protein (g)",
+      "savedToast": "Daily log saved!",
+      "sleepHours": "Sleep (h)",
+      "sleepQuality": "Sleep quality",
+      "sleepQualityValue": "Sleep quality: {v}/10",
+      "steps": "Steps",
+      "target": "Target: {v}",
+      "targetWithUnit": "Target: {v} {unit}",
+      "title": "Daily log",
+      "water": "Water (L)",
+      "errors": {
+        "loadFailed": "Couldn't load log.",
+        "loadTargetsFailed": "Couldn't load targets.",
+        "saveFailed": "Couldn't save. Try again."
+      }
+    },
     "meals": {
       "slotPrefix": "Meal {n}"
     },

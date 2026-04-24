@@ -16,6 +16,33 @@
       "training": "Trening",
       "workoutFallback": "Trening"
     },
+    "log": {
+      "calories": "Kalorije (kcal)",
+      "cardio": "Kardio (min)",
+      "carbs": "Ugljikohidrati (g)",
+      "energyLevel": "Razina energije",
+      "energyLevelValue": "Razina energije: {v}/10",
+      "fat": "Masti (g)",
+      "fiber": "Vlakna (g)",
+      "followedPlanQuestion": "Jesi li pratio/la plan prehrane?",
+      "notesLabel": "Bilješka",
+      "notesPlaceholder": "Opcionalno...",
+      "protein": "Proteini (g)",
+      "savedToast": "Dnevni log spremljen!",
+      "sleepHours": "San (h)",
+      "sleepQuality": "Kvaliteta sna",
+      "sleepQualityValue": "Kvaliteta sna: {v}/10",
+      "steps": "Koraci",
+      "target": "Cilj: {v}",
+      "targetWithUnit": "Cilj: {v} {unit}",
+      "title": "Dnevni log",
+      "water": "Voda (L)",
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju loga.",
+        "loadTargetsFailed": "Greška pri dohvaćanju ciljeva.",
+        "saveFailed": "Greška pri spremanju. Pokušaj ponovo."
+      }
+    },
     "meals": {
       "slotPrefix": "Obrok {n}"
     },
