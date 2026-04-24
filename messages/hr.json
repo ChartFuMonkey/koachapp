@@ -1,0 +1,9 @@
+{
+  "common": {
+    "save": "Spremi",
+    "cancel": "Odustani",
+    "delete": "Obriši",
+    "edit": "Uredi",
+    "loading": "Učitavanje…"
+  }
+}
