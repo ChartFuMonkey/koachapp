@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 export default function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = "Obriši",
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
 }: {
@@ -15,10 +17,14 @@ export default function ConfirmDialog({
   title: string;
   description?: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const tCommon = useTranslations("common");
+  const effectiveCancel = cancelLabel ?? tCommon("cancel");
+  const effectiveConfirm = confirmLabel ?? tCommon("delete");
 
   useEffect(() => {
     if (open) {
@@ -50,10 +56,10 @@ export default function ConfirmDialog({
         )}
         <div className="mt-6 flex justify-end gap-2">
           <Button ref={cancelRef} variant="outline" onClick={onCancel}>
-            Odustani
+            {effectiveCancel}
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            {confirmLabel}
+            {effectiveConfirm}
           </Button>
         </div>
       </div>
