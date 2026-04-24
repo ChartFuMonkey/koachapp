@@ -9,7 +9,7 @@ export async function getActiveProgram() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Nisi prijavljen/a." };
+  if (!user) return { error: "unauthenticated" };
 
   // Get active program
   const { data: program, error: progErr } = await supabase
@@ -21,7 +21,7 @@ export async function getActiveProgram() {
 
   if (progErr) {
     console.error("Program fetch error:", progErr);
-    return { error: "Greška pri dohvaćanju programa." };
+    return { error: "loadProgramFailed" };
   }
 
   if (!program) return { data: null };
@@ -43,7 +43,7 @@ export async function getActiveProgram() {
 
   if (daysErr) {
     console.error("Days fetch error:", daysErr);
-    return { error: "Greška pri dohvaćanju dana." };
+    return { error: "loadDaysFailed" };
   }
 
   // Sort exercises within each day, normalize nested joins
@@ -66,7 +66,7 @@ export async function createWorkoutSession(programDayId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Nisi prijavljen/a." };
+  if (!user) return { error: "unauthenticated" };
 
   const today = todayCET();
 
@@ -82,7 +82,7 @@ export async function createWorkoutSession(programDayId: string) {
 
   if (error) {
     console.error("Session create error:", error);
-    return { error: "Greška pri kreiranju sesije." };
+    return { error: "createSessionFailed" };
   }
 
   return { data };
@@ -102,7 +102,7 @@ export async function logExerciseSet(params: {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Nisi prijavljen/a." };
+  if (!user) return { error: "unauthenticated" };
 
   const { error } = await supabase.from("exercise_logs").insert({
     session_id: params.session_id,
@@ -116,7 +116,7 @@ export async function logExerciseSet(params: {
 
   if (error) {
     console.error("Exercise log error:", error);
-    return { error: "Greška pri spremanju serije." };
+    return { error: "saveSetFailed" };
   }
 
   return { success: true };
@@ -131,7 +131,7 @@ export async function finishWorkoutSession(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Nisi prijavljen/a." };
+  if (!user) return { error: "unauthenticated" };
 
   const { error } = await supabase
     .from("workout_sessions")
@@ -141,7 +141,7 @@ export async function finishWorkoutSession(
 
   if (error) {
     console.error("Session finish error:", error);
-    return { error: "Greška pri završavanju treninga." };
+    return { error: "finishSessionFailed" };
   }
 
   return { success: true };
@@ -153,7 +153,7 @@ export async function getPreviousWeights(exerciseIds: string[]) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Nisi prijavljen/a." };
+  if (!user) return { error: "unauthenticated" };
 
   // For each exercise, get the most recent log from a previous session
   const { data, error } = await supabase
@@ -170,7 +170,7 @@ export async function getPreviousWeights(exerciseIds: string[]) {
 
   if (error) {
     console.error("Previous weights error:", error);
-    return { error: "Greška pri dohvaćanju prethodnih težina." };
+    return { error: "loadPrevWeightsFailed" };
   }
 
   // Group by exercise_id, take the first (most recent) set 1 entry
@@ -190,7 +190,7 @@ export async function getDayExercises(dayId: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Nisi prijavljen/a." };
+  if (!user) return { error: "unauthenticated" };
 
   const { data, error } = await supabase
     .from("program_exercises")
@@ -205,7 +205,7 @@ export async function getDayExercises(dayId: string) {
 
   if (error) {
     console.error("Day exercises fetch error:", error);
-    return { error: "Greška pri dohvaćanju vježbi." };
+    return { error: "loadExercisesFailed" };
   }
 
   // Normalize nested join (exercises may come as array)

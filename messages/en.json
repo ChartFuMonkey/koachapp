@@ -26,6 +26,43 @@
       "photos": "Photos",
       "profile": "Profile",
       "workout": "Workout"
+    },
+    "workout": {
+      "allDone": "All exercises done!",
+      "chooseDay": "Pick a day and start your workout",
+      "durationMinutes": "Duration: {min} min",
+      "easy": "Easy",
+      "exerciseCount": "Exercise {current}/{total}",
+      "exerciseCountShort": "{count} exercises",
+      "finishEarly": "Finish early",
+      "finishWorkout": "Finish workout",
+      "goal": "Target: {sets} x {reps}",
+      "invalidSession": "Invalid workout session.",
+      "lastTimeWeight": "Last time: {kg} kg",
+      "max": "Max",
+      "needReps": "Enter the number of reps.",
+      "noExercisesForDay": "No exercises for this day.",
+      "noProgramSubtitle": "Your coach hasn't set up a training program yet.",
+      "noProgramTitle": "No training program",
+      "noteLabel": "Note",
+      "repsLabel": "Reps",
+      "restLabel": "Rest",
+      "restSecondsShort": "{sec} sec rest",
+      "saveSet": "Save set",
+      "setLabel": "Set {n}",
+      "skipRest": "Skip rest",
+      "startWorkout": "Start workout",
+      "weightLabel": "Weight (kg)",
+      "workoutDoneToast": "Workout done!",
+      "errors": {
+        "createSessionFailed": "Couldn't start session.",
+        "finishSessionFailed": "Couldn't finish workout.",
+        "loadDaysFailed": "Couldn't load days.",
+        "loadExercisesFailed": "Couldn't load exercises.",
+        "loadPrevWeightsFailed": "Couldn't load previous weights.",
+        "loadProgramFailed": "Couldn't load program.",
+        "saveSetFailed": "Couldn't save set."
+      }
     }
   },
   "auth": {

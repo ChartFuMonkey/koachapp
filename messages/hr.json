@@ -26,6 +26,43 @@
       "photos": "Foto",
       "profile": "Profil",
       "workout": "Trening"
+    },
+    "workout": {
+      "allDone": "Sve vježbe gotove!",
+      "chooseDay": "Odaberi dan i pokreni trening",
+      "durationMinutes": "Trajanje: {min} min",
+      "easy": "Lako",
+      "exerciseCount": "Vježba {current}/{total}",
+      "exerciseCountShort": "{count} vježbi",
+      "finishEarly": "Završi ranije",
+      "finishWorkout": "Završi trening",
+      "goal": "Cilj: {sets} x {reps}",
+      "invalidSession": "Nevažeća sesija treninga.",
+      "lastTimeWeight": "Zadnji put: {kg} kg",
+      "max": "Maks",
+      "needReps": "Unesi broj ponavljanja.",
+      "noExercisesForDay": "Nema vježbi za ovaj dan.",
+      "noProgramSubtitle": "Trener još nije postavio tvoj program treninga.",
+      "noProgramTitle": "Nema programa treninga",
+      "noteLabel": "Bilješka",
+      "repsLabel": "Ponavljanja",
+      "restLabel": "Odmor",
+      "restSecondsShort": "{sec} sek odmora",
+      "saveSet": "Spremi seriju",
+      "setLabel": "Serija {n}",
+      "skipRest": "Preskoči odmor",
+      "startWorkout": "Počni trening",
+      "weightLabel": "Težina (kg)",
+      "workoutDoneToast": "Trening završen!",
+      "errors": {
+        "createSessionFailed": "Greška pri kreiranju sesije.",
+        "finishSessionFailed": "Greška pri završavanju treninga.",
+        "loadDaysFailed": "Greška pri dohvaćanju dana.",
+        "loadExercisesFailed": "Greška pri dohvaćanju vježbi.",
+        "loadPrevWeightsFailed": "Greška pri dohvaćanju prethodnih težina.",
+        "loadProgramFailed": "Greška pri dohvaćanju programa.",
+        "saveSetFailed": "Greška pri spremanju serije."
+      }
     }
   },
   "auth": {

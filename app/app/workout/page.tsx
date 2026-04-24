@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ChevronDown,
   ChevronUp,
   Dumbbell,
-  ExternalLink,
   Play,
   Timer,
   Loader2,
@@ -48,27 +48,40 @@ type Program = {
 
 export default function WorkoutPage() {
   const router = useRouter();
+  const t = useTranslations("app.workout");
+  const tErrors = useTranslations("app.workout.errors");
+  const tCommonErrors = useTranslations("errors");
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericLoad");
+    }
+  }
+
   useEffect(() => {
     getActiveProgram().then((res) => {
       if (res.error) {
-        toast.error(res.error);
+        toast.error(translateError(res.error));
       } else {
         setProgram(res.data as Program | null);
       }
       setLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleStartWorkout(dayId: string) {
     setStarting(true);
     const res = await createWorkoutSession(dayId);
     if (res.error) {
-      toast.error(res.error);
+      toast.error(translateError(res.error));
       setStarting(false);
       return;
     }
@@ -90,11 +103,9 @@ export default function WorkoutPage() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
         <Dumbbell className="mb-4 size-14 text-gray-600" />
         <h2 className="text-xl font-semibold text-gray-300">
-          Nema programa treninga
+          {t("noProgramTitle")}
         </h2>
-        <p className="mt-2 text-gray-500">
-          Trener još nije postavio tvoj program treninga.
-        </p>
+        <p className="mt-2 text-gray-500">{t("noProgramSubtitle")}</p>
       </div>
     );
   }
@@ -102,9 +113,7 @@ export default function WorkoutPage() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold">{program.name}</h1>
-      <p className="mt-1 text-sm text-gray-400">
-        Odaberi dan i pokreni trening
-      </p>
+      <p className="mt-1 text-sm text-gray-400">{t("chooseDay")}</p>
 
       <div className="mt-6 space-y-3">
         {program.days.map((day) => {
@@ -129,7 +138,9 @@ export default function WorkoutPage() {
                       {day.day_label}
                     </span>
                     <p className="text-sm text-gray-400">
-                      {day.program_exercises.length} vježbi
+                      {t("exerciseCountShort", {
+                        count: day.program_exercises.length,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -163,7 +174,7 @@ export default function WorkoutPage() {
                                 {pe.rest_sec && (
                                   <span className="flex items-center gap-1">
                                     <Timer className="size-3.5" />
-                                    {pe.rest_sec} sek odmora
+                                    {t("restSecondsShort", { sec: pe.rest_sec })}
                                   </span>
                                 )}
                                 {pe.rpe && (
@@ -204,7 +215,7 @@ export default function WorkoutPage() {
                     ) : (
                       <Play className="mr-2 size-5" />
                     )}
-                    Počni trening
+                    {t("startWorkout")}
                   </Button>
                 </CardContent>
               )}
