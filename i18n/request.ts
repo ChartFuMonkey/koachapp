@@ -24,11 +24,16 @@ function pickFromAcceptLanguage(header: string | null): Locale {
 
 export async function resolveLocale(): Promise<Locale> {
   // 1. Logged-in user: profiles.language wins.
-  try {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Skip Supabase path if env is not populated (e.g. during Vercel's
+  // build-time page data collection). Cookie + Accept-Language still work.
+  if (supabaseUrl && supabaseAnonKey) try {
     const cookieStore = await cookies();
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         cookies: {
           getAll: () => cookieStore.getAll(),
