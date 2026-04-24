@@ -1,9 +1,26 @@
 {
+  "auth": {
+    "login": {
+      "emailConfirmationRequired": "Email address not confirmed.",
+      "emailPlaceholder": "you@example.com",
+      "genericError": "Login failed. Try again.",
+      "invalidCredentials": "Wrong email or password.",
+      "loading": "Signing in...",
+      "networkError": "Network error. Check your connection.",
+      "passwordPlaceholder": "********",
+      "submit": "Log in",
+      "title": "KoachApp",
+      "tooManyRequests": "Too many attempts. Try again in a few minutes.",
+      "userNotFound": "User not found."
+    }
+  },
   "common": {
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
+    "email": "Email",
     "loading": "Loading…",
+    "password": "Password",
     "save": "Save"
   },
   "landing": {

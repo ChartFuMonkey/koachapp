@@ -1,9 +1,26 @@
 {
+  "auth": {
+    "login": {
+      "emailConfirmationRequired": "Email adresa nije potvrđena.",
+      "emailPlaceholder": "email@primjer.com",
+      "genericError": "Greška pri prijavi. Pokušaj ponovo.",
+      "invalidCredentials": "Pogrešan email ili lozinka.",
+      "loading": "Prijava...",
+      "networkError": "Greška s mrežom. Provjeri internetsku vezu.",
+      "passwordPlaceholder": "********",
+      "submit": "Prijava",
+      "title": "KoachApp",
+      "tooManyRequests": "Previše pokušaja. Pokušaj ponovo za par minuta.",
+      "userNotFound": "Korisnik nije pronađen."
+    }
+  },
   "common": {
     "cancel": "Odustani",
     "delete": "Obriši",
     "edit": "Uredi",
+    "email": "Email",
     "loading": "Učitavanje…",
+    "password": "Lozinka",
     "save": "Spremi"
   },
   "landing": {
