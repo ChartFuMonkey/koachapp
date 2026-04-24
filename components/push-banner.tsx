@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { savePushSubscription } from "@/actions/push";
@@ -37,6 +38,7 @@ async function subscribeToPush() {
 }
 
 export default function PushBanner() {
+  const t = useTranslations("pushBanner");
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -77,10 +79,10 @@ export default function PushBanner() {
       <div className="flex items-center gap-3 rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 shadow-lg">
         <Bell size={20} className="shrink-0 text-blue-400" />
         <p className="flex-1 text-sm text-gray-300">
-          Ukljuci podsjetnike za dnevni log
+          {t("description")}
         </p>
         <Button size="sm" onClick={handleEnable}>
-          Ukljuci
+          {t("enable")}
         </Button>
         <button
           onClick={handleDismiss}

@@ -3,9 +3,9 @@
     "home": {
       "dailyPlan": "Daily plan",
       "done": "Done",
-      "greeting": "Hi {name}!",
+      "greeting": "Hello {name}!",
       "inProgress": "In progress",
-      "logDay": "Log today",
+      "logDay": "Log today's stats",
       "nameFallback": "there",
       "noMealsToday": "No meals planned for today",
       "noPlanYet": "Your coach hasn't set up a meal plan yet",
@@ -642,5 +642,9 @@
     "iosHintSuffix": "\"Add to Home Screen\"",
     "installPrompt": "Install KoachApp on your home screen for a better experience",
     "installCta": "Install"
+  },
+  "pushBanner": {
+    "description": "Turn on reminders for your daily log",
+    "enable": "Turn on"
   }
 }

@@ -11,7 +11,7 @@ export async function savePushSubscription(subscription: {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
-  if (authError || !user) return { error: "Nisi prijavljen/a." };
+  if (authError || !user) return { error: "unauthenticated" as const };
 
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
@@ -25,7 +25,7 @@ export async function savePushSubscription(subscription: {
 
   if (error) {
     console.error("Push subscription save error:", error);
-    return { error: "Greška pri spremanju pretplate." };
+    return { error: "saveFailed" as const };
   }
 
   return { success: true };

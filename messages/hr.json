@@ -642,5 +642,9 @@
     "iosHintSuffix": "\"Dodaj na početni zaslon\"",
     "installPrompt": "Instaliraj KoachApp na početni zaslon za bolje iskustvo",
     "installCta": "Instaliraj"
+  },
+  "pushBanner": {
+    "description": "Uključi podsjetnike za dnevni log",
+    "enable": "Uključi"
   }
 }
