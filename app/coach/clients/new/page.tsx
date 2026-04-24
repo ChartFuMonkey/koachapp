@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,25 @@ import { Loader2, ArrowRight, Mail } from "lucide-react";
 
 export default function NewClientPage() {
   const router = useRouter();
+  const t = useTranslations("coach.clients.new");
+  const tErrors = useTranslations("coach.clients.new.errors");
+  const tCommonErrors = useTranslations("errors");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
     id: string;
     email: string;
   } | null>(null);
+
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericSave");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,7 +44,7 @@ export default function NewClientPage() {
     setLoading(false);
 
     if ("error" in res) {
-      setError(res.error as string);
+      setError(translateError(res.error as string));
       return;
     }
 
@@ -48,20 +62,19 @@ export default function NewClientPage() {
                 <Mail size={20} className="text-green-400" />
               </div>
               <h2 className="text-xl font-bold text-green-400">
-                Klijent kreiran!
+                {t("successTitle")}
               </h2>
             </div>
 
             <div className="rounded-lg bg-gray-900 p-4">
               <p className="text-sm text-gray-300">
-                Pozivnica je poslana na{" "}
+                {t("inviteSent")}{" "}
                 <span className="font-semibold text-white">
                   {result.email}
                 </span>
               </p>
               <p className="mt-2 text-xs text-gray-500">
-                Klijent će primiti email s linkom za postavljanje lozinke.
-                Nakon toga se može prijaviti u aplikaciju.
+                {t("inviteHint")}
               </p>
             </div>
 
@@ -69,7 +82,7 @@ export default function NewClientPage() {
               className="w-full"
               onClick={() => router.push(`/coach/clients/${result.id}`)}
             >
-              Idi na profil klijenta <ArrowRight size={14} />
+              {t("goToProfile")} <ArrowRight size={14} />
             </Button>
           </CardContent>
         </Card>
@@ -79,7 +92,7 @@ export default function NewClientPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold">Novi klijent</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
       <form onSubmit={handleSubmit}>
         <Card>
@@ -87,34 +100,34 @@ export default function NewClientPage() {
             {/* Identity */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <Label className="mb-1">Email *</Label>
+                <Label className="mb-1">{t("emailLabel")} *</Label>
                 <Input name="email" type="email" required />
               </div>
               <div>
-                <Label className="mb-1">Puno ime *</Label>
+                <Label className="mb-1">{t("fullNameLabel")} *</Label>
                 <Input name="full_name" required />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <Label className="mb-1">Datum rođenja</Label>
+                <Label className="mb-1">{t("dobLabel")}</Label>
                 <Input name="date_of_birth" type="date" />
               </div>
               <div>
-                <Label className="mb-1">Spol</Label>
+                <Label className="mb-1">{t("genderLabel")}</Label>
                 <select
                   name="gender"
                   className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
                 >
                   <option value="">—</option>
-                  <option value="M">Muški</option>
-                  <option value="F">Ženski</option>
-                  <option value="other">Ostalo</option>
+                  <option value="M">{t("genderMale")}</option>
+                  <option value="F">{t("genderFemale")}</option>
+                  <option value="other">{t("genderOther")}</option>
                 </select>
               </div>
               <div>
-                <Label className="mb-1">Visina (cm)</Label>
+                <Label className="mb-1">{t("heightLabel")}</Label>
                 <Input name="height_cm" type="number" step="0.1" />
               </div>
             </div>
@@ -122,11 +135,11 @@ export default function NewClientPage() {
             {/* Weight */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <Label className="mb-1">Početna težina (kg)</Label>
+                <Label className="mb-1">{t("startWeightLabel")}</Label>
                 <Input name="start_weight_kg" type="number" step="0.1" />
               </div>
               <div>
-                <Label className="mb-1">Ciljana težina (kg)</Label>
+                <Label className="mb-1">{t("targetWeightLabel")}</Label>
                 <Input name="target_weight_kg" type="number" step="0.1" />
               </div>
             </div>
@@ -134,34 +147,34 @@ export default function NewClientPage() {
             {/* Targets */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div>
-                <Label className="mb-1">Kalorije (kcal)</Label>
+                <Label className="mb-1">{t("caloriesLabel")}</Label>
                 <Input name="target_calories" type="number" />
               </div>
               <div>
-                <Label className="mb-1">Proteini (g)</Label>
+                <Label className="mb-1">{t("proteinLabel")}</Label>
                 <Input name="target_protein_g" type="number" />
               </div>
               <div>
-                <Label className="mb-1">UH (g)</Label>
+                <Label className="mb-1">{t("carbsLabel")}</Label>
                 <Input name="target_carbs_g" type="number" />
               </div>
               <div>
-                <Label className="mb-1">Masti (g)</Label>
+                <Label className="mb-1">{t("fatLabel")}</Label>
                 <Input name="target_fat_g" type="number" />
               </div>
             </div>
 
             {/* Notes */}
             <div>
-              <Label className="mb-1">Bilješka</Label>
-              <Textarea name="notes" rows={3} placeholder="Napomene..." />
+              <Label className="mb-1">{t("notesLabel")}</Label>
+              <Textarea name="notes" rows={3} placeholder={t("notesPlaceholder")} />
             </div>
             <div>
-              <Label className="mb-1">Ozljede</Label>
+              <Label className="mb-1">{t("injuriesLabel")}</Label>
               <Textarea
                 name="injuries"
                 rows={2}
-                placeholder="Ozljede, ograničenja..."
+                placeholder={t("injuriesPlaceholder")}
               />
             </div>
 
@@ -172,10 +185,10 @@ export default function NewClientPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 size={14} className="animate-spin" /> Kreiram...
+                  <Loader2 size={14} className="animate-spin" /> {t("submitLoading")}
                 </>
               ) : (
-                "Kreiraj klijenta"
+                t("submit")
               )}
             </Button>
           </CardContent>

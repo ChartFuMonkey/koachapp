@@ -250,6 +250,42 @@
       "daysSuffix": "{count}/7 dana",
       "active": "Aktivan",
       "inactive": "Neaktivan"
+    },
+    "clients": {
+      "new": {
+        "title": "Novi klijent",
+        "emailLabel": "Email",
+        "fullNameLabel": "Puno ime",
+        "dobLabel": "Datum rođenja",
+        "genderLabel": "Spol",
+        "genderMale": "Muški",
+        "genderFemale": "Ženski",
+        "genderOther": "Ostalo",
+        "heightLabel": "Visina (cm)",
+        "startWeightLabel": "Početna težina (kg)",
+        "targetWeightLabel": "Ciljana težina (kg)",
+        "caloriesLabel": "Kalorije (kcal)",
+        "proteinLabel": "Proteini (g)",
+        "carbsLabel": "UH (g)",
+        "fatLabel": "Masti (g)",
+        "notesLabel": "Bilješka",
+        "notesPlaceholder": "Napomene...",
+        "injuriesLabel": "Ozljede",
+        "injuriesPlaceholder": "Ozljede, ograničenja...",
+        "submit": "Kreiraj klijenta",
+        "submitLoading": "Kreiram...",
+        "successTitle": "Klijent kreiran!",
+        "inviteSent": "Pozivnica je poslana na",
+        "inviteHint": "Klijent će primiti email s linkom za postavljanje lozinke. Nakon toga se može prijaviti u aplikaciju.",
+        "goToProfile": "Idi na profil klijenta",
+        "errors": {
+          "missingFields": "Email i ime su obavezni.",
+          "emailAlreadyUsed": "Korisnik s ovim emailom već postoji.",
+          "authCreateFailed": "Greška pri kreiranju korisnika.",
+          "profileCreateFailed": "Greška pri kreiranju profila.",
+          "clientCreateFailed": "Greška pri kreiranju klijenta."
+        }
+      }
     }
   },
   "common": {

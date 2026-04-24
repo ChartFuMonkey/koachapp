@@ -250,6 +250,42 @@
       "daysSuffix": "{count}/7 days",
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "clients": {
+      "new": {
+        "title": "Add client",
+        "emailLabel": "Email",
+        "fullNameLabel": "Full name",
+        "dobLabel": "Date of birth",
+        "genderLabel": "Gender",
+        "genderMale": "Male",
+        "genderFemale": "Female",
+        "genderOther": "Other",
+        "heightLabel": "Height (cm)",
+        "startWeightLabel": "Start weight (kg)",
+        "targetWeightLabel": "Target weight (kg)",
+        "caloriesLabel": "Calories (kcal)",
+        "proteinLabel": "Protein (g)",
+        "carbsLabel": "Carbs (g)",
+        "fatLabel": "Fat (g)",
+        "notesLabel": "Note",
+        "notesPlaceholder": "Notes...",
+        "injuriesLabel": "Injuries",
+        "injuriesPlaceholder": "Injuries, limitations...",
+        "submit": "Add client",
+        "submitLoading": "Adding...",
+        "successTitle": "Client added!",
+        "inviteSent": "Invite sent to",
+        "inviteHint": "The client will get an email with a link to set their password. After that they can sign in to the app.",
+        "goToProfile": "Go to client profile",
+        "errors": {
+          "missingFields": "Email and name are required.",
+          "emailAlreadyUsed": "A user with that email already exists.",
+          "authCreateFailed": "Couldn't create user.",
+          "profileCreateFailed": "Couldn't create profile.",
+          "clientCreateFailed": "Couldn't create client."
+        }
+      }
     }
   },
   "common": {
