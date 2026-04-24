@@ -59,6 +59,7 @@ export default function WorkoutPage() {
   function translateError(code: string): string {
     if (code === "unauthenticated") return tCommonErrors("unauthenticated");
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return tErrors(code as any);
     } catch {
       return tCommonErrors("genericLoad");

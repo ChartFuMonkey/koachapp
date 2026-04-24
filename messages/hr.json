@@ -79,6 +79,39 @@
     "meals": {
       "slotPrefix": "Obrok {n}"
     },
+    "profile": {
+      "carbsShort": "UH",
+      "clearSelection": "Poništi",
+      "currentPhase": "Trenutna faza",
+      "dateOfBirth": "Datum rođenja",
+      "editTitle": "Uredi profil",
+      "female": "Žensko",
+      "fullName": "Ime i prezime",
+      "gender": "Spol",
+      "heightCm": "Visina (cm)",
+      "kcal": "kcal",
+      "language": "Jezik / Language",
+      "male": "Muško",
+      "nameRequired": "Ime je obavezno.",
+      "notFound": "Profil nije pronađen.",
+      "profileUpdatedToast": "Profil ažuriran!",
+      "signOut": "Odjava",
+      "signOutLoading": "Odjava...",
+      "startDate": "Početak:",
+      "startWeight": "Početna težina:",
+      "targetCalories": "Kalorije:",
+      "targetCarbs": "UH:",
+      "targetFat": "Masti:",
+      "targetProtein": "Proteini:",
+      "targetSleep": "San:",
+      "targetSteps": "Koraci:",
+      "targets": "Ciljevi",
+      "title": "Profil",
+      "errors": {
+        "loadFailed": "Greška pri dohvaćanju profila.",
+        "updateFailed": "Greška pri ažuriranju profila."
+      }
+    },
     "progress": {
       "caloriesLabel": "Kalorije",
       "caloriesTitle": "Kalorije (kcal)",

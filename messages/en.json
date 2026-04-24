@@ -79,6 +79,39 @@
     "meals": {
       "slotPrefix": "Meal {n}"
     },
+    "profile": {
+      "carbsShort": "Carbs",
+      "clearSelection": "Clear",
+      "currentPhase": "Current phase",
+      "dateOfBirth": "Date of birth",
+      "editTitle": "Edit profile",
+      "female": "Female",
+      "fullName": "Full name",
+      "gender": "Gender",
+      "heightCm": "Height (cm)",
+      "kcal": "kcal",
+      "language": "Jezik / Language",
+      "male": "Male",
+      "nameRequired": "Name is required.",
+      "notFound": "Profile not found.",
+      "profileUpdatedToast": "Profile updated!",
+      "signOut": "Log out",
+      "signOutLoading": "Logging out...",
+      "startDate": "Start:",
+      "startWeight": "Start weight:",
+      "targetCalories": "Calories:",
+      "targetCarbs": "Carbs:",
+      "targetFat": "Fat:",
+      "targetProtein": "Protein:",
+      "targetSleep": "Sleep:",
+      "targetSteps": "Steps:",
+      "targets": "Targets",
+      "title": "Profile",
+      "errors": {
+        "loadFailed": "Couldn't load profile.",
+        "updateFailed": "Couldn't update profile."
+      }
+    },
     "progress": {
       "caloriesLabel": "Calories",
       "caloriesTitle": "Calories (kcal)",

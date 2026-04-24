@@ -6,13 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Check,
-  ChevronRight,
-  ExternalLink,
   Loader2,
   Play,
   SkipForward,
   Trophy,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -150,6 +147,7 @@ function WorkoutLogInner() {
   function translateError(code: string): string {
     if (code === "unauthenticated") return tCommonErrors("unauthenticated");
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return tErrors(code as any);
     } catch {
       return tCommonErrors("genericLoad");

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 type Profile = {
   full_name: string | null;
@@ -35,11 +37,26 @@ type Dashboard = {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const t = useTranslations("app.profile");
+  const tErrors = useTranslations("app.profile.errors");
+  const tCommon = useTranslations("common");
+  const tCommonErrors = useTranslations("errors");
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+
+  function translateError(code: string): string {
+    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return tErrors(code as any);
+    } catch {
+      return tCommonErrors("genericLoad");
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -56,7 +73,7 @@ export default function ProfilePage() {
 
   async function handleSave() {
     if (!profile?.full_name?.trim()) {
-      toast.error("Ime je obavezno.");
+      toast.error(t("nameRequired"));
       return;
     }
     setSaving(true);
@@ -67,9 +84,9 @@ export default function ProfilePage() {
       gender: profile.gender,
     });
     if (result.error) {
-      toast.error(result.error);
+      toast.error(translateError(result.error));
     } else {
-      toast.success("Profil ažuriran!");
+      toast.success(t("profileUpdatedToast"));
     }
     setSaving(false);
   }
@@ -92,14 +109,16 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="p-6 text-center text-gray-400">
-        Profil nije pronađen.
+        {t("notFound")}
       </div>
     );
   }
 
+  const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+
   return (
     <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">Profil</h1>
+      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
 
       {/* === Dashboard Section === */}
       {dashboard && (
@@ -113,7 +132,7 @@ export default function ProfilePage() {
           {dashboard.phase && (
             <Card size="sm">
               <CardContent>
-                <p className="text-xs text-gray-500">Trenutna faza</p>
+                <p className="text-xs text-gray-500">{t("currentPhase")}</p>
                 <p className="text-base font-semibold">{dashboard.phase.name}</p>
                 {dashboard.phase.type && (
                   <p className="text-sm text-gray-400">{dashboard.phase.type}</p>
@@ -125,41 +144,41 @@ export default function ProfilePage() {
           {dashboard.targets && (
             <Card size="sm">
               <CardContent>
-                <p className="mb-2 text-xs text-gray-500">Ciljevi</p>
+                <p className="mb-2 text-xs text-gray-500">{t("targets")}</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {dashboard.targets.calories != null && (
                     <div>
-                      <span className="text-gray-400">Kalorije: </span>
+                      <span className="text-gray-400">{t("targetCalories")} </span>
                       <span className="font-medium">{dashboard.targets.calories} kcal</span>
                     </div>
                   )}
                   {dashboard.targets.protein != null && (
                     <div>
-                      <span className="text-gray-400">Proteini: </span>
+                      <span className="text-gray-400">{t("targetProtein")} </span>
                       <span className="font-medium">{dashboard.targets.protein} g</span>
                     </div>
                   )}
                   {dashboard.targets.carbs != null && (
                     <div>
-                      <span className="text-gray-400">UH: </span>
+                      <span className="text-gray-400">{t("targetCarbs")} </span>
                       <span className="font-medium">{dashboard.targets.carbs} g</span>
                     </div>
                   )}
                   {dashboard.targets.fat != null && (
                     <div>
-                      <span className="text-gray-400">Masti: </span>
+                      <span className="text-gray-400">{t("targetFat")} </span>
                       <span className="font-medium">{dashboard.targets.fat} g</span>
                     </div>
                   )}
                   {dashboard.targets.steps != null && (
                     <div>
-                      <span className="text-gray-400">Koraci: </span>
+                      <span className="text-gray-400">{t("targetSteps")} </span>
                       <span className="font-medium">{dashboard.targets.steps.toLocaleString()}</span>
                     </div>
                   )}
                   {dashboard.targets.sleep != null && (
                     <div>
-                      <span className="text-gray-400">San: </span>
+                      <span className="text-gray-400">{t("targetSleep")} </span>
                       <span className="font-medium">{dashboard.targets.sleep} h</span>
                     </div>
                   )}
@@ -174,15 +193,15 @@ export default function ProfilePage() {
                 <div className="flex gap-6 text-sm">
                   {dashboard.start_date && (
                     <div>
-                      <span className="text-gray-400">Početak:</span>
+                      <span className="text-gray-400">{t("startDate")}</span>
                       <span className="font-medium">
-                        {new Date(dashboard.start_date + "T00:00").toLocaleDateString("hr-HR")}
+                        {new Date(dashboard.start_date + "T00:00").toLocaleDateString(bcp47)}
                       </span>
                     </div>
                   )}
                   {dashboard.start_weight && (
                     <div>
-                      <span className="text-gray-400">Početna težina:</span>
+                      <span className="text-gray-400">{t("startWeight")}</span>
                       <span className="font-medium">{dashboard.start_weight} kg</span>
                     </div>
                   )}
@@ -196,12 +215,12 @@ export default function ProfilePage() {
       )}
 
       {/* === Edit Profile Form === */}
-      <h2 className="mb-4 text-lg font-semibold">Uredi profil</h2>
+      <h2 className="mb-4 text-lg font-semibold">{t("editTitle")}</h2>
 
       <Card>
         <CardContent className="space-y-4 pt-2">
           <div>
-            <Label htmlFor="full_name">Ime i prezime</Label>
+            <Label htmlFor="full_name">{t("fullName")}</Label>
             <Input
               id="full_name"
               value={profile.full_name || ""}
@@ -213,7 +232,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{tCommon("email")}</Label>
             <Input
               id="email"
               value={profile.email || ""}
@@ -223,7 +242,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <Label htmlFor="dob">Datum rođenja</Label>
+            <Label htmlFor="dob">{t("dateOfBirth")}</Label>
             <Input
               id="dob"
               type="date"
@@ -239,7 +258,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <Label htmlFor="height">Visina (cm)</Label>
+            <Label htmlFor="height">{t("heightCm")}</Label>
             <Input
               id="height"
               type="number"
@@ -255,7 +274,7 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <Label>Spol</Label>
+            <Label>{t("gender")}</Label>
             <div className="mt-1 flex gap-2">
               {(["M", "F"] as const).map((g) => (
                 <Button
@@ -265,7 +284,7 @@ export default function ProfilePage() {
                   className="h-11 min-w-[48px] px-4"
                   onClick={() => setProfile({ ...profile, gender: g })}
                 >
-                  {g === "M" ? "Muško" : "Žensko"}
+                  {g === "M" ? t("male") : t("female")}
                 </Button>
               ))}
               {profile.gender && (
@@ -275,7 +294,7 @@ export default function ProfilePage() {
                   className="h-11"
                   onClick={() => setProfile({ ...profile, gender: null })}
                 >
-                  Poništi
+                  {t("clearSelection")}
                 </Button>
               )}
             </div>
@@ -289,16 +308,26 @@ export default function ProfilePage() {
             {saving ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Spremam...
+                {tCommon("saving")}
               </>
             ) : (
-              "Spremi"
+              tCommon("save")
             )}
           </Button>
         </CardContent>
       </Card>
 
       <div className="my-6 border-t border-gray-800" />
+
+      {/* === Language switcher === */}
+      <Card className="mb-6">
+        <CardContent className="flex items-center justify-between gap-3 p-4">
+          <span className="text-sm font-medium text-gray-300">
+            {t("language")}
+          </span>
+          <LanguageSwitcher />
+        </CardContent>
+      </Card>
 
       <Button
         variant="outline"
@@ -307,7 +336,7 @@ export default function ProfilePage() {
         className="h-11 w-full text-base text-red-400 hover:text-red-300"
       >
         <LogOut className="mr-2 size-4" />
-        {signingOut ? "Odjava..." : "Odjava"}
+        {signingOut ? t("signOutLoading") : t("signOut")}
       </Button>
     </div>
   );
