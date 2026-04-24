@@ -1,7 +1,10 @@
+import { getTranslations } from "next-intl/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import MealManager from "./meal-manager";
 
 export default async function MealDatabasePage() {
+  const t = await getTranslations("coach.meals");
+  const tErrors = await getTranslations("errors");
   const [mealsResult, foodsResult] = await Promise.all([
     supabaseAdmin
       .from("meals")
@@ -22,17 +25,20 @@ export default async function MealDatabasePage() {
   if (mealsResult.error || foodsResult.error) {
     return (
       <div>
-        <h1 className="mb-4 text-2xl font-bold">Meals</h1>
-        <p className="text-red-400">Error loading data.</p>
+        <h1 className="mb-4 text-2xl font-bold">{t("title")}</h1>
+        <p className="text-red-400">{tErrors("genericLoad")}</p>
       </div>
     );
   }
 
   // Normalize nested joins and sort meal_foods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const meals = (mealsResult.data ?? []).map((meal: any) => ({
     ...meal,
     meal_foods: [...(meal.meal_foods ?? [])]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((mf: any) => ({
         ...mf,
         foods: Array.isArray(mf.foods) ? mf.foods[0] : mf.foods,
