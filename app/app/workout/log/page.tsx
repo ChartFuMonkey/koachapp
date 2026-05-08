@@ -400,6 +400,19 @@ function WorkoutLogInner() {
   const prevWeight = prevWeights[ex.id];
   const doneSets = completedSets[currentExercise.id] ?? [];
 
+  // Build set log table data: status per set + last logged values
+  const setRows = Array.from({ length: currentExercise.sets }, (_, i) => {
+    const setNum = i + 1;
+    const isDone = doneSets.includes(setNum);
+    const isCurrent = setNum === currentSetNum && !showRest;
+    const status: "done" | "now" | "next" = isDone
+      ? "done"
+      : isCurrent
+        ? "now"
+        : "next";
+    return { setNum, status };
+  });
+
   // ── Header (shared) ─────────────────────────────────────────────
   const Header = (
     <div className="flex items-center justify-between gap-3 mb-3">
@@ -565,6 +578,65 @@ function WorkoutLogInner() {
                 {t("saveSet")}
               </Button>
             </div>
+          </div>
+
+          {/* SET LOG table */}
+          <div className="mt-5 rounded-xl border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+              <MicroLabel>SET LOG</MicroLabel>
+              <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
+                {currentExercise.sets} × {currentExercise.reps}
+              </span>
+            </div>
+            {setRows.map((r, i) => (
+              <div
+                key={r.setNum}
+                className={`grid grid-cols-[32px_1fr_1fr_1fr_72px] items-center px-4 py-2.5 font-mono text-[12px] ${
+                  i < setRows.length - 1 ? "border-b border-border" : ""
+                } ${r.status === "now" ? "bg-primary/[0.04]" : ""}`}
+              >
+                <span
+                  className={`text-[14px] font-bold ${
+                    r.status === "next" ? "text-ink-3" : "text-ink"
+                  }`}
+                >
+                  #{r.setNum}
+                </span>
+                <span className={r.status === "next" ? "text-ink-3" : "text-ink"}>
+                  {r.status === "now"
+                    ? `${weightInput || "—"}${weightInput ? " kg" : ""}`
+                    : r.status === "done"
+                      ? "—"
+                      : "—"}
+                </span>
+                <span className={r.status === "next" ? "text-ink-3" : "text-ink"}>
+                  {r.status === "now"
+                    ? `${repsInput || "—"}${repsInput ? " rep" : ""}`
+                    : "—"}
+                </span>
+                <span className={r.status === "next" ? "text-ink-3" : "text-ink"}>
+                  {r.status === "now" && rpeInput > 0
+                    ? `@${rpeInput}`
+                    : "—"}
+                </span>
+                <Chip
+                  variant={
+                    r.status === "done"
+                      ? "good"
+                      : r.status === "now"
+                        ? "accent"
+                        : "neutral"
+                  }
+                  className="justify-self-end"
+                >
+                  {r.status === "done"
+                    ? t("doneSet")
+                    : r.status === "now"
+                      ? t("currentSet")
+                      : t("upNext").toUpperCase().slice(0, 4)}
+                </Chip>
+              </div>
+            ))}
           </div>
 
           {/* Notes */}

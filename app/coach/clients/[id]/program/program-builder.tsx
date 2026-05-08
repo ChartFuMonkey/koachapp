@@ -6,8 +6,9 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Chip } from "@/components/ui/athletic/chip";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import {
   createProgram,
   deleteProgram,
@@ -188,22 +189,23 @@ export default function ProgramBuilder({
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-7">
         <Link
           href={`/coach/clients/${clientId}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-gray-200"
+          className="mb-2 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3 hover:text-ink"
         >
-          <ChevronLeft size={14} /> {clientName}
+          <ChevronLeft size={12} /> {clientName}
         </Link>
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-xl font-bold sm:text-2xl">{t("title")}</h1>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <MicroLabel>{clientName.toUpperCase()} · PROGRAM</MicroLabel>
+            <h1 className="mt-1 text-[28px] sm:text-[32px] font-semibold tracking-tight text-ink">
+              {t("title")}
+            </h1>
+          </div>
           {!showNewProgram && (
-            <Button
-              onClick={() => setShowNewProgram(true)}
-              size="sm"
-              className="shrink-0 sm:size-default"
-            >
-              <Plus size={14} /> <span className="hidden sm:inline">{t("newProgramShort")}</span> {t("newProgram")}
+            <Button onClick={() => setShowNewProgram(true)} size="sm">
+              <Plus size={14} /> {t("newProgram")}
             </Button>
           )}
         </div>
@@ -263,19 +265,24 @@ export default function ProgramBuilder({
             >
               <CardContent className="p-3 sm:p-4">
                 {/* Program header */}
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Dumbbell
-                      size={18}
+                      size={16}
                       className="hidden text-ink-2 sm:block"
                     />
-                    <h2 className="text-base font-semibold sm:text-lg">
+                    <h2 className="text-lg font-semibold text-ink tracking-tight">
                       {prog.name}
                     </h2>
+                    {prog.program_days.length > 0 && (
+                      <Chip variant="ghost" size="sm">
+                        {prog.program_days.length}D/WEEK
+                      </Chip>
+                    )}
                     {prog.is_active && (
-                      <Badge className="border-good/30 bg-good/10 text-good">
-                        {t("active")}
-                      </Badge>
+                      <Chip variant="good" size="sm">
+                        ACTIVE
+                      </Chip>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -295,42 +302,87 @@ export default function ProgramBuilder({
                       onClick={() =>
                         setDeleteTarget({ type: "program", id: prog.id, label: prog.name })
                       }
-                      className="text-danger hover:text-red-300"
+                      className="text-danger hover:text-danger"
                     >
                       <Trash2 size={12} />
                     </Button>
                   </div>
                 </div>
 
+                {/* Schedule strip — 7-day grid showing days assigned */}
+                {prog.program_days.length > 0 && (
+                  <div className="mb-4">
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => {
+                        // Map: assign program days sequentially across weekdays as a visual default
+                        // (M=0, T=1, W=2, T=3, F=4 typically used for 5-day; rest for shorter)
+                        const isAssigned =
+                          i < prog.program_days.length &&
+                          // simple heuristic: spread N days across the week
+                          [0, 2, 4, 1, 3, 5, 6].slice(0, prog.program_days.length).includes(i);
+                        const dayIdx = isAssigned
+                          ? [0, 2, 4, 1, 3, 5, 6]
+                              .slice(0, prog.program_days.length)
+                              .indexOf(i)
+                          : -1;
+                        const dayLabel = dayIdx >= 0
+                          ? String.fromCharCode(65 + dayIdx)
+                          : "";
+                        return (
+                          <div
+                            key={i}
+                            className={`aspect-square rounded-md flex flex-col items-center justify-center border ${
+                              isAssigned
+                                ? "bg-primary/10 border-primary/30 text-primary"
+                                : "bg-surface-2/50 border-border text-ink-3"
+                            }`}
+                          >
+                            <span className="font-mono text-[9px] uppercase tracking-[0.08em] opacity-70">
+                              {d}
+                            </span>
+                            {isAssigned && (
+                              <span className="font-mono text-[12px] font-bold leading-none mt-0.5">
+                                {dayLabel}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Days */}
                 <div className="space-y-2">
-                  {prog.program_days.map((day) => (
+                  {prog.program_days.map((day, dayIdx) => (
                     <div
                       key={day.id}
-                      className="rounded-lg border border-border bg-surface/30"
+                      className="rounded-lg border border-border bg-surface/30 overflow-hidden"
                     >
                       {/* Day header */}
                       <button
                         type="button"
                         onClick={() => toggleDay(day.id)}
-                        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-surface-2/30"
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-2/30"
                       >
-                        <span className="text-sm font-medium text-gray-200 sm:text-base">
+                        <span
+                          className="flex size-7 items-center justify-center rounded-md font-mono text-[12px] font-bold text-bg"
+                          style={{ background: "var(--lime)" }}
+                        >
+                          {String.fromCharCode(65 + dayIdx)}
+                        </span>
+                        <span className="text-sm font-semibold text-ink sm:text-base flex-1 truncate">
                           {day.day_label}
                         </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-ink-3">
-                            {t("exerciseCount", {
-                              count: day.program_exercises.length,
-                            })}
-                          </span>
-                          <ChevronDown
-                            size={14}
-                            className={`text-ink-2 transition-transform ${
-                              expandedDays.has(day.id) ? "rotate-180" : ""
-                            }`}
-                          />
-                        </div>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3 shrink-0">
+                          {day.program_exercises.length} VJ
+                        </span>
+                        <ChevronDown
+                          size={14}
+                          className={`text-ink-3 transition-transform ${
+                            expandedDays.has(day.id) ? "rotate-180" : ""
+                          }`}
+                        />
                       </button>
 
                       {/* Day content (expanded) */}

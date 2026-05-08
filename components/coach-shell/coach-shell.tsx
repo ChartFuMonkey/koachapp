@@ -45,12 +45,21 @@ function buildBreadcrumb(pathname: string): string {
   return "~/" + parts.join(" / ");
 }
 
+function getInitials(name: string): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export default function CoachShell({
   children,
   clients = [],
+  coachName = "Coach",
 }: {
   children: React.ReactNode;
   clients?: ClientItem[];
+  coachName?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -121,11 +130,21 @@ export default function CoachShell({
         } lg:translate-x-0`}
       >
         <div className="flex items-center justify-between px-5 pt-5 pb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-base font-bold text-ink tracking-tight">
-              {t("brand")}
-            </span>
-            <span className="font-mono text-[10px] text-ink-3">v0.1</span>
+          <div className="flex items-center gap-2.5">
+            <div
+              className="flex size-7 items-center justify-center rounded-md text-bg font-bold text-sm"
+              style={{ background: "var(--lime)" }}
+            >
+              K
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold text-ink tracking-tight">
+                koach
+              </span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-ink-3">
+                v0.1 · COACH
+              </span>
+            </div>
           </div>
           <button
             onClick={() => setDrawerOpen(false)}
@@ -166,15 +185,29 @@ export default function CoachShell({
           })}
         </nav>
 
-        <div className="shrink-0 border-t border-border px-5 pt-3 pb-5">
-          <div className="flex items-center justify-between mb-3">
+        <div className="shrink-0 border-t border-border px-3 py-3">
+          <div className="flex items-center gap-2.5 px-2">
+            <div
+              className="flex size-8 items-center justify-center rounded-full text-bg font-bold text-[11px]"
+              style={{
+                background: "linear-gradient(135deg, #C5F73B, #3DE8A0)",
+              }}
+            >
+              {getInitials(coachName)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-medium text-ink truncate">
+                {coachName}
+              </div>
+              <div className="font-mono text-[10px] text-good">● online</div>
+            </div>
             <LanguageSwitcher />
           </div>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2 text-sm text-ink-3 transition-colors hover:text-ink"
+            className="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
           >
-            <LogOut size={14} />
+            <LogOut size={13} />
             <span>{t("signOut")}</span>
           </button>
         </div>
