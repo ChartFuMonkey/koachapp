@@ -80,6 +80,7 @@
       "slotPrefix": "Meal {n}"
     },
     "profile": {
+      "photosLink": "Progress photos",
       "carbsShort": "Carbs",
       "clearSelection": "Clear",
       "currentPhase": "Current phase",
@@ -123,8 +124,9 @@
       "weightTitle": "Weight (kg)"
     },
     "photos": {
+      "weekShort": "WEEK",
       "addFirstPhoto": "No photos yet. Add your first!",
-      "addPhoto": "Add photo",
+      "addPhoto": "Add today's photos",
       "angleBack": "Back",
       "angleFront": "Front",
       "angleOther": "Other",

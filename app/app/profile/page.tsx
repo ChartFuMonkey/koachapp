@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Camera, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -319,6 +320,20 @@ export default function ProfilePage() {
             {saving ? tCommon("saving") : tCommon("save")}
           </Button>
         </div>
+      </div>
+
+      {/* Account links */}
+      <div className="rounded-xl border border-border bg-card overflow-hidden mb-5">
+        <Link
+          href="/app/photos"
+          className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2/50 transition-colors"
+        >
+          <Camera size={16} className="text-ink-3 shrink-0" />
+          <span className="flex-1 text-sm text-ink">
+            {t.has("photosLink") ? t("photosLink") : "Progress photos"}
+          </span>
+          <ChevronRight size={14} className="text-ink-3" />
+        </Link>
       </div>
 
       {/* Language */}

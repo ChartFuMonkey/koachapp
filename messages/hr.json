@@ -80,6 +80,7 @@
       "slotPrefix": "Obrok {n}"
     },
     "profile": {
+      "photosLink": "Fotografije napretka",
       "carbsShort": "UH",
       "clearSelection": "Poništi",
       "currentPhase": "Trenutna faza",
@@ -123,8 +124,9 @@
       "weightTitle": "Težina (kg)"
     },
     "photos": {
+      "weekShort": "TJEDAN",
       "addFirstPhoto": "Nema fotografija. Dodaj prvu!",
-      "addPhoto": "Dodaj fotografiju",
+      "addPhoto": "Dodaj današnje fotografije",
       "angleBack": "Straga",
       "angleFront": "Sprijeda",
       "angleOther": "Ostalo",
