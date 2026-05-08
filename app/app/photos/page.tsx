@@ -5,15 +5,31 @@ import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Camera, X, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Chip } from "@/components/ui/athletic/chip";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
-import { getPhotos, uploadPhoto } from "@/actions/photos";
+import { Num } from "@/components/ui/athletic/num";
+import {
+  getPhotos,
+  uploadPhoto,
+  getPhotoSessionWeights,
+} from "@/actions/photos";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type PhotoRow = Record<string, any> & { signedUrl: string | null };
 
 type UploadStep = "idle" | "selecting_angle" | "uploading";
+
+const ANGLES = ["front", "side", "back"] as const;
+type Angle = (typeof ANGLES)[number];
+
+function isoWeekNumber(date: Date): number {
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
 
 export default function PhotosPage() {
   const t = useTranslations("app.photos");
@@ -23,13 +39,11 @@ export default function PhotosPage() {
   const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
+  const [weights, setWeights] = useState<Record<string, number>>({});
   const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
   const [selectedAngle, setSelectedAngle] = useState<string>("");
   const [fullViewPhoto, setFullViewPhoto] = useState<PhotoRow | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [compareDate1, setCompareDate1] = useState("");
-  const [compareDate2, setCompareDate2] = useState("");
 
   const ANGLE_OPTIONS = [
     { label: t("angleFront"), value: "front" },
@@ -64,11 +78,17 @@ export default function PhotosPage() {
 
   useEffect(() => {
     async function load() {
-      const result = await getPhotos();
-      if (result.error) {
-        toast.error(translateError(result.error));
-      } else if (result.data) {
-        setPhotos(result.data);
+      const [photosResult, weightsResult] = await Promise.all([
+        getPhotos(),
+        getPhotoSessionWeights(),
+      ]);
+      if (photosResult.error) {
+        toast.error(translateError(photosResult.error));
+      } else if (photosResult.data) {
+        setPhotos(photosResult.data);
+      }
+      if (weightsResult && "data" in weightsResult && weightsResult.data) {
+        setWeights(weightsResult.data);
       }
       setLoading(false);
     }
@@ -103,6 +123,7 @@ export default function PhotosPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  // Group photos by date
   const grouped: Record<string, PhotoRow[]> = {};
   for (const photo of photos) {
     const date = photo.photo_date as string;
@@ -113,11 +134,8 @@ export default function PhotosPage() {
     (a, b) => new Date(b).getTime() - new Date(a).getTime()
   );
 
-  const uniqueDates = sortedDates;
-  const comparePhotos1 = compareDate1 ? grouped[compareDate1] || [] : [];
-  const comparePhotos2 = compareDate2 ? grouped[compareDate2] || [] : [];
-
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+  const tWeek = t.has("weekShort") ? t("weekShort") : "WEEK";
 
   if (loading) {
     return (
@@ -127,9 +145,36 @@ export default function PhotosPage() {
     );
   }
 
+  // Build sessions with weight + delta (vs older session)
+  const sessions = sortedDates.map((date, idx) => {
+    const olderDate = sortedDates[idx + 1];
+    const weight = weights[date];
+    const olderWeight = olderDate ? weights[olderDate] : undefined;
+    const delta =
+      weight != null && olderWeight != null
+        ? Math.round((weight - olderWeight) * 10) / 10
+        : null;
+    const photosByAngle: Record<Angle, PhotoRow | undefined> = {
+      front: grouped[date].find((p) => p.angle === "front"),
+      side: grouped[date].find((p) => p.angle === "side"),
+      back: grouped[date].find((p) => p.angle === "back"),
+    };
+    return {
+      date,
+      weekNumber: isoWeekNumber(new Date(date + "T00:00")),
+      weight,
+      delta,
+      photosByAngle,
+      otherPhotos: grouped[date].filter((p) => !ANGLES.includes(p.angle)),
+    };
+  });
+
   return (
     <div className="px-5 pt-5 pb-6">
-      <MicroLabel>~/Progress photos</MicroLabel>
+      <MicroLabel>
+        PROGRESS · {sortedDates.length}{" "}
+        {sortedDates.length === 1 ? "SESSION" : "SESSIONS"}
+      </MicroLabel>
       <h1 className="mt-1 mb-4 text-[28px] font-semibold leading-tight text-ink tracking-tight">
         {t("title")}
       </h1>
@@ -140,10 +185,9 @@ export default function PhotosPage() {
           <button
             type="button"
             onClick={() => setUploadStep("selecting_angle")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-hairline-2 bg-surface/40 py-5 text-sm text-ink-2 hover:border-primary/40 hover:text-ink transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-hairline-2 bg-card/40 py-5 text-ink-2 hover:border-primary/40 hover:text-ink transition-colors"
           >
-            <Camera size={16} />
-            <span className="font-mono uppercase tracking-[0.06em] text-[11px]">
+            <span className="font-mono text-[12px] uppercase tracking-[0.08em]">
               + {t("addPhoto")}
             </span>
           </button>
@@ -190,130 +234,125 @@ export default function PhotosPage() {
         />
       </div>
 
-      {/* Sessions stacked by date */}
-      {sortedDates.length === 0 ? (
+      {/* Sessions */}
+      {sessions.length === 0 ? (
         <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
           {t("addFirstPhoto")}
         </p>
       ) : (
-        <div className="space-y-5">
-          {sortedDates.map((date) => (
-            <div key={date}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-2">
-                  {new Date(date + "T00:00").toLocaleDateString(bcp47, {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                  }).toUpperCase()}
-                </span>
-                <span className="font-mono text-[10px] text-ink-3">
-                  {grouped[date].length} {grouped[date].length === 1 ? "photo" : "photos"}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {grouped[date].map((photo) => (
-                  <button
-                    key={photo.id as string}
-                    onClick={() => setFullViewPhoto(photo)}
-                    className="overflow-hidden rounded-lg border border-border bg-card hover:border-hairline-2 transition-colors"
-                  >
-                    {photo.signedUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={photo.signedUrl}
-                        alt={`${photo.angle || "photo"}`}
-                        className="aspect-[3/4] w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex aspect-[3/4] items-center justify-center bg-surface-2 text-[10px] text-ink-3">
-                        {t("noUrl")}
-                      </div>
-                    )}
-                    <div className="px-2 py-1.5 text-center">
-                      <span className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink-3">
-                        {angleLabel(photo.angle as string)}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Compare */}
-      {uniqueDates.length >= 2 && (
-        <div className="mt-7">
-          <MicroLabel>{t("compareTitle").toUpperCase()}</MicroLabel>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs text-ink-3 mb-1 inline-block">
-                {t("date1")}
-              </Label>
-              <select
-                value={compareDate1}
-                onChange={(e) => setCompareDate1(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-ring"
-              >
-                <option value="">{t("pickPlaceholder")}</option>
-                {uniqueDates.map((d) => (
-                  <option key={d} value={d}>
-                    {new Date(d + "T00:00").toLocaleDateString(bcp47)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs text-ink-3 mb-1 inline-block">
-                {t("date2")}
-              </Label>
-              <select
-                value={compareDate2}
-                onChange={(e) => setCompareDate2(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-ring"
-              >
-                <option value="">{t("pickPlaceholder")}</option>
-                {uniqueDates.map((d) => (
-                  <option key={d} value={d}>
-                    {new Date(d + "T00:00").toLocaleDateString(bcp47)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {compareDate1 && compareDate2 && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {[
-                { date: compareDate1, photos: comparePhotos1 },
-                { date: compareDate2, photos: comparePhotos2 },
-              ].map((side) => (
-                <div key={side.date}>
-                  <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
-                    {new Date(side.date + "T00:00").toLocaleDateString(bcp47)}
-                  </p>
-                  <div className="space-y-2">
-                    {side.photos.map((p) => (
-                      <div
-                        key={p.id as string}
-                        className="overflow-hidden rounded-lg border border-border"
-                      >
-                        {p.signedUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={p.signedUrl}
-                            alt={p.angle as string}
-                            className="aspect-[3/4] w-full object-cover"
-                          />
-                        )}
-                      </div>
-                    ))}
+        <div className="space-y-4">
+          {sessions.map((session) => (
+            <div
+              key={session.date}
+              className="overflow-hidden rounded-xl border border-border bg-card"
+            >
+              {/* Session header */}
+              <div className="flex items-start justify-between px-4 py-3 border-b border-border">
+                <div>
+                  <MicroLabel>
+                    {tWeek} {session.weekNumber}
+                  </MicroLabel>
+                  <div className="mt-0.5 text-base font-semibold text-ink">
+                    {new Date(session.date + "T00:00")
+                      .toLocaleDateString(bcp47, {
+                        day: "numeric",
+                        month: "short",
+                      })
+                      .toUpperCase()}
                   </div>
                 </div>
-              ))}
+                <div className="text-right">
+                  <div className="font-mono text-[15px] font-semibold text-ink tabular-nums">
+                    {session.weight != null ? (
+                      <>
+                        <Num value={session.weight} decimals={1} />
+                        <span className="text-ink-3 ml-1 text-xs font-normal">
+                          kg
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-ink-3">—</span>
+                    )}
+                  </div>
+                  <div
+                    className={`mt-0.5 font-mono text-[11px] tabular-nums ${
+                      session.delta == null
+                        ? "text-ink-3"
+                        : session.delta < 0
+                          ? "text-good"
+                          : session.delta > 0
+                            ? "text-warn"
+                            : "text-ink-3"
+                    }`}
+                  >
+                    {session.delta == null
+                      ? "—"
+                      : session.delta > 0
+                        ? `+${session.delta.toFixed(1)}`
+                        : session.delta.toFixed(1)}
+                  </div>
+                </div>
+              </div>
+
+              {/* 3-up grid */}
+              <div className="grid grid-cols-3 gap-px bg-border">
+                {ANGLES.map((angle) => {
+                  const photo = session.photosByAngle[angle];
+                  return (
+                    <button
+                      key={angle}
+                      type="button"
+                      onClick={() => photo && setFullViewPhoto(photo)}
+                      disabled={!photo}
+                      className="relative block aspect-[3/4] overflow-hidden disabled:cursor-default"
+                      style={{
+                        background: photo
+                          ? "var(--surface-2)"
+                          : "linear-gradient(135deg, var(--surface-2), var(--bg))",
+                      }}
+                    >
+                      {photo?.signedUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={photo.signedUrl}
+                          alt={angle}
+                          loading="lazy"
+                          className="absolute inset-0 size-full object-cover"
+                        />
+                      )}
+                      <span className="absolute bottom-1.5 left-2 font-mono text-[9px] uppercase tracking-[0.08em] text-ink-3">
+                        {angleLabel(angle).toUpperCase()}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Other (non-standard) photos for the session */}
+              {session.otherPhotos.length > 0 && (
+                <div className="border-t border-border px-4 py-3 grid grid-cols-3 gap-2">
+                  {session.otherPhotos.map((p) => (
+                    <button
+                      key={p.id as string}
+                      type="button"
+                      onClick={() => setFullViewPhoto(p)}
+                      className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface-2"
+                    >
+                      {p.signedUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.signedUrl}
+                          alt={(p.angle as string) || "photo"}
+                          loading="lazy"
+                          className="absolute inset-0 size-full object-cover"
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </div>
       )}
 

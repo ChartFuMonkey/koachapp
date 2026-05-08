@@ -8,6 +8,40 @@ const ALLOWED_ANGLES = ["front", "side", "back"] as const;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+export async function getPhotoSessionWeights() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) return { error: "unauthenticated" as const };
+
+  const { data: photos } = await supabase
+    .from("progress_photos")
+    .select("photo_date")
+    .eq("client_id", user.id);
+
+  const dates = Array.from(
+    new Set((photos ?? []).map((p) => p.photo_date as string))
+  );
+  if (dates.length === 0) return { data: {} as Record<string, number> };
+
+  const { data: logs } = await supabase
+    .from("daily_logs")
+    .select("log_date, weight_kg")
+    .eq("client_id", user.id)
+    .in("log_date", dates)
+    .not("weight_kg", "is", null);
+
+  const map: Record<string, number> = {};
+  for (const l of logs ?? []) {
+    if (l.weight_kg != null) {
+      map[l.log_date as string] = Number(l.weight_kg);
+    }
+  }
+  return { data: map };
+}
+
 export async function getPhotos() {
   const supabase = await createClient();
   const {
