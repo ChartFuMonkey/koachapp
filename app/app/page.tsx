@@ -78,7 +78,7 @@ export default async function DanasPage() {
       .select(
         `
         id, duration_min, session_date,
-        program_days ( day_label ),
+        program_days ( day_label, program_exercises ( id ) ),
         exercise_logs ( id )
       `
       )
@@ -125,16 +125,26 @@ export default async function DanasPage() {
   const targetSleep = client?.target_sleep_h ?? 8;
   const eatenSleep = (todayLog?.sleep_h as number | null) ?? 0;
 
+  const programDay = todaySession
+    ? Array.isArray(todaySession.program_days)
+      ? todaySession.program_days[0]
+      : (todaySession.program_days as
+          | {
+              day_label?: string;
+              program_exercises?: { id: string }[];
+            }
+          | null)
+    : null;
+
   const workout = todaySession
     ? {
-        dayLabel:
-          (Array.isArray(todaySession.program_days)
-            ? todaySession.program_days[0]?.day_label
-            : (todaySession.program_days as { day_label?: string } | null)?.day_label) ??
-          t("workoutFallback"),
+        dayLabel: programDay?.day_label ?? t("workoutFallback"),
         duration: todaySession.duration_min as number | null,
-        exerciseCount: Array.isArray(todaySession.exercise_logs)
+        loggedSets: Array.isArray(todaySession.exercise_logs)
           ? todaySession.exercise_logs.length
+          : 0,
+        plannedExercises: Array.isArray(programDay?.program_exercises)
+          ? programDay!.program_exercises!.length
           : 0,
         finished: todaySession.duration_min != null,
       }
@@ -237,53 +247,88 @@ export default async function DanasPage() {
       {/* Today's session */}
       <div className="mt-4">
         <MicroLabel>{t("training").toUpperCase()}</MicroLabel>
-        <div className="mt-2">
-          {workout ? (
-            <Link
-              href="/app/workout"
-              className="block rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-semibold text-ink">
+        {workout ? (
+          <div className="mt-2 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-surface-2 shrink-0">
+                  <Dumbbell size={18} className="text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <span className="block font-semibold text-ink truncate">
                     {workout.dayLabel}
                   </span>
-                  <p className="mt-0.5 font-mono text-[11px] text-ink-3">
+                  <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
+                    {workout.plannedExercises > 0
+                      ? `${workout.plannedExercises} VJ`
+                      : ""}
                     {workout.duration != null
-                      ? `${workout.duration} min`
-                      : t("inProgress")}
-                    {workout.exerciseCount > 0 &&
-                      ` · ${workout.exerciseCount} ${t("setsSuffix")}`}
+                      ? ` · ${workout.duration} MIN`
+                      : ""}
+                    {workout.loggedSets > 0
+                      ? ` · ${workout.loggedSets} ${t("setsSuffix").toUpperCase()}`
+                      : ""}
                   </p>
                 </div>
-                {workout.finished ? (
-                  <Chip variant="good">DONE</Chip>
-                ) : (
-                  <Button size="sm">
-                    <Play size={12} /> {t("inProgress")}
-                  </Button>
+              </div>
+              {workout.finished ? (
+                <Chip variant="good">DONE</Chip>
+              ) : null}
+            </div>
+            {workout.plannedExercises > 0 && (
+              <div className="mt-4 flex gap-1.5">
+                {Array.from({ length: workout.plannedExercises }).map(
+                  (_, i) => {
+                    const isDone =
+                      workout.loggedSets > 0 &&
+                      i < Math.ceil(workout.loggedSets / 4);
+                    return (
+                      <div
+                        key={i}
+                        className={`flex flex-1 h-7 items-center justify-center rounded-md font-mono text-[10px] tabular-nums border ${
+                          isDone
+                            ? "bg-good/10 text-good border-good/30"
+                            : "bg-surface-2 text-ink-3 border-hairline-2"
+                        }`}
+                      >
+                        {(i + 1).toString().padStart(2, "0")}
+                      </div>
+                    );
+                  }
                 )}
               </div>
+            )}
+            <Link href="/app/workout">
+              <Button
+                size="lg"
+                className="mt-4 w-full"
+                variant={workout.finished ? "outline" : "default"}
+              >
+                <Play size={14} />
+                {workout.finished
+                  ? t("training")
+                  : t("startWorkout")}
+              </Button>
             </Link>
-          ) : (
-            <Link
-              href="/app/workout"
-              className="block rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Dumbbell size={20} className="text-ink-3" />
-                  <span className="text-sm text-ink-2">
-                    {t("noWorkoutToday")}
-                  </span>
-                </div>
-                <Button size="sm" variant="outline">
-                  {t("training")}
-                </Button>
+          </div>
+        ) : (
+          <Link
+            href="/app/workout"
+            className="mt-2 block rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Dumbbell size={20} className="text-ink-3" />
+                <span className="text-sm text-ink-2">
+                  {t("noWorkoutToday")}
+                </span>
               </div>
-            </Link>
-          )}
-        </div>
+              <Button size="sm" variant="outline">
+                {t("training")}
+              </Button>
+            </div>
+          </Link>
+        )}
       </div>
 
       {/* Meal plan */}

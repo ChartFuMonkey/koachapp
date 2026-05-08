@@ -6,12 +6,21 @@ export default async function CoachLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [clientsRes, profilesRes] = await Promise.all([
+  const coachId = process.env.NEXT_PUBLIC_COACH_UUID;
+
+  const [clientsRes, profilesRes, coachProfileRes] = await Promise.all([
     supabaseAdmin
       .from("clients")
       .select("id")
       .order("created_at", { ascending: false }),
     supabaseAdmin.from("profiles").select("id, full_name"),
+    coachId
+      ? supabaseAdmin
+          .from("profiles")
+          .select("full_name")
+          .eq("id", coachId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const profileMap = new Map(
@@ -23,5 +32,12 @@ export default async function CoachLayout({
     name: (profileMap.get(c.id) as string) || "—",
   }));
 
-  return <CoachShell clients={clientList}>{children}</CoachShell>;
+  const coachName =
+    (coachProfileRes.data?.full_name as string | null) || "Coach";
+
+  return (
+    <CoachShell clients={clientList} coachName={coachName}>
+      {children}
+    </CoachShell>
+  );
 }
