@@ -8,7 +8,7 @@ export default async function NotFound() {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center">
       <h2 className="text-xl font-bold">{t("notFoundTitle")}</h2>
-      <p className="mt-2 text-sm text-gray-400">
+      <p className="mt-2 text-sm text-ink-2">
         {t("notFoundDescription")}
       </p>
       <Link href="/coach">

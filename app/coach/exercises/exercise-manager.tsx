@@ -231,32 +231,32 @@ export default function ExerciseManager({
       )}
 
       {initialExercises.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-ink-3">
           {t("emptyList")}
         </p>
       ) : (
         <>
           {/* ── Desktop table ── */}
-          <div className="hidden overflow-x-auto rounded-lg border border-gray-800 md:block">
+          <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-800 bg-gray-900/50">
+              <thead className="border-b border-border bg-surface-2/50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">
+                  <th className="px-3 py-2 text-left font-medium text-ink-2">
                     {t("colName")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">
+                  <th className="px-3 py-2 text-left font-medium text-ink-2">
                     {t("colMuscleGroup")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">
+                  <th className="px-3 py-2 text-left font-medium text-ink-2">
                     {t("colEquipment")}
                   </th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">
+                  <th className="px-3 py-2 text-left font-medium text-ink-2">
                     {t("colDifficulty")}
                   </th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-400">
+                  <th className="px-3 py-2 text-center font-medium text-ink-2">
                     {t("colVideo")}
                   </th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">
+                  <th className="px-3 py-2 text-right font-medium text-ink-2">
                     {t("colActions")}
                   </th>
                 </tr>
@@ -276,28 +276,28 @@ export default function ExerciseManager({
                   ) : (
                     <tr
                       key={ex.id}
-                      className="border-b border-gray-800/50 last:border-0"
+                      className="border-b border-border last:border-0"
                     >
                       <td className="px-3 py-2 font-medium text-gray-200">
                         {ex.name}
                       </td>
-                      <td className="px-3 py-2 text-gray-400">
+                      <td className="px-3 py-2 text-ink-2">
                         {ex.muscle_group || "—"}
                       </td>
-                      <td className="px-3 py-2 text-gray-400">
+                      <td className="px-3 py-2 text-ink-2">
                         {ex.equipment || "—"}
                       </td>
-                      <td className="px-3 py-2 text-gray-400">
+                      <td className="px-3 py-2 text-ink-2">
                         {ex.difficulty ? difficultyLabel(ex.difficulty) : "—"}
                       </td>
                       <td className="px-3 py-2 text-center">
                         {ex.video_url ? (
                           <Video
                             size={14}
-                            className="mx-auto text-green-400"
+                            className="mx-auto text-good"
                           />
                         ) : (
-                          <span className="text-gray-600">—</span>
+                          <span className="text-ink-3">—</span>
                         )}
                       </td>
                       <td className="px-3 py-2 text-right">
@@ -313,7 +313,7 @@ export default function ExerciseManager({
                             variant="ghost"
                             size="icon-xs"
                             onClick={() => setDeleteTarget({ id: ex.id, name: ex.name })}
-                            className="text-red-400 hover:text-red-300"
+                            className="text-danger hover:text-red-300"
                           >
                             <Trash2 size={12} />
                           </Button>
@@ -346,7 +346,7 @@ export default function ExerciseManager({
                             {ex.name}
                           </h3>
                           {ex.video_url && (
-                            <Video size={12} className="shrink-0 text-green-400" />
+                            <Video size={12} className="shrink-0 text-good" />
                           )}
                         </div>
                         <div className="mt-1 flex flex-wrap gap-1.5">
@@ -379,7 +379,7 @@ export default function ExerciseManager({
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => setDeleteTarget({ id: ex.id, name: ex.name })}
-                          className="text-red-400 hover:text-red-300"
+                          className="text-danger hover:text-red-300"
                         >
                           <Trash2 size={12} />
                         </Button>

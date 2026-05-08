@@ -14,7 +14,7 @@ export default async function FoodDatabasePage() {
     return (
       <div>
         <h1 className="mb-4 text-2xl font-bold">{t("title")}</h1>
-        <p className="text-red-400">{tErrors("genericLoad")}</p>
+        <p className="text-danger">{tErrors("genericLoad")}</p>
       </div>
     );
   }

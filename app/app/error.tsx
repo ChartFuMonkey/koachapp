@@ -20,7 +20,7 @@ export default function Error({
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center">
       <h2 className="text-xl font-bold">{t("somethingWentWrong")}</h2>
-      <p className="mt-2 text-sm text-gray-400">
+      <p className="mt-2 text-sm text-ink-2">
         {t("unexpectedError")}
       </p>
       <Button onClick={() => unstable_retry()} className="mt-4">

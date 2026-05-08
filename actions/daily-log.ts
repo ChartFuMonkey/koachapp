@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayCET } from "@/lib/date";
 
@@ -47,6 +48,10 @@ export async function saveDailyLog(data: DailyLogData) {
     console.error("Daily log save error:", error);
     return { error: "saveFailed" };
   }
+
+  revalidatePath("/coach");
+  revalidatePath(`/coach/clients/${user.id}`);
+  revalidatePath("/app");
 
   return { success: true };
 }

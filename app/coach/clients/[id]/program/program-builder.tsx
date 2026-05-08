@@ -191,7 +191,7 @@ export default function ProgramBuilder({
       <div className="mb-6">
         <Link
           href={`/coach/clients/${clientId}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-gray-200"
         >
           <ChevronLeft size={14} /> {clientName}
         </Link>
@@ -251,7 +251,7 @@ export default function ProgramBuilder({
 
       {/* Programs list */}
       {programs.length === 0 && !showNewProgram ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-ink-3">
           {t("emptyPrograms")}
         </p>
       ) : (
@@ -259,7 +259,7 @@ export default function ProgramBuilder({
           {programs.map((prog) => (
             <Card
               key={prog.id}
-              className={prog.is_active ? "border-green-500/30" : ""}
+              className={prog.is_active ? "border-good/30" : ""}
             >
               <CardContent className="p-3 sm:p-4">
                 {/* Program header */}
@@ -267,13 +267,13 @@ export default function ProgramBuilder({
                   <div className="flex items-center gap-2">
                     <Dumbbell
                       size={18}
-                      className="hidden text-gray-400 sm:block"
+                      className="hidden text-ink-2 sm:block"
                     />
                     <h2 className="text-base font-semibold sm:text-lg">
                       {prog.name}
                     </h2>
                     {prog.is_active && (
-                      <Badge className="border-green-500/30 bg-green-500/20 text-green-400">
+                      <Badge className="border-good/30 bg-good/10 text-good">
                         {t("active")}
                       </Badge>
                     )}
@@ -295,7 +295,7 @@ export default function ProgramBuilder({
                       onClick={() =>
                         setDeleteTarget({ type: "program", id: prog.id, label: prog.name })
                       }
-                      className="text-red-400 hover:text-red-300"
+                      className="text-danger hover:text-red-300"
                     >
                       <Trash2 size={12} />
                     </Button>
@@ -307,26 +307,26 @@ export default function ProgramBuilder({
                   {prog.program_days.map((day) => (
                     <div
                       key={day.id}
-                      className="rounded-lg border border-gray-800 bg-gray-900/30"
+                      className="rounded-lg border border-border bg-surface/30"
                     >
                       {/* Day header */}
                       <button
                         type="button"
                         onClick={() => toggleDay(day.id)}
-                        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-gray-800/30"
+                        className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-surface-2/30"
                       >
                         <span className="text-sm font-medium text-gray-200 sm:text-base">
                           {day.day_label}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-ink-3">
                             {t("exerciseCount", {
                               count: day.program_exercises.length,
                             })}
                           </span>
                           <ChevronDown
                             size={14}
-                            className={`text-gray-400 transition-transform ${
+                            className={`text-ink-2 transition-transform ${
                               expandedDays.has(day.id) ? "rotate-180" : ""
                             }`}
                           />
@@ -335,9 +335,9 @@ export default function ProgramBuilder({
 
                       {/* Day content (expanded) */}
                       {expandedDays.has(day.id) && (
-                        <div className="border-t border-gray-800 px-2 py-2 sm:px-3">
+                        <div className="border-t border-border px-2 py-2 sm:px-3">
                           {day.program_exercises.length === 0 ? (
-                            <p className="py-2 text-sm text-gray-500">
+                            <p className="py-2 text-sm text-ink-3">
                               {t("noExercisesInDay")}
                             </p>
                           ) : (
@@ -345,15 +345,15 @@ export default function ProgramBuilder({
                               {day.program_exercises.map((pe, idx) => (
                                 <div
                                   key={pe.id}
-                                  className="flex items-center gap-1.5 rounded px-1.5 py-1.5 text-sm hover:bg-gray-800/30 sm:gap-2 sm:px-2"
+                                  className="flex items-center gap-1.5 rounded px-1.5 py-1.5 text-sm hover:bg-surface-2/30 sm:gap-2 sm:px-2"
                                 >
-                                  <span className="w-4 shrink-0 text-center text-xs text-gray-500 sm:w-5">
+                                  <span className="w-4 shrink-0 text-center text-xs text-ink-3 sm:w-5">
                                     {idx + 1}
                                   </span>
                                   <span className="min-w-0 flex-1 truncate font-medium text-gray-200">
                                     {pe.exercises?.name ?? t("unknown")}
                                   </span>
-                                  <span className="shrink-0 text-xs text-gray-400 sm:text-sm">
+                                  <span className="shrink-0 text-xs text-ink-2 sm:text-sm">
                                     {pe.sets && pe.reps
                                       ? `${pe.sets}×${pe.reps}`
                                       : pe.sets
@@ -361,12 +361,12 @@ export default function ProgramBuilder({
                                         : pe.reps ?? "—"}
                                   </span>
                                   {pe.rest_sec && (
-                                    <span className="hidden text-xs text-gray-500 sm:inline">
+                                    <span className="hidden text-xs text-ink-3 sm:inline">
                                       {pe.rest_sec}s
                                     </span>
                                   )}
                                   {pe.rpe && (
-                                    <span className="hidden text-xs text-blue-400 sm:inline">
+                                    <span className="hidden text-xs text-primary sm:inline">
                                       RPE {pe.rpe}
                                     </span>
                                   )}
@@ -402,7 +402,7 @@ export default function ProgramBuilder({
                                       onClick={() =>
                                         handleRemoveExercise(pe.id)
                                       }
-                                      className="text-red-400 hover:text-red-300"
+                                      className="text-danger hover:text-red-300"
                                     >
                                       <Trash2 size={10} />
                                     </Button>
@@ -438,7 +438,7 @@ export default function ProgramBuilder({
                                 onClick={() =>
                                   setDeleteTarget({ type: "day", id: day.id, label: day.day_label })
                                 }
-                                className="text-red-400 hover:text-red-300"
+                                className="text-danger hover:text-red-300"
                               >
                                 <Trash2 size={12} /> {t("deleteDay")}
                               </Button>
@@ -582,7 +582,7 @@ function AddExerciseForm({
   }
 
   return (
-    <div className="mt-2 rounded-lg border border-gray-700 bg-gray-900/50 p-3">
+    <div className="mt-2 rounded-lg border border-border bg-surface-2/50 p-3">
       {!selectedId ? (
         <div>
           <Input
@@ -593,14 +593,14 @@ function AddExerciseForm({
           />
           <div className="mt-2 max-h-40 overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className="py-2 text-sm text-gray-500">{t("noSearchResults")}</p>
+              <p className="py-2 text-sm text-ink-3">{t("noSearchResults")}</p>
             ) : (
               filtered.map((ex) => (
                 <button
                   key={ex.id}
                   type="button"
                   onClick={() => setSelectedId(ex.id)}
-                  className="w-full rounded px-2 py-1.5 text-left text-sm text-gray-300 hover:bg-gray-800"
+                  className="w-full rounded px-2 py-1.5 text-left text-sm text-ink-2 hover:bg-surface-2"
                 >
                   {ex.name}
                 </button>

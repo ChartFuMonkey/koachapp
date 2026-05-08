@@ -13,8 +13,11 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Area,
+  AreaChart,
 } from "recharts";
 import { getProgressData } from "@/actions/daily-log";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
 
 type LogEntry = {
   log_date: string;
@@ -29,8 +32,28 @@ function formatDate(dateStr: string) {
 }
 
 function NoData({ text }: { text: string }) {
-  return <p className="py-8 text-center text-sm text-gray-500">{text}</p>;
+  return (
+    <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
+      {text}
+    </p>
+  );
 }
+
+const tooltipStyle = {
+  background: "var(--surface-2)",
+  border: "1px solid var(--hairline-2)",
+  borderRadius: "8px",
+  fontSize: "11px",
+  color: "var(--ink)",
+  padding: "6px 10px",
+  fontFamily: "var(--font-geist-mono)",
+};
+
+const axisTickStyle = {
+  fontSize: 10,
+  fill: "var(--ink-3)",
+  fontFamily: "var(--font-geist-mono)",
+};
 
 export default function ProgressPage() {
   const t = useTranslations("app.progress");
@@ -40,9 +63,7 @@ export default function ProgressPage() {
   useEffect(() => {
     async function load() {
       const result = await getProgressData();
-      if (result.data) {
-        setData(result.data as LogEntry[]);
-      }
+      if (result.data) setData(result.data as LogEntry[]);
       setLoading(false);
     }
     load();
@@ -51,7 +72,7 @@ export default function ProgressPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader2 className="size-6 animate-spin text-gray-400" />
+        <Loader2 className="size-6 animate-spin text-ink-3" />
       </div>
     );
   }
@@ -68,125 +89,97 @@ export default function ProgressPage() {
   const stepsData = chartData.filter((d) => d.steps != null);
 
   return (
-    <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
+    <div className="px-5 pt-5 pb-6">
+      <MicroLabel>~/Progress</MicroLabel>
+      <h1 className="mt-1 mb-5 text-[28px] font-semibold leading-tight text-ink tracking-tight">
+        {t("title")}
+      </h1>
 
-      {/* Weight chart */}
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">{t("weightTitle")}</h2>
+      {/* Weight */}
+      <section className="mb-5 rounded-xl border border-border bg-card p-5">
+        <MicroLabel>{t("weightTitle").toUpperCase()}</MicroLabel>
         {weightData.length < 3 ? (
           <NoData text={t("noData")} />
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={weightData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-                domain={["dataMin - 1", "dataMax + 1"]}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                  borderRadius: 8,
-                  fontSize: 13,
-                }}
-                labelStyle={{ color: "#9ca3af" }}
-              />
-              <Line
-                type="monotone"
-                dataKey="weight"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ r: 3, fill: "#3b82f6" }}
-                name={t("weightLabel")}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="mt-3 h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={weightData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="progressWeight" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--lime)" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="var(--lime)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" vertical={false} />
+                <XAxis dataKey="date" tick={axisTickStyle} tickLine={false} axisLine={false} />
+                <YAxis tick={axisTickStyle} tickLine={false} axisLine={false} domain={["dataMin - 1", "dataMax + 1"]} width={32} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--ink-3)" }} />
+                <Area
+                  type="monotone"
+                  dataKey="weight"
+                  stroke="var(--lime)"
+                  strokeWidth={2}
+                  fill="url(#progressWeight)"
+                  dot={false}
+                  activeDot={{ r: 4, fill: "var(--lime)", stroke: "var(--bg)", strokeWidth: 2 }}
+                  name={t("weightLabel")}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </section>
 
-      {/* Calories chart */}
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">{t("caloriesTitle")}</h2>
+      {/* Calories */}
+      <section className="mb-5 rounded-xl border border-border bg-card p-5">
+        <MicroLabel>{t("caloriesTitle").toUpperCase()}</MicroLabel>
         {caloriesData.length < 3 ? (
           <NoData text={t("noData")} />
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={caloriesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                  borderRadius: 8,
-                  fontSize: 13,
-                }}
-                labelStyle={{ color: "#9ca3af" }}
-              />
-              <Line
-                type="monotone"
-                dataKey="calories"
-                stroke="#f97316"
-                strokeWidth={2}
-                dot={{ r: 3, fill: "#f97316" }}
-                name={t("caloriesLabel")}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="mt-3 h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={caloriesData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" vertical={false} />
+                <XAxis dataKey="date" tick={axisTickStyle} tickLine={false} axisLine={false} />
+                <YAxis tick={axisTickStyle} tickLine={false} axisLine={false} width={36} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--ink-3)" }} />
+                <Line
+                  type="monotone"
+                  dataKey="calories"
+                  stroke="var(--carb)"
+                  strokeWidth={2}
+                  dot={{ r: 2, fill: "var(--carb)" }}
+                  activeDot={{ r: 4 }}
+                  name={t("caloriesLabel")}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </section>
 
-      {/* Steps chart */}
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">{t("stepsTitle")}</h2>
+      {/* Steps */}
+      <section className="rounded-xl border border-border bg-card p-5">
+        <MicroLabel>{t("stepsTitle").toUpperCase()}</MicroLabel>
         {stepsData.length < 3 ? (
           <NoData text={t("noData")} />
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={stepsData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#9ca3af" }}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1f2937",
-                  border: "1px solid #374151",
-                  borderRadius: 8,
-                  fontSize: 13,
-                }}
-                labelStyle={{ color: "#9ca3af" }}
-              />
-              <Bar
-                dataKey="steps"
-                fill="#22c55e"
-                radius={[4, 4, 0, 0]}
-                name={t("stepsLabel")}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="mt-3 h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stepsData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" vertical={false} />
+                <XAxis dataKey="date" tick={axisTickStyle} tickLine={false} axisLine={false} />
+                <YAxis tick={axisTickStyle} tickLine={false} axisLine={false} width={36} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--ink-3)" }} />
+                <Bar
+                  dataKey="steps"
+                  fill="var(--violet)"
+                  radius={[3, 3, 0, 0]}
+                  name={t("stepsLabel")}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </section>
     </div>

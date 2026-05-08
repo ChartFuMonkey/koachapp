@@ -24,7 +24,7 @@ export default async function ClientDetailPage({
         .select("*")
         .eq("client_id", id)
         .order("log_date", { ascending: false })
-        .limit(14),
+        .limit(30),
       supabaseAdmin
         .from("checkins")
         .select("*")

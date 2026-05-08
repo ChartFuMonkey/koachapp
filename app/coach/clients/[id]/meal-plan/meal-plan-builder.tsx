@@ -203,7 +203,7 @@ export default function MealPlanBuilder({
       <div className="mb-6">
         <Link
           href={`/coach/clients/${clientId}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink"
         >
           <ChevronLeft size={14} /> {clientName}
         </Link>
@@ -254,9 +254,9 @@ export default function MealPlanBuilder({
       {plans.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center py-8 text-center">
-            <UtensilsCrossed className="mb-3 size-10 text-gray-500" />
+            <UtensilsCrossed className="mb-3 size-10 text-ink-3" />
             <p className="text-lg font-medium">{t("emptyTitle")}</p>
-            <p className="mt-1 text-sm text-gray-400">
+            <p className="mt-1 text-sm text-ink-2">
               {t("emptyHint")}
             </p>
           </CardContent>
@@ -271,7 +271,7 @@ export default function MealPlanBuilder({
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold">{plan.name}</h2>
                     {plan.is_active ? (
-                      <Badge className="bg-green-600 text-white">{t("active")}</Badge>
+                      <Badge className="bg-green-600 text-ink">{t("active")}</Badge>
                     ) : (
                       <Button
                         variant="outline"
@@ -288,7 +288,7 @@ export default function MealPlanBuilder({
                     onClick={() =>
                       setDeleteTarget({ id: plan.id, name: plan.name })
                     }
-                    className="text-red-400 hover:text-red-300"
+                    className="text-danger hover:text-red-300"
                   >
                     <Trash2 size={14} />
                   </Button>
@@ -311,7 +311,7 @@ export default function MealPlanBuilder({
                     return (
                       <div
                         key={dayKey}
-                        className="rounded-lg border border-gray-800"
+                        className="rounded-lg border border-border"
                       >
                         <div
                           className="flex cursor-pointer items-center justify-between p-3"
@@ -321,25 +321,25 @@ export default function MealPlanBuilder({
                             <span className="font-medium text-gray-200">
                               {dayLabel}
                             </span>
-                            <span className="ml-2 text-xs text-gray-500">
+                            <span className="ml-2 text-xs text-ink-3">
                               {t("mealCount", { count: dayEntries.length })}
                             </span>
                             {dayEntries.length > 0 && (
-                              <span className="ml-2 text-xs text-gray-500">
+                              <span className="ml-2 text-xs text-ink-3">
                                 &middot; {macros.cal} kcal / {macros.protein}P /{" "}
                                 {macros.carbs}UH / {macros.fat}M
                               </span>
                             )}
                           </div>
                           {isExpanded ? (
-                            <ChevronUp size={16} className="text-gray-500" />
+                            <ChevronUp size={16} className="text-ink-3" />
                           ) : (
-                            <ChevronDown size={16} className="text-gray-500" />
+                            <ChevronDown size={16} className="text-ink-3" />
                           )}
                         </div>
 
                         {isExpanded && (
-                          <div className="border-t border-gray-800 p-3 space-y-2">
+                          <div className="border-t border-border p-3 space-y-2">
                             {dayEntries.map((entry) => {
                               const meal = allMeals.find(
                                 (m) => m.id === entry.meals?.id
@@ -347,17 +347,17 @@ export default function MealPlanBuilder({
                               return (
                                 <div
                                   key={entry.id}
-                                  className="flex items-center justify-between rounded-lg bg-gray-900/50 p-2 text-sm"
+                                  className="flex items-center justify-between rounded-lg bg-surface-2/50 p-2 text-sm"
                                 >
                                   <div>
-                                    <span className="font-medium text-gray-300">
+                                    <span className="font-medium text-ink-2">
                                       {t("mealSlotPrefix")} {entry.slot_number}:
                                     </span>{" "}
-                                    <span className="text-gray-400">
+                                    <span className="text-ink-2">
                                       {entry.meals?.name ?? "—"}
                                     </span>
                                     {meal && (
-                                      <span className="ml-2 text-xs text-gray-500">
+                                      <span className="ml-2 text-xs text-ink-3">
                                         {meal.cal} kcal
                                       </span>
                                     )}
@@ -365,7 +365,7 @@ export default function MealPlanBuilder({
                                   <Button
                                     variant="ghost"
                                     size="icon-xs"
-                                    className="text-red-400 hover:text-red-300"
+                                    className="text-danger hover:text-red-300"
                                     onClick={() => handleRemoveEntry(entry.id)}
                                   >
                                     <X size={12} />
