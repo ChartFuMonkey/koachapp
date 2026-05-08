@@ -28,37 +28,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations("app.nav");
 
   return (
-    <>
-      <main className="pb-[calc(4rem+env(safe-area-inset-bottom))]">{children}</main>
-      <PushBanner />
-      <InstallBanner />
+    <div className="bg-bg min-h-screen">
+      <div className="mx-auto w-full max-w-[430px] min-h-screen flex flex-col bg-bg">
+        <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+          {children}
+        </main>
+        <PushBanner />
+        <InstallBanner />
 
-      <nav
-        className="fixed bottom-0 w-full border-t border-gray-800 bg-gray-950 pb-[env(safe-area-inset-bottom)]"
-      >
-        <div className="flex justify-around">
-          {tabs.map((tab) => {
-            const isActive =
-              tab.route === "/app"
-                ? pathname === "/app"
-                : pathname.startsWith(tab.route);
-            const Icon = tab.icon;
-
-            return (
-              <Link
-                key={tab.route}
-                href={tab.route}
-                className={`flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-1 px-2 py-1 ${
-                  isActive ? "text-blue-500" : "text-gray-500"
-                }`}
-              >
-                <Icon size={20} />
-                <span className="text-xs">{t(tab.key)}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    </>
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] z-30">
+          <div className="flex justify-around px-2 pt-1.5 pb-1.5">
+            {tabs.map((tab) => {
+              const isActive =
+                tab.route === "/app"
+                  ? pathname === "/app"
+                  : pathname.startsWith(tab.route);
+              const Icon = tab.icon;
+              return (
+                <Link
+                  key={tab.route}
+                  href={tab.route}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 py-1 transition-colors ${
+                    isActive
+                      ? "text-primary"
+                      : "text-ink-3 hover:text-ink-2"
+                  }`}
+                >
+                  <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
+                  <span className="font-mono text-[9px] uppercase tracking-[0.08em] leading-none">
+                    {t(tab.key)}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
+    </div>
   );
 }

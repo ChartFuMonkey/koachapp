@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayCET } from "@/lib/date";
 
@@ -108,6 +109,9 @@ export async function uploadPhoto(formData: FormData) {
   if (urlError) {
     console.error("Signed URL error:", urlError, storagePath);
   }
+
+  revalidatePath("/coach");
+  revalidatePath(`/coach/clients/${user.id}`);
 
   return { data: { ...row, signedUrl: urlData?.signedUrl || null } };
 }

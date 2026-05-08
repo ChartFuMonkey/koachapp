@@ -253,7 +253,7 @@ export default function FoodManager({
       <div className="relative mb-4">
         <Search
           size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3"
         />
         <Input
           value={search}
@@ -264,23 +264,23 @@ export default function FoodManager({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-ink-3">
           {search ? t("noResults") : t("emptyList")}
         </p>
       ) : (
         <>
           {/* ── Desktop table ── */}
-          <div className="hidden overflow-x-auto rounded-lg border border-gray-800 md:block">
+          <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-800 bg-gray-900/50">
+              <thead className="border-b border-border bg-surface-2/50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">{t("colName")}</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-400">{t("colCategory")}</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colKcal")}</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colProtein")}</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colCarbs")}</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colFat")}</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-400">{t("colActions")}</th>
+                  <th className="px-3 py-2 text-left font-medium text-ink-2">{t("colName")}</th>
+                  <th className="px-3 py-2 text-left font-medium text-ink-2">{t("colCategory")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-ink-2">{t("colKcal")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-ink-2">{t("colProtein")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-ink-2">{t("colCarbs")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-ink-2">{t("colFat")}</th>
+                  <th className="px-3 py-2 text-right font-medium text-ink-2">{t("colActions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -296,7 +296,7 @@ export default function FoodManager({
                       </td>
                     </tr>
                   ) : (
-                    <tr key={f.id} className="border-b border-gray-800/50 last:border-0">
+                    <tr key={f.id} className="border-b border-border last:border-0">
                       <td className="px-3 py-2 font-medium text-gray-200">
                         <span className="flex items-center gap-2">
                           {foodDisplayName(f, locale)}
@@ -307,11 +307,11 @@ export default function FoodManager({
                           )}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-gray-400">{categoryLabel(f.category)}</td>
-                      <td className="px-3 py-2 text-right text-gray-300">{f.calories_per_100g}</td>
-                      <td className="px-3 py-2 text-right text-gray-300">{f.protein_per_100g}</td>
-                      <td className="px-3 py-2 text-right text-gray-300">{f.carbs_per_100g}</td>
-                      <td className="px-3 py-2 text-right text-gray-300">{f.fat_per_100g}</td>
+                      <td className="px-3 py-2 text-ink-2">{categoryLabel(f.category)}</td>
+                      <td className="px-3 py-2 text-right text-ink-2">{f.calories_per_100g}</td>
+                      <td className="px-3 py-2 text-right text-ink-2">{f.protein_per_100g}</td>
+                      <td className="px-3 py-2 text-right text-ink-2">{f.carbs_per_100g}</td>
+                      <td className="px-3 py-2 text-right text-ink-2">{f.fat_per_100g}</td>
                       <td className="px-3 py-2 text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon-xs" onClick={() => setEditingId(f.id)}>
@@ -321,7 +321,7 @@ export default function FoodManager({
                             variant="ghost"
                             size="icon-xs"
                             onClick={() => setDeleteTarget({ id: f.id, name: foodDisplayName(f, locale) })}
-                            className="text-red-400 hover:text-red-300"
+                            className="text-danger hover:text-red-300"
                           >
                             <Trash2 size={12} />
                           </Button>
@@ -357,7 +357,7 @@ export default function FoodManager({
                             </Badge>
                           )}
                         </div>
-                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-400">
+                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-ink-2">
                           {f.category && (
                             <Badge variant="secondary" className="text-xs">
                               {categoryLabel(f.category)}
@@ -377,7 +377,7 @@ export default function FoodManager({
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => setDeleteTarget({ id: f.id, name: foodDisplayName(f, locale) })}
-                          className="text-red-400 hover:text-red-300"
+                          className="text-danger hover:text-red-300"
                         >
                           <Trash2 size={12} />
                         </Button>

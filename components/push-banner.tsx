@@ -75,10 +75,10 @@ export default function PushBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 px-4 pb-2">
-      <div className="flex items-center gap-3 rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 shadow-lg">
-        <Bell size={20} className="shrink-0 text-blue-400" />
-        <p className="flex-1 text-sm text-gray-300">
+    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 px-4 pb-2">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3">
+        <Bell size={18} className="shrink-0 text-primary" />
+        <p className="flex-1 text-sm text-ink-2">
           {t("description")}
         </p>
         <Button size="sm" onClick={handleEnable}>
@@ -86,9 +86,10 @@ export default function PushBanner() {
         </Button>
         <button
           onClick={handleDismiss}
-          className="text-gray-500 hover:text-gray-300"
+          aria-label="Dismiss"
+          className="text-ink-3 hover:text-ink"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
     </div>

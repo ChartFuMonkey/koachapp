@@ -58,22 +58,22 @@ export default function NewClientPage() {
         <Card>
           <CardContent className="space-y-4 p-6">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-green-500/20">
-                <Mail size={20} className="text-green-400" />
+              <div className="flex size-10 items-center justify-center rounded-full bg-good/10">
+                <Mail size={20} className="text-good" />
               </div>
-              <h2 className="text-xl font-bold text-green-400">
+              <h2 className="text-xl font-bold text-good">
                 {t("successTitle")}
               </h2>
             </div>
 
-            <div className="rounded-lg bg-gray-900 p-4">
-              <p className="text-sm text-gray-300">
+            <div className="rounded-lg bg-surface p-4">
+              <p className="text-sm text-ink-2">
                 {t("inviteSent")}{" "}
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-ink">
                   {result.email}
                 </span>
               </p>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-ink-3">
                 {t("inviteHint")}
               </p>
             </div>
@@ -179,7 +179,7 @@ export default function NewClientPage() {
             </div>
 
             {error && (
-              <p className="text-sm text-red-400">{error}</p>
+              <p className="text-sm text-danger">{error}</p>
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>

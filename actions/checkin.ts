@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayCET } from "@/lib/date";
 
@@ -85,6 +86,9 @@ export async function submitCheckin(formData: CheckinData) {
     console.error("Checkin submit error:", error);
     return { error: "submitFailed" };
   }
+
+  revalidatePath("/coach");
+  revalidatePath(`/coach/clients/${user.id}`);
 
   return { success: true };
 }

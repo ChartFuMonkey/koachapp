@@ -47,11 +47,11 @@ const PHASE_TYPE_VALUES = [
 ] as const;
 
 const TYPE_BADGE_COLORS: Record<string, string> = {
-  fat_loss: "border-red-500/30 bg-red-500/20 text-red-400",
-  muscle_gain: "border-green-500/30 bg-green-500/20 text-green-400",
-  maintenance: "border-blue-500/30 bg-blue-500/20 text-blue-400",
-  strength: "border-yellow-500/30 bg-yellow-500/20 text-yellow-400",
-  rest: "border-gray-500/30 bg-gray-500/20 text-gray-400",
+  fat_loss: "border-danger/30 bg-danger/10 text-danger",
+  muscle_gain: "border-good/30 bg-good/10 text-good",
+  maintenance: "border-primary/30 bg-primary/15 text-primary",
+  strength: "border-carb/30 bg-carb/10 text-carb",
+  rest: "border-gray-500/30 bg-gray-500/20 text-ink-2",
   other: "border-purple-500/30 bg-purple-500/20 text-purple-400",
 };
 
@@ -148,7 +148,7 @@ export default function PhaseManager({
       <div className="mb-6">
         <Link
           href={`/coach/clients/${clientId}`}
-          className="mb-2 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200"
+          className="mb-2 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-gray-200"
         >
           <ChevronLeft size={14} /> {clientName}
         </Link>
@@ -234,7 +234,7 @@ export default function PhaseManager({
 
       {/* Timeline */}
       {phases.length === 0 && !showAddForm ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-ink-3">
           {t("emptyPhases")}
         </p>
       ) : (
@@ -247,18 +247,18 @@ export default function PhaseManager({
                   className={`mt-1 size-3 shrink-0 rounded-full border-2 ${
                     phase.is_active
                       ? "border-green-400 bg-green-400"
-                      : "border-gray-600 bg-gray-900"
+                      : "border-hairline-2 bg-surface"
                   }`}
                 />
                 {idx < phases.length - 1 && (
-                  <div className="w-px flex-1 bg-gray-800" />
+                  <div className="w-px flex-1 bg-surface-2" />
                 )}
               </div>
 
               {/* Phase card */}
               <Card
                 className={`mb-3 min-w-0 flex-1 sm:mb-4 ${
-                  phase.is_active ? "border-green-500/30" : ""
+                  phase.is_active ? "border-good/30" : ""
                 }`}
               >
                 <CardContent className="p-3 sm:p-4">
@@ -279,13 +279,13 @@ export default function PhaseManager({
                           </Badge>
                         )}
                         {phase.is_active && (
-                          <Badge className="border-green-500/30 bg-green-500/20 text-xs text-green-400">
+                          <Badge className="border-good/30 bg-good/10 text-xs text-good">
                             {t("active")}
                           </Badge>
                         )}
                       </div>
 
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 sm:text-sm">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-2 sm:text-sm">
                         <span className="inline-flex items-center gap-1">
                           <Calendar size={12} />
                           {formatDate(phase.start_date)}
@@ -301,7 +301,7 @@ export default function PhaseManager({
                       </div>
 
                       {phase.notes && (
-                        <p className="mt-2 text-xs text-gray-500 sm:text-sm">
+                        <p className="mt-2 text-xs text-ink-3 sm:text-sm">
                           {phase.notes}
                         </p>
                       )}
@@ -322,7 +322,7 @@ export default function PhaseManager({
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => setDeleteTarget({ id: phase.id, name: phase.name })}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-danger hover:text-red-300"
                       >
                         <Trash2 size={12} />
                       </Button>

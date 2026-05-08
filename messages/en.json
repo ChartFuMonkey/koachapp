@@ -177,12 +177,24 @@
       "repsLabel": "Reps",
       "restLabel": "Rest",
       "restSecondsShort": "{sec} sec rest",
-      "saveSet": "Save set",
+      "saveSet": "Log set",
       "setLabel": "Set {n}",
       "skipRest": "Skip rest",
       "startWorkout": "Start workout",
       "weightLabel": "Weight (kg)",
       "workoutDoneToast": "Workout done!",
+      "exShort": "EX",
+      "setShort": "SET",
+      "liftingNow": "LIFTING NOW",
+      "loadLabel": "LOAD",
+      "repsLabelShort": "REPS",
+      "rpeLabel": "RPE",
+      "upNext": "Up next",
+      "elapsedLabel": "ELAPSED",
+      "restingNow": "RESTING",
+      "previous": "Previous",
+      "currentSet": "CURRENT",
+      "doneSet": "DONE",
       "errors": {
         "createSessionFailed": "Couldn't start session.",
         "finishSessionFailed": "Couldn't finish workout.",
@@ -629,6 +641,7 @@
     "backToDashboard": "Back to dashboard"
   },
   "landing": {
+    "welcome": "WELCOME TO",
     "loginAsClient": "Log in as client",
     "loginAsCoach": "Log in as coach",
     "tagline": "Your personal trainer in your pocket — track nutrition, training, and progress."

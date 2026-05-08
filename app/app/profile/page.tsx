@@ -6,12 +6,19 @@ import { useTranslations, useLocale } from "next-intl";
 import { Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { getProfile, updateProfile, getProfileDashboard } from "@/actions/profile";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  getProfile,
+  updateProfile,
+  getProfileDashboard,
+} from "@/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { Avatar } from "@/components/ui/athletic/avatar";
+import { Chip } from "@/components/ui/athletic/chip";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
+import { Num } from "@/components/ui/athletic/num";
 
 type Profile = {
   full_name: string | null;
@@ -101,241 +108,234 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader2 className="size-6 animate-spin text-gray-400" />
+        <Loader2 className="size-6 animate-spin text-ink-3" />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="p-6 text-center text-gray-400">
-        {t("notFound")}
-      </div>
+      <div className="p-6 text-center text-ink-3">{t("notFound")}</div>
     );
   }
 
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+  const fullName = profile.full_name || "—";
 
   return (
-    <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
+    <div className="px-5 pt-5 pb-6">
+      {/* Avatar header with accent glow */}
+      <div className="relative flex flex-col items-center pt-2 pb-5">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-32 -z-10 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(ellipse at center top, rgba(197,247,59,0.18), transparent 60%)",
+          }}
+        />
+        <Avatar name={fullName} size="xl" />
+        <h1 className="mt-3 text-[22px] font-semibold leading-tight text-ink tracking-tight">
+          {fullName}
+        </h1>
+        {profile.email && (
+          <p className="mt-0.5 font-mono text-[11px] text-ink-3">
+            {profile.email}
+          </p>
+        )}
+        {dashboard?.phase && (
+          <Chip variant="ghost" className="mt-2">
+            {dashboard.phase.name.toUpperCase()}
+          </Chip>
+        )}
+      </div>
 
-      {/* === Dashboard Section === */}
+      {/* 3-up stat strip */}
       {dashboard && (
-        <div className="mb-6 space-y-4">
-          {profile.full_name && (
-            <p className="text-lg text-gray-300">
-              {profile.full_name}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="rounded-xl border border-border bg-card p-3 text-center">
+            <MicroLabel>START</MicroLabel>
+            <p className="mt-1.5 font-mono text-[20px] font-semibold text-ink tabular-nums leading-none">
+              <Num value={dashboard.start_weight} decimals={1} />
             </p>
-          )}
-
-          {dashboard.phase && (
-            <Card size="sm">
-              <CardContent>
-                <p className="text-xs text-gray-500">{t("currentPhase")}</p>
-                <p className="text-base font-semibold">{dashboard.phase.name}</p>
-                {dashboard.phase.type && (
-                  <p className="text-sm text-gray-400">{dashboard.phase.type}</p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {dashboard.targets && (
-            <Card size="sm">
-              <CardContent>
-                <p className="mb-2 text-xs text-gray-500">{t("targets")}</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {dashboard.targets.calories != null && (
-                    <div>
-                      <span className="text-gray-400">{t("targetCalories")} </span>
-                      <span className="font-medium">{dashboard.targets.calories} kcal</span>
-                    </div>
-                  )}
-                  {dashboard.targets.protein != null && (
-                    <div>
-                      <span className="text-gray-400">{t("targetProtein")} </span>
-                      <span className="font-medium">{dashboard.targets.protein} g</span>
-                    </div>
-                  )}
-                  {dashboard.targets.carbs != null && (
-                    <div>
-                      <span className="text-gray-400">{t("targetCarbs")} </span>
-                      <span className="font-medium">{dashboard.targets.carbs} g</span>
-                    </div>
-                  )}
-                  {dashboard.targets.fat != null && (
-                    <div>
-                      <span className="text-gray-400">{t("targetFat")} </span>
-                      <span className="font-medium">{dashboard.targets.fat} g</span>
-                    </div>
-                  )}
-                  {dashboard.targets.steps != null && (
-                    <div>
-                      <span className="text-gray-400">{t("targetSteps")} </span>
-                      <span className="font-medium">{dashboard.targets.steps.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {dashboard.targets.sleep != null && (
-                    <div>
-                      <span className="text-gray-400">{t("targetSleep")} </span>
-                      <span className="font-medium">{dashboard.targets.sleep} h</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {(dashboard.start_date || dashboard.start_weight) && (
-            <Card size="sm">
-              <CardContent>
-                <div className="flex gap-6 text-sm">
-                  {dashboard.start_date && (
-                    <div>
-                      <span className="text-gray-400">{t("startDate")}</span>
-                      <span className="font-medium">
-                        {new Date(dashboard.start_date + "T00:00").toLocaleDateString(bcp47)}
-                      </span>
-                    </div>
-                  )}
-                  {dashboard.start_weight && (
-                    <div>
-                      <span className="text-gray-400">{t("startWeight")}</span>
-                      <span className="font-medium">{dashboard.start_weight} kg</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="border-t border-gray-800" />
+            <p className="mt-1 font-mono text-[10px] text-ink-3">kg</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3 text-center">
+            <MicroLabel>HEIGHT</MicroLabel>
+            <p className="mt-1.5 font-mono text-[20px] font-semibold text-ink tabular-nums leading-none">
+              <Num value={profile.height_cm} />
+            </p>
+            <p className="mt-1 font-mono text-[10px] text-ink-3">cm</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3 text-center">
+            <MicroLabel>SINCE</MicroLabel>
+            <p className="mt-1.5 font-mono text-[14px] font-semibold text-ink leading-none whitespace-nowrap">
+              {dashboard.start_date
+                ? new Date(
+                    dashboard.start_date + "T00:00"
+                  ).toLocaleDateString(bcp47, {
+                    day: "2-digit",
+                    month: "short",
+                  })
+                : "—"}
+            </p>
+            <p className="mt-1 font-mono text-[10px] text-ink-3">
+              {dashboard.start_date
+                ? new Date(dashboard.start_date + "T00:00").getFullYear()
+                : ""}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* === Edit Profile Form === */}
-      <h2 className="mb-4 text-lg font-semibold">{t("editTitle")}</h2>
+      {/* Targets summary */}
+      {dashboard?.targets && (
+        <div className="rounded-xl border border-border bg-card p-4 mb-5">
+          <MicroLabel>TARGETS</MicroLabel>
+          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-[12px]">
+            {[
+              ["targetCalories", dashboard.targets.calories, "kcal"],
+              ["targetProtein", dashboard.targets.protein, "g"],
+              ["targetCarbs", dashboard.targets.carbs, "g"],
+              ["targetFat", dashboard.targets.fat, "g"],
+              ["targetSteps", dashboard.targets.steps, ""],
+              ["targetSleep", dashboard.targets.sleep, "h"],
+            ].map(([key, value, unit]) => (
+              <div
+                key={key as string}
+                className="flex items-baseline justify-between"
+              >
+                <span className="text-ink-3">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {t(key as any)}
+                </span>
+                <span className="text-ink tabular-nums">
+                  {value != null ? value : "—"}
+                  {unit ? <span className="text-ink-3 ml-0.5">{unit as string}</span> : null}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <Card>
-        <CardContent className="space-y-4 pt-2">
+      {/* Edit profile */}
+      <div className="rounded-xl border border-border bg-card p-4 mb-5">
+        <MicroLabel>{t("editTitle").toUpperCase()}</MicroLabel>
+        <div className="mt-3 space-y-3">
           <div>
-            <Label htmlFor="full_name">{t("fullName")}</Label>
+            <Label htmlFor="full_name" className="text-xs text-ink-3 mb-1 inline-block">
+              {t("fullName")}
+            </Label>
             <Input
               id="full_name"
               value={profile.full_name || ""}
               onChange={(e) =>
                 setProfile({ ...profile, full_name: e.target.value })
               }
-              className="h-11"
             />
           </div>
-
           <div>
-            <Label htmlFor="email">{tCommon("email")}</Label>
+            <Label htmlFor="email" className="text-xs text-ink-3 mb-1 inline-block">
+              {tCommon("email")}
+            </Label>
             <Input
               id="email"
               value={profile.email || ""}
               disabled
-              className="h-11 text-gray-500"
+              className="text-ink-3"
             />
           </div>
-
-          <div>
-            <Label htmlFor="dob">{t("dateOfBirth")}</Label>
-            <Input
-              id="dob"
-              type="date"
-              value={profile.date_of_birth || ""}
-              onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  date_of_birth: e.target.value || null,
-                })
-              }
-              className="h-11"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="height">{t("heightCm")}</Label>
-            <Input
-              id="height"
-              type="number"
-              value={profile.height_cm ?? ""}
-              onChange={(e) =>
-                setProfile({
-                  ...profile,
-                  height_cm: e.target.value ? parseFloat(e.target.value) : null,
-                })
-              }
-              className="h-11"
-            />
-          </div>
-
-          <div>
-            <Label>{t("gender")}</Label>
-            <div className="mt-1 flex gap-2">
-              {(["M", "F"] as const).map((g) => (
-                <Button
-                  key={g}
-                  type="button"
-                  variant={profile.gender === g ? "default" : "outline"}
-                  className="h-11 min-w-[48px] px-4"
-                  onClick={() => setProfile({ ...profile, gender: g })}
-                >
-                  {g === "M" ? t("male") : t("female")}
-                </Button>
-              ))}
-              {profile.gender && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-11"
-                  onClick={() => setProfile({ ...profile, gender: null })}
-                >
-                  {t("clearSelection")}
-                </Button>
-              )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label
+                htmlFor="dob"
+                className="text-xs text-ink-3 mb-1 inline-block"
+              >
+                {t("dateOfBirth")}
+              </Label>
+              <Input
+                id="dob"
+                type="date"
+                value={profile.date_of_birth || ""}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    date_of_birth: e.target.value || null,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Label
+                htmlFor="height"
+                className="text-xs text-ink-3 mb-1 inline-block"
+              >
+                {t("heightCm")}
+              </Label>
+              <Input
+                id="height"
+                type="number"
+                value={profile.height_cm ?? ""}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    height_cm: e.target.value
+                      ? parseFloat(e.target.value)
+                      : null,
+                  })
+                }
+              />
             </div>
           </div>
-
+          <div>
+            <Label className="text-xs text-ink-3 mb-1 inline-block">
+              {t("gender")}
+            </Label>
+            <div className="flex gap-2">
+              {(["M", "F"] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setProfile({ ...profile, gender: g })}
+                  className={`flex-1 rounded-lg border px-4 py-2 font-mono text-[11px] uppercase tracking-[0.06em] transition-colors ${
+                    profile.gender === g
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-border text-ink-3 hover:border-hairline-2"
+                  }`}
+                >
+                  {g === "M" ? t("male") : t("female")}
+                </button>
+              ))}
+            </div>
+          </div>
           <Button
             onClick={handleSave}
+            size="lg"
             disabled={saving}
-            className="mt-2 h-11 w-full text-base"
+            className="w-full mt-2"
           >
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                {tCommon("saving")}
-              </>
-            ) : (
-              tCommon("save")
-            )}
+            {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+            {saving ? tCommon("saving") : tCommon("save")}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <div className="my-6 border-t border-gray-800" />
+      {/* Language */}
+      <div className="rounded-xl border border-border bg-card p-4 mb-5 flex items-center justify-between">
+        <span className="text-sm text-ink-2">{t("language")}</span>
+        <LanguageSwitcher />
+      </div>
 
-      {/* === Language switcher === */}
-      <Card className="mb-6">
-        <CardContent className="flex items-center justify-between gap-3 p-4">
-          <span className="text-sm font-medium text-gray-300">
-            {t("language")}
-          </span>
-          <LanguageSwitcher />
-        </CardContent>
-      </Card>
-
+      {/* Sign out */}
       <Button
         variant="outline"
         onClick={handleSignOut}
         disabled={signingOut}
-        className="h-11 w-full text-base text-red-400 hover:text-red-300"
+        size="lg"
+        className="w-full text-danger border-danger/30 hover:bg-danger/10"
       >
-        <LogOut className="mr-2 size-4" />
+        <LogOut className="size-4" />
         {signingOut ? t("signOutLoading") : t("signOut")}
       </Button>
     </div>

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayCET } from "@/lib/date";
 
@@ -143,6 +144,10 @@ export async function finishWorkoutSession(
     console.error("Session finish error:", error);
     return { error: "finishSessionFailed" };
   }
+
+  revalidatePath("/coach");
+  revalidatePath(`/coach/clients/${user.id}`);
+  revalidatePath("/app");
 
   return { success: true };
 }

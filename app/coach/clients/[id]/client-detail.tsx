@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,12 +24,29 @@ import {
   ResponsiveContainer,
   Tooltip,
   YAxis,
+  Area,
+  AreaChart,
 } from "recharts";
 import { updateClientNotes, updateClientTargets } from "@/actions/coach";
 import { sendReminder } from "@/actions/send-reminder";
-import { Save, Pencil, X, Dumbbell, Layers, Bell, UtensilsCrossed } from "lucide-react";
+import {
+  Save,
+  Pencil,
+  X,
+  Dumbbell,
+  Layers,
+  Bell,
+  UtensilsCrossed,
+} from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+
+import { Avatar } from "@/components/ui/athletic/avatar";
+import { Chip } from "@/components/ui/athletic/chip";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
+import { Num } from "@/components/ui/athletic/num";
+import { RingChart } from "@/components/ui/athletic/ring-chart";
+import { StatusDot } from "@/components/ui/athletic/status-dot";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>;
@@ -41,6 +61,26 @@ type Props = {
   photos: Row[];
 };
 
+type MacroSpec = {
+  label: string;
+  current: number | null;
+  target: number | null;
+  unit: string;
+  color: string;
+  decimals?: number;
+};
+
+function pct(current: number | null, target: number | null): number {
+  if (current == null || target == null || target === 0) return 0;
+  return Math.round((current / target) * 100);
+}
+
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function ClientDetail({
   client,
   profile,
@@ -51,7 +91,6 @@ export default function ClientDetail({
   photos,
 }: Props) {
   const t = useTranslations("coach.clients.detail");
-  const tCommon = useTranslations("common");
   const locale = useLocale();
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
 
@@ -71,20 +110,58 @@ export default function ClientDetail({
     target_sleep_h: client.target_sleep_h as number | null,
   });
 
-  // Clean up notesSaved timer
   useEffect(() => {
     if (!notesSaved) return;
     const timer = setTimeout(() => setNotesSaved(false), 2000);
     return () => clearTimeout(timer);
   }, [notesSaved]);
 
-  const weightData = logs
-    .filter((l) => l.weight_kg != null)
-    .reverse()
-    .map((l) => ({
-      date: l.log_date as string,
-      weight_kg: Number(l.weight_kg),
-    }));
+  // Latest log = first item (logs come ordered desc)
+  const latestLog = logs[0] ?? {};
+
+  // Weight series (chronological)
+  const weightData = useMemo(() => {
+    return logs
+      .filter((l) => l.weight_kg != null)
+      .slice()
+      .reverse()
+      .map((l) => ({
+        date: l.log_date as string,
+        weight: Number(l.weight_kg),
+      }));
+  }, [logs]);
+
+  // 14-day adherence histogram from daily_logs presence
+  const adherence14 = useMemo(() => {
+    const days: { date: string; logged: boolean }[] = [];
+    const logsByDate = new Map<string, Row>();
+    logs.forEach((l) => logsByDate.set(l.log_date as string, l));
+    for (let i = 13; i >= 0; i--) {
+      const date = daysAgo(i);
+      days.push({ date, logged: logsByDate.has(date) });
+    }
+    return days;
+  }, [logs]);
+  const adherenceAvg = Math.round(
+    (adherence14.filter((d) => d.logged).length / 14) * 100
+  );
+
+  // Streak: consecutive logged days walking back from today
+  const streak = useMemo(() => {
+    const dates = new Set(logs.map((l) => l.log_date as string));
+    let count = 0;
+    for (let i = 0; i < 365; i++) {
+      const date = daysAgo(i);
+      if (dates.has(date)) {
+        count++;
+      } else if (i > 0) {
+        break;
+      } else {
+        break;
+      }
+    }
+    return count;
+  }, [logs]);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -120,7 +197,7 @@ export default function ClientDetail({
   ) {
     return (
       <div>
-        <Label className="mb-1 text-xs text-gray-400">
+        <Label className="mb-1 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
           {label} ({unit})
         </Label>
         <Input
@@ -137,82 +214,167 @@ export default function ClientDetail({
     );
   }
 
-  const targetCards = [
-    { label: t("targetCalories"), value: targets.target_calories, unit: "kcal" },
-    { label: t("targetProtein"), value: targets.target_protein_g, unit: "g" },
-    { label: t("targetCarbs"), value: targets.target_carbs_g, unit: "g" },
-    { label: t("targetFat"), value: targets.target_fat_g, unit: "g" },
-    { label: t("targetSteps"), value: targets.target_steps, unit: "" },
-    { label: t("targetSleep"), value: targets.target_sleep_h, unit: "h" },
+  const macros: MacroSpec[] = [
+    {
+      label: t("targetCalories"),
+      current: latestLog.calories_kcal ?? null,
+      target: targets.target_calories,
+      unit: "kcal",
+      color: "var(--lime)",
+    },
+    {
+      label: t("targetProtein"),
+      current: latestLog.protein_g ?? null,
+      target: targets.target_protein_g,
+      unit: "g",
+      color: "var(--info)",
+    },
+    {
+      label: t("targetCarbs"),
+      current: latestLog.carbs_g ?? null,
+      target: targets.target_carbs_g,
+      unit: "g",
+      color: "var(--carb)",
+    },
+    {
+      label: t("targetFat"),
+      current: latestLog.fat_g ?? null,
+      target: targets.target_fat_g,
+      unit: "g",
+      color: "var(--fat)",
+    },
+    {
+      label: t("targetSteps"),
+      current: latestLog.steps ?? null,
+      target: targets.target_steps,
+      unit: "",
+      color: "var(--violet)",
+    },
+    {
+      label: t("targetSleep"),
+      current: latestLog.sleep_h ?? null,
+      target: targets.target_sleep_h,
+      unit: "h",
+      color: "var(--good)",
+      decimals: 1,
+    },
   ];
+
+  const fullName = (profile.full_name as string) || t("unknownClient");
+  const isActive = client.is_active as boolean;
 
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">
-            {profile.full_name as string}
-          </h1>
-          {phase && (
-            <Badge className="border-blue-500/30 bg-blue-500/20 text-blue-400">
-              {phase.name as string}
-            </Badge>
-          )}
-          {!client.is_active && <Badge variant="secondary">{t("inactive")}</Badge>}
+      <div className="mb-7 flex flex-wrap items-start gap-4">
+        <Avatar name={fullName} size="lg" />
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-[28px] sm:text-[32px] font-semibold leading-tight tracking-tight text-ink truncate">
+              {fullName}
+            </h1>
+            {isActive ? (
+              <Chip variant="good" size="lg" className="gap-1.5">
+                <StatusDot tone="good" size="sm" />
+                ACTIVE
+              </Chip>
+            ) : (
+              <Chip variant="neutral" size="lg">
+                {t("inactive").toUpperCase()}
+              </Chip>
+            )}
+            {phase && (
+              <Chip variant="ghost" size="lg">
+                {(phase.name as string).toUpperCase()}
+              </Chip>
+            )}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-ink-3">
+            {client.start_date != null && (
+              <span>
+                {t("startDate")}{" "}
+                {new Date(
+                  (client.start_date as string) + "T00:00"
+                ).toLocaleDateString(bcp47)}
+              </span>
+            )}
+            <span>
+              STREAK <span className="text-ink">{streak}d</span>
+            </span>
+            <span>
+              ADHERENCE 14D{" "}
+              <span className="text-ink">{adherenceAvg}%</span>
+            </span>
+          </div>
         </div>
-        {client.start_date != null && (
-          <p className="mt-1 text-sm text-gray-400">
-            {t("startDate")}{" "}
-            {new Date(
-              (client.start_date as string) + "T00:00"
-            ).toLocaleDateString(bcp47)}
-          </p>
-        )}
-        <div className="mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSendReminder}
-            disabled={sendingReminder}
-          >
-            <Bell size={14} />{" "}
-            {sendingReminder ? t("sendReminderLoading") : t("sendReminder")}
-          </Button>
-        </div>
-      </div>
-
-      {/* Targets grid */}
-      <div className="mb-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {targetCards.map((tc) => (
-          <Card key={tc.label} size="sm">
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-gray-400">{tc.label}</p>
-              <p className="text-lg font-semibold">
-                {tc.value != null ? tc.value : "—"}
-                {tc.value != null && tc.unit && (
-                  <span className="text-xs text-gray-500"> {tc.unit}</span>
-                )}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Edit targets */}
-      {!editingTargets ? (
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setEditingTargets(true)}
-          className="mb-6"
+          onClick={handleSendReminder}
+          disabled={sendingReminder}
         >
-          <Pencil size={14} /> {t("editTargets")}
+          <Bell size={14} />
+          {sendingReminder ? t("sendReminderLoading") : t("sendReminder")}
         </Button>
-      ) : (
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      </div>
+
+      {/* Macro ring grid */}
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <MicroLabel>~/Latest snapshot</MicroLabel>
+          {!editingTargets ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditingTargets(true)}
+            >
+              <Pencil size={12} /> {t("editTargets")}
+            </Button>
+          ) : (
+            <div className="flex gap-1.5">
+              <Button onClick={handleSaveTargets} disabled={saving} size="sm">
+                <Save size={12} /> {t("saveTargets")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingTargets(false)}
+              >
+                <X size={12} /> {t("cancelEdit")}
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {macros.map((m) => {
+            const p = pct(m.current, m.target);
+            return (
+              <div
+                key={m.label}
+                className="rounded-xl border border-border bg-card p-4"
+              >
+                <div className="flex items-start justify-between">
+                  <MicroLabel>{m.label.toUpperCase()}</MicroLabel>
+                  <RingChart
+                    percent={Math.min(p, 100)}
+                    color={m.color}
+                    size={28}
+                    stroke={2.5}
+                  />
+                </div>
+                <div className="mt-3 font-mono text-[22px] font-semibold tracking-tight text-ink leading-none tabular-nums">
+                  <Num value={m.current} decimals={m.decimals} />
+                </div>
+                <div className="mt-1 font-mono text-[10px] text-ink-3 leading-none">
+                  / <Num value={m.target} decimals={m.decimals} /> · {p}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {editingTargets && (
+          <div className="mt-3 rounded-xl border border-border bg-card p-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {targetField(t("targetCalories"), "target_calories", "kcal")}
               {targetField(t("targetProtein"), "target_protein_g", "g")}
               {targetField(t("targetCarbs"), "target_carbs_g", "g")}
@@ -220,20 +382,136 @@ export default function ClientDetail({
               {targetField(t("targetSteps"), "target_steps", "")}
               {targetField(t("targetSleep"), "target_sleep_h", "h")}
             </div>
-            <div className="mt-4 flex gap-2">
-              <Button onClick={handleSaveTargets} disabled={saving}>
-                <Save size={14} /> {t("saveTargets")}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setEditingTargets(false)}
-              >
-                <X size={14} /> {t("cancelEdit")}
-              </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Charts row */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Weight chart */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between">
+            <MicroLabel>{t("weightTrend").toUpperCase()} · 30D</MicroLabel>
+            {weightData.length > 0 && (
+              <span className="font-mono text-[18px] font-semibold tracking-tight text-ink tabular-nums">
+                <Num
+                  value={weightData[weightData.length - 1]?.weight}
+                  decimals={1}
+                />
+                <span className="text-ink-3 text-xs ml-1">kg</span>
+              </span>
+            )}
+          </div>
+          {weightData.length >= 2 ? (
+            <div className="mt-3 h-[140px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={weightData}
+                  margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="weightGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="var(--lime)"
+                        stopOpacity={0.25}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--lime)"
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <YAxis
+                    domain={["dataMin - 0.5", "dataMax + 0.5"]}
+                    hide
+                  />
+                  <Tooltip
+                    cursor={{
+                      stroke: "var(--hairline-2)",
+                      strokeWidth: 1,
+                      strokeDasharray: "3 3",
+                    }}
+                    contentStyle={{
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--hairline-2)",
+                      borderRadius: "8px",
+                      fontSize: "11px",
+                      color: "var(--ink)",
+                      padding: "6px 10px",
+                      fontFamily: "var(--font-geist-mono)",
+                    }}
+                    labelStyle={{ color: "var(--ink-3)" }}
+                    formatter={(v) => [`${v} kg`, t("weightLabel")]}
+                    labelFormatter={(l) =>
+                      new Date(String(l) + "T00:00").toLocaleDateString(bcp47)
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="var(--lime)"
+                    strokeWidth={2}
+                    fill="url(#weightGradient)"
+                    dot={false}
+                    activeDot={{
+                      r: 4,
+                      fill: "var(--lime)",
+                      stroke: "var(--bg)",
+                      strokeWidth: 2,
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="mt-6 text-center font-mono text-[11px] text-ink-3">
+              {t("noLogs")}
+            </p>
+          )}
+        </div>
+
+        {/* Adherence histogram */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between">
+            <MicroLabel>ADHERENCE · 14D</MicroLabel>
+            <span className="font-mono text-[18px] font-semibold tracking-tight text-ink tabular-nums">
+              {adherenceAvg}
+              <span className="text-ink-3 text-xs ml-0.5">%</span>
+            </span>
+          </div>
+          <div className="mt-4 flex h-[100px] items-end gap-1">
+            {adherence14.map((d, i) => {
+              const isToday = i === 13;
+              return (
+                <div
+                  key={d.date}
+                  className="flex-1 rounded-sm transition-all"
+                  style={{
+                    height: d.logged ? "100%" : "8%",
+                    backgroundColor: d.logged
+                      ? "var(--lime)"
+                      : "var(--hairline-2)",
+                    opacity: isToday ? 1 : d.logged ? 0.7 : 1,
+                  }}
+                  title={d.date}
+                />
+              );
+            })}
+          </div>
+          <div className="mt-3 flex justify-between font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+            <span>14D AGO</span>
+            <span>TODAY</span>
+          </div>
+        </div>
+      </div>
 
       {/* Quick links */}
       <div className="mb-6 flex flex-wrap gap-2">
@@ -264,214 +542,149 @@ export default function ClientDetail({
           <TabsTrigger value="photos">{t("tabPhotos")}</TabsTrigger>
         </TabsList>
 
-        {/* LOGS TAB */}
+        {/* LOGS */}
         <TabsContent value="logs">
-          {weightData.length >= 2 && (
-            <div className="mb-4 rounded-lg border border-gray-800 p-4">
-              <p className="mb-2 text-xs text-gray-400">{t("weightTrend")}</p>
-              <ResponsiveContainer width="100%" height={80}>
-                <LineChart data={weightData}>
-                  <YAxis domain={["dataMin - 0.5", "dataMax + 0.5"]} hide />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#1f2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                    formatter={(v) => [`${v} kg`, t("weightLabel")]}
-                    labelFormatter={(l) =>
-                      new Date(String(l) + "T00:00").toLocaleDateString(bcp47)
-                    }
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="weight_kg"
-                    stroke="#3b82f6"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
           {logs.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">{t("noLogs")}</p>
+            <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
+              {t("noLogs")}
+            </p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-800">
-              <table className="w-full text-sm">
-                <thead className="border-b border-gray-800 bg-gray-900/50">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-400">
-                      {t("colDate")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colWeight")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colKcal")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colProtein")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colSteps")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colSleep")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((l) => (
-                    <tr
-                      key={l.id as string}
-                      className="border-b border-gray-800/50 last:border-0"
-                    >
-                      <td className="px-3 py-2 text-gray-300">
-                        {new Date(
-                          (l.log_date as string) + "T00:00"
-                        ).toLocaleDateString(bcp47)}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {l.weight_kg != null ? `${l.weight_kg}` : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {l.calories_kcal != null ? l.calories_kcal : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {l.protein_g != null ? `${l.protein_g}g` : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {l.steps != null
-                          ? (l.steps as number).toLocaleString()
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {l.sleep_h != null ? `${l.sleep_h}h` : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="grid grid-cols-[1.2fr_0.7fr_0.7fr_0.7fr_0.7fr_0.6fr] items-center border-b border-border px-5 py-3 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
+                <span>{t("colDate")}</span>
+                <span className="text-right">{t("colWeight")}</span>
+                <span className="text-right">{t("colKcal")}</span>
+                <span className="text-right">{t("colProtein")}</span>
+                <span className="text-right">{t("colSteps")}</span>
+                <span className="text-right">{t("colSleep")}</span>
+              </div>
+              {logs.map((l, idx) => (
+                <div
+                  key={l.id as string}
+                  className={`grid grid-cols-[1.2fr_0.7fr_0.7fr_0.7fr_0.7fr_0.6fr] items-center px-5 py-2.5 text-sm hover:bg-surface-2/40 transition-colors ${
+                    idx < logs.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <span className="text-ink">
+                    {new Date(
+                      (l.log_date as string) + "T00:00"
+                    ).toLocaleDateString(bcp47)}
+                  </span>
+                  <span className="text-right font-mono text-ink-2 tabular-nums">
+                    <Num value={l.weight_kg} decimals={1} />
+                  </span>
+                  <span className="text-right font-mono text-ink-2 tabular-nums">
+                    <Num value={l.calories_kcal} />
+                  </span>
+                  <span className="text-right font-mono text-ink-2 tabular-nums">
+                    <Num value={l.protein_g} unit="g" />
+                  </span>
+                  <span className="text-right font-mono text-ink-2 tabular-nums">
+                    <Num value={l.steps} />
+                  </span>
+                  <span className="text-right font-mono text-ink-2 tabular-nums">
+                    <Num value={l.sleep_h} decimals={1} unit="h" />
+                  </span>
+                </div>
+              ))}
             </div>
           )}
         </TabsContent>
 
-        {/* CHECKINS TAB */}
+        {/* CHECKINS */}
         <TabsContent value="checkins">
           {checkins.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">{t("noCheckins")}</p>
+            <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
+              {t("noCheckins")}
+            </p>
           ) : (
             <Accordion>
               {checkins.map((ci) => (
                 <AccordionItem key={ci.id as string} value={ci.id as string}>
                   <AccordionTrigger className="px-2">
                     <div className="flex items-center gap-3">
-                      <span>
+                      <span className="font-mono text-[12px] text-ink">
                         {new Date(
                           (ci.checkin_date as string) + "T00:00"
                         ).toLocaleDateString(bcp47)}
                       </span>
                       {ci.overall_rating != null && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs"
-                        >
+                        <Chip variant="ghost">
                           {ci.overall_rating as number}/10
-                        </Badge>
+                        </Chip>
                       )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-2">
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 font-mono text-[12px]">
                       {ci.energy_level != null && (
                         <div>
-                          <span className="text-gray-500">{t("ciEnergy")}:</span>{" "}
-                          {ci.energy_level as number}/10
+                          <span className="text-ink-3">{t("ciEnergy")}: </span>
+                          <span className="text-ink">
+                            {ci.energy_level as number}/10
+                          </span>
                         </div>
                       )}
                       {ci.stress_level != null && (
                         <div>
-                          <span className="text-gray-500">{t("ciStress")}:</span>{" "}
-                          {ci.stress_level as number}/10
+                          <span className="text-ink-3">{t("ciStress")}: </span>
+                          <span className="text-ink">
+                            {ci.stress_level as number}/10
+                          </span>
                         </div>
                       )}
                       {ci.motivation != null && (
                         <div>
-                          <span className="text-gray-500">{t("ciMotivation")}:</span>{" "}
-                          {ci.motivation as number}/10
+                          <span className="text-ink-3">
+                            {t("ciMotivation")}:{" "}
+                          </span>
+                          <span className="text-ink">
+                            {ci.motivation as number}/10
+                          </span>
                         </div>
                       )}
                       {ci.sleep_quality != null && (
                         <div>
-                          <span className="text-gray-500">{t("ciSleepQuality")}:</span>{" "}
-                          {ci.sleep_quality as number}/10
+                          <span className="text-ink-3">
+                            {t("ciSleepQuality")}:{" "}
+                          </span>
+                          <span className="text-ink">
+                            {ci.sleep_quality as number}/10
+                          </span>
                         </div>
                       )}
                       {ci.appetite != null && (
                         <div>
-                          <span className="text-gray-500">{t("ciAppetite")}:</span>{" "}
-                          {ci.appetite as number}/10
+                          <span className="text-ink-3">{t("ciAppetite")}: </span>
+                          <span className="text-ink">
+                            {ci.appetite as number}/10
+                          </span>
                         </div>
                       )}
                       {ci.adherence_diet_pct != null && (
                         <div>
-                          <span className="text-gray-500">{t("ciDiet")}:</span>{" "}
-                          {ci.adherence_diet_pct as number}%
+                          <span className="text-ink-3">{t("ciDiet")}: </span>
+                          <span className="text-ink">
+                            {ci.adherence_diet_pct as number}%
+                          </span>
                         </div>
                       )}
                     </div>
-                    {ci.pain_discomfort && (
-                      <div className="mt-3">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("ciPain")}
-                        </span>
-                        <p className="text-gray-300">
-                          {ci.pain_discomfort as string}
-                        </p>
-                      </div>
-                    )}
-                    {ci.what_went_well && (
-                      <div className="mt-3">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("ciWhatWentWell")}
-                        </span>
-                        <p className="text-gray-300">
-                          {ci.what_went_well as string}
-                        </p>
-                      </div>
-                    )}
-                    {ci.challenges && (
-                      <div className="mt-3">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("ciChallenges")}
-                        </span>
-                        <p className="text-gray-300">
-                          {ci.challenges as string}
-                        </p>
-                      </div>
-                    )}
-                    {ci.goals_next_week && (
-                      <div className="mt-3">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("ciGoalsNextWeek")}
-                        </span>
-                        <p className="text-gray-300">
-                          {ci.goals_next_week as string}
-                        </p>
-                      </div>
-                    )}
-                    {ci.questions_for_coach && (
-                      <div className="mt-3">
-                        <span className="text-xs font-medium text-gray-500">
-                          {t("ciQuestionsForCoach")}
-                        </span>
-                        <p className="text-gray-300">
-                          {ci.questions_for_coach as string}
-                        </p>
-                      </div>
+                    {[
+                      ["pain_discomfort", t("ciPain")],
+                      ["what_went_well", t("ciWhatWentWell")],
+                      ["challenges", t("ciChallenges")],
+                      ["goals_next_week", t("ciGoalsNextWeek")],
+                      ["questions_for_coach", t("ciQuestionsForCoach")],
+                    ].map(([key, label]) =>
+                      ci[key] ? (
+                        <div key={key} className="mt-3">
+                          <MicroLabel>{label}</MicroLabel>
+                          <p className="mt-1 text-sm text-ink-2 leading-relaxed">
+                            {ci[key] as string}
+                          </p>
+                        </div>
+                      ) : null
                     )}
                   </AccordionContent>
                 </AccordionItem>
@@ -480,84 +693,73 @@ export default function ClientDetail({
           )}
         </TabsContent>
 
-        {/* MEASUREMENTS TAB */}
+        {/* MEASUREMENTS */}
         <TabsContent value="measurements">
           {measurements.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">{t("noMeasurements")}</p>
+            <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
+              {t("noMeasurements")}
+            </p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
               <table className="w-full text-sm">
-                <thead className="border-b border-gray-800 bg-gray-900/50">
+                <thead className="border-b border-border">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-400">
-                      {t("colDate")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colNeck")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colChest")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colWaist")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colHips")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colArmL")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colArmR")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colThighL")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colThighR")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-400">
-                      {t("colBfPct")}
-                    </th>
+                    {[
+                      "colDate",
+                      "colNeck",
+                      "colChest",
+                      "colWaist",
+                      "colHips",
+                      "colArmL",
+                      "colArmR",
+                      "colThighL",
+                      "colThighR",
+                      "colBfPct",
+                    ].map((k, i) => (
+                      <th
+                        key={k}
+                        className={`px-3 py-3 ${i === 0 ? "text-left" : "text-right"} font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3`}
+                      >
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {t(k as any)}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {measurements.map((m) => (
+                  {measurements.map((m, idx) => (
                     <tr
                       key={m.id as string}
-                      className="border-b border-gray-800/50 last:border-0"
+                      className={
+                        idx < measurements.length - 1
+                          ? "border-b border-border"
+                          : ""
+                      }
                     >
-                      <td className="px-3 py-2 text-gray-300">
+                      <td className="px-3 py-2.5 text-ink">
                         {new Date(
                           (m.meas_date as string) + "T00:00"
                         ).toLocaleDateString(bcp47)}
                       </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.neck_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.chest_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.waist_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.hips_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.arm_l_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.arm_r_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.thigh_l_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.thigh_r_cm ?? "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-300">
-                        {m.body_fat_pct != null ? `${m.body_fat_pct}%` : "—"}
+                      {[
+                        "neck_cm",
+                        "chest_cm",
+                        "waist_cm",
+                        "hips_cm",
+                        "arm_l_cm",
+                        "arm_r_cm",
+                        "thigh_l_cm",
+                        "thigh_r_cm",
+                      ].map((k) => (
+                        <td
+                          key={k}
+                          className="px-3 py-2.5 text-right font-mono text-ink-2 tabular-nums"
+                        >
+                          <Num value={m[k] ?? null} decimals={1} />
+                        </td>
+                      ))}
+                      <td className="px-3 py-2.5 text-right font-mono text-ink-2 tabular-nums">
+                        <Num value={m.body_fat_pct ?? null} decimals={1} unit="%" />
                       </td>
                     </tr>
                   ))}
@@ -567,11 +769,13 @@ export default function ClientDetail({
           )}
         </TabsContent>
 
-        {/* NOTES TAB */}
+        {/* NOTES */}
         <TabsContent value="notes">
           <div className="max-w-2xl space-y-4">
             <div>
-              <Label className="mb-2">{t("notesLabel")}</Label>
+              <Label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+                {t("notesLabel")}
+              </Label>
               <Textarea
                 rows={6}
                 value={notes}
@@ -580,7 +784,9 @@ export default function ClientDetail({
               />
             </div>
             <div>
-              <Label className="mb-2">{t("injuriesLabel")}</Label>
+              <Label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+                {t("injuriesLabel")}
+              </Label>
               <Textarea
                 rows={4}
                 value={injuries}
@@ -588,36 +794,50 @@ export default function ClientDetail({
                 placeholder={t("injuriesPlaceholder")}
               />
             </div>
-            <Button onClick={handleSaveNotes} disabled={saving}>
-              <Save size={14} /> {saving ? t("savingNotes") : t("saveNotes")}
-            </Button>
-            {notesSaved && (
-              <span className="ml-3 text-sm text-green-400">{t("notesSaved")}</span>
-            )}
+            <div className="flex items-center gap-3">
+              <Button onClick={handleSaveNotes} disabled={saving}>
+                <Save size={14} />{" "}
+                {saving ? t("savingNotes") : t("saveNotes")}
+              </Button>
+              {notesSaved && (
+                <span className="font-mono text-[11px] text-good uppercase tracking-[0.06em]">
+                  ✓ {t("notesSaved")}
+                </span>
+              )}
+            </div>
           </div>
         </TabsContent>
 
-        {/* PHOTOS TAB */}
+        {/* PHOTOS */}
         <TabsContent value="photos">
           {photos.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">{t("noPhotos")}</p>
+            <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
+              {t("noPhotos")}
+            </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {photos.map((p) => (
-                <div key={p.id as string} className="overflow-hidden rounded-lg border border-gray-800">
+                <div
+                  key={p.id as string}
+                  className="overflow-hidden rounded-xl border border-border bg-card"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`${supabaseUrl}/storage/v1/object/public/progress-photos/${p.storage_path as string}`}
                     alt={`${p.angle || "photo"} - ${p.photo_date}`}
                     className="aspect-[3/4] w-full object-cover"
+                    loading="lazy"
                   />
-                  <div className="p-2">
-                    <p className="text-xs text-gray-400">
+                  <div className="px-3 py-2 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-ink-3 uppercase tracking-[0.06em]">
                       {new Date(
                         (p.photo_date as string) + "T00:00"
                       ).toLocaleDateString(bcp47)}
-                    </p>
+                    </span>
                     {p.angle && (
-                      <p className="text-xs text-gray-500">{p.angle as string}</p>
+                      <Chip variant="ghost" size="sm">
+                        {(p.angle as string).toUpperCase()}
+                      </Chip>
                     )}
                   </div>
                 </div>

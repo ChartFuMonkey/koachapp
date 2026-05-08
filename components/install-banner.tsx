@@ -69,12 +69,12 @@ export default function InstallBanner() {
   if (!deferredPrompt && !showIOSHint) return null;
 
   return (
-    <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 px-4 pb-2">
-      <div className="flex items-center gap-3 rounded-xl border border-gray-800 bg-gray-900 px-4 py-3 shadow-lg">
+    <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-full max-w-[430px] z-40 px-4 pb-2">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3">
         {showIOSHint ? (
           <>
-            <Share size={20} className="shrink-0 text-blue-400" />
-            <p className="flex-1 text-sm text-gray-300">
+            <Share size={18} className="shrink-0 text-primary" />
+            <p className="flex-1 text-sm text-ink-2">
               {t("iosHintPrefix")}{" "}
               <Share size={14} className="mb-0.5 inline" />
               {" \u2192 "}
@@ -83,8 +83,8 @@ export default function InstallBanner() {
           </>
         ) : (
           <>
-            <Download size={20} className="shrink-0 text-blue-400" />
-            <p className="flex-1 text-sm text-gray-300">
+            <Download size={18} className="shrink-0 text-primary" />
+            <p className="flex-1 text-sm text-ink-2">
               {t("installPrompt")}
             </p>
             <Button size="sm" onClick={handleInstall}>
@@ -94,9 +94,10 @@ export default function InstallBanner() {
         )}
         <button
           onClick={handleDismiss}
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center text-gray-500 hover:text-gray-300"
+          aria-label="Dismiss"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center text-ink-3 hover:text-ink"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
     </div>

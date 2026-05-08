@@ -7,8 +7,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Chip } from "@/components/ui/athletic/chip";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
+import { ProgressBar } from "@/components/ui/athletic/progress-bar";
 import {
   getThisWeekCheckin,
   submitCheckin,
@@ -17,6 +18,87 @@ import {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type CheckinRow = Record<string, any>;
+
+function DiscreteSlider({
+  value,
+  onChange,
+  color = "var(--lime)",
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  color?: string;
+}) {
+  return (
+    <div className="mt-2 flex gap-[3px]">
+      {Array.from({ length: 10 }, (_, i) => {
+        const cellValue = i + 1;
+        const isActive = cellValue <= value;
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onChange(cellValue)}
+            aria-label={`${cellValue}`}
+            className="flex-1 h-2 rounded-[2px] transition-colors"
+            style={{
+              backgroundColor: isActive ? color : "var(--hairline-2)",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function SliderRow({
+  label,
+  value,
+  onChange,
+  color,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  color?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-baseline justify-between">
+        <Label className="text-sm text-ink-2">{label}</Label>
+        <span className="font-mono text-sm text-ink tabular-nums">
+          {value}
+          <span className="text-ink-3">/10</span>
+        </span>
+      </div>
+      <DiscreteSlider value={value} onChange={onChange} color={color} />
+    </div>
+  );
+}
+
+function TextareaField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <Label className="text-sm text-ink-2 mb-2 inline-block">{label}</Label>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink resize-none outline-none placeholder:text-ink-3 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+      />
+    </div>
+  );
+}
 
 export default function CheckinPage() {
   const t = useTranslations("app.checkin");
@@ -28,13 +110,12 @@ export default function CheckinPage() {
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState<CheckinRow | null>(null);
 
-  // Form state
   const [energyLevel, setEnergyLevel] = useState(5);
   const [stressLevel, setStressLevel] = useState(5);
   const [motivation, setMotivation] = useState(5);
   const [sleepQuality, setSleepQuality] = useState(5);
   const [appetite, setAppetite] = useState(5);
-  const [adherenceDietPct, setAdherenceDietPct] = useState("");
+  const [adherenceDietPct, setAdherenceDietPct] = useState<number | null>(null);
   const [adherenceTraining, setAdherenceTraining] = useState(false);
   const [whatWentWell, setWhatWentWell] = useState("");
   const [challenges, setChallenges] = useState("");
@@ -54,9 +135,7 @@ export default function CheckinPage() {
   useEffect(() => {
     async function load() {
       const result = await getThisWeekCheckin();
-      if (result.data) {
-        setSubmitted(result.data);
-      }
+      if (result.data) setSubmitted(result.data);
       setLoading(false);
     }
     load();
@@ -65,16 +144,13 @@ export default function CheckinPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-
     const data: CheckinData = {
       energy_level: energyLevel,
       stress_level: stressLevel,
       motivation,
       sleep_quality: sleepQuality,
       appetite,
-      adherence_diet_pct: adherenceDietPct.trim()
-        ? Number(adherenceDietPct)
-        : null,
+      adherence_diet_pct: adherenceDietPct,
       adherence_training: adherenceTraining,
       what_went_well: whatWentWell.trim() || null,
       challenges: challenges.trim() || null,
@@ -82,9 +158,7 @@ export default function CheckinPage() {
       questions_for_coach: questionsForCoach.trim() || null,
       overall_rating: overallRating,
     };
-
     const result = await submitCheckin(data);
-
     if (result.error) {
       toast.error(translateError(result.error));
     } else {
@@ -94,44 +168,48 @@ export default function CheckinPage() {
         checkin_date: new Date().toISOString().split("T")[0],
       });
     }
-
     setSaving(false);
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader2 className="size-6 animate-spin text-gray-400" />
+        <Loader2 className="size-6 animate-spin text-ink-3" />
       </div>
     );
   }
 
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
 
-  // Read-only view for already-submitted check-in
+  // Submitted view
   if (submitted) {
     return (
-      <div className="p-4 pb-8">
-        <div className="mb-6 flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <Badge className="border-green-500/30 bg-green-500/20 text-green-400">
-            <CheckCircle size={14} className="mr-1" />
+      <div className="px-5 pt-5 pb-6">
+        <MicroLabel>~/Weekly check-in</MicroLabel>
+        <div className="mt-1 flex items-center gap-3 mb-4">
+          <h1 className="text-[28px] font-semibold leading-tight text-ink tracking-tight">
+            {t("title")}
+          </h1>
+          <Chip variant="good" className="gap-1 mt-1">
+            <CheckCircle size={10} />
             {t("badgeSubmitted")}
-          </Badge>
+          </Chip>
         </div>
-
         {submitted.checkin_date && (
-          <p className="mb-4 text-sm text-gray-400">
+          <p className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.06em] mb-4">
             {new Date(
               (submitted.checkin_date as string) + "T00:00"
             ).toLocaleDateString(bcp47)}
           </p>
         )}
-
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <MetricCard label={t("energy")} value={submitted.energy_level} max={10} />
           <MetricCard label={t("stress")} value={submitted.stress_level} max={10} />
-          <MetricCard label={t("motivation")} value={submitted.motivation} max={10} />
+          <MetricCard
+            label={t("motivation")}
+            value={submitted.motivation}
+            max={10}
+          />
           <MetricCard
             label={t("sleepQuality")}
             value={submitted.sleep_quality}
@@ -153,25 +231,15 @@ export default function CheckinPage() {
             max={10}
           />
         </div>
-
-        <div className="mt-6 space-y-4">
+        <div className="mt-5 space-y-3">
           {submitted.what_went_well && (
-            <TextBlock
-              label={t("whatWentWell")}
-              text={submitted.what_went_well as string}
-            />
+            <TextBlock label={t("whatWentWell")} text={submitted.what_went_well as string} />
           )}
           {submitted.challenges && (
-            <TextBlock
-              label={t("challenges")}
-              text={submitted.challenges as string}
-            />
+            <TextBlock label={t("challenges")} text={submitted.challenges as string} />
           )}
           {submitted.goals_next_week && (
-            <TextBlock
-              label={t("goalsNextWeek")}
-              text={submitted.goals_next_week as string}
-            />
+            <TextBlock label={t("goalsNextWeek")} text={submitted.goals_next_week as string} />
           )}
           {submitted.questions_for_coach && (
             <TextBlock
@@ -185,68 +253,98 @@ export default function CheckinPage() {
   }
 
   // Form view
-  return (
-    <div className="p-4 pb-8">
-      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
+  const sections = 5;
+  const filledSections =
+    [whatWentWell, challenges, goalsNextWeek, questionsForCoach].filter(
+      (s) => s.trim().length > 0
+    ).length + 1; // ratings always count as section 1
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <SliderField
-          label={t("energyLevel")}
-          value={energyLevel}
-          onChange={setEnergyLevel}
+  return (
+    <div className="px-5 pt-5 pb-6">
+      <MicroLabel>~/Weekly check-in</MicroLabel>
+      <h1 className="mt-1 text-[28px] font-semibold leading-tight text-ink tracking-tight">
+        {t("title")}
+      </h1>
+
+      {/* Section progress */}
+      <div className="mt-4 flex items-center gap-3">
+        <ProgressBar
+          value={filledSections}
+          max={sections}
+          size="thin"
+          className="flex-1"
         />
-        <SliderField
-          label={t("stressLevel")}
-          value={stressLevel}
-          onChange={setStressLevel}
-        />
-        <SliderField
-          label={t("motivation")}
-          value={motivation}
-          onChange={setMotivation}
-        />
-        <SliderField
+        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3 shrink-0">
+          {filledSections} / {sections} SECTIONS
+        </span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+        <SliderRow label={t("energyLevel")} value={energyLevel} onChange={setEnergyLevel} />
+        <SliderRow label={t("stressLevel")} value={stressLevel} onChange={setStressLevel} color="var(--warn)" />
+        <SliderRow label={t("motivation")} value={motivation} onChange={setMotivation} />
+        <SliderRow
           label={t("sleepQuality")}
           value={sleepQuality}
           onChange={setSleepQuality}
+          color="var(--good)"
         />
-        <SliderField
-          label={t("appetite")}
-          value={appetite}
-          onChange={setAppetite}
-        />
+        <SliderRow label={t("appetite")} value={appetite} onChange={setAppetite} />
 
         {/* Diet adherence */}
-        <div>
-          <Label htmlFor="diet-pct">{t("adherenceDietLabel")}</Label>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <Label className="text-sm text-ink-2 mb-2 inline-block">
+            {t("adherenceDietLabel")}
+          </Label>
+          <div className="grid grid-cols-6 gap-1.5">
+            {[0, 20, 40, 60, 80, 100].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setAdherenceDietPct(p)}
+                className={`rounded-md py-2 font-mono text-[12px] transition-colors ${
+                  adherenceDietPct === p
+                    ? "bg-primary text-bg font-semibold"
+                    : "bg-surface-2 text-ink-2 hover:bg-surface-3"
+                }`}
+              >
+                {p}%
+              </button>
+            ))}
+          </div>
           <Input
-            id="diet-pct"
             type="number"
             min={0}
             max={100}
             inputMode="numeric"
-            value={adherenceDietPct}
-            onChange={(e) => setAdherenceDietPct(e.target.value)}
+            value={adherenceDietPct ?? ""}
+            onChange={(e) =>
+              setAdherenceDietPct(
+                e.target.value === "" ? null : Number(e.target.value)
+              )
+            }
             placeholder={t("adherenceDietPlaceholder")}
-            className="mt-1 h-10 text-base"
+            className="mt-2"
           />
         </div>
 
-        {/* Training adherence checkbox */}
-        <div className="flex items-center gap-3">
-          <input
-            id="training"
-            type="checkbox"
-            checked={adherenceTraining}
-            onChange={(e) => setAdherenceTraining(e.target.checked)}
-            className="size-5 rounded border-gray-600 bg-gray-800 accent-blue-500"
-          />
-          <Label htmlFor="training" className="cursor-pointer">
+        {/* Training adherence */}
+        <div className="rounded-xl border border-border bg-card p-4">
+          <Label
+            htmlFor="training"
+            className="flex cursor-pointer items-center gap-3 text-sm text-ink-2"
+          >
+            <input
+              id="training"
+              type="checkbox"
+              checked={adherenceTraining}
+              onChange={(e) => setAdherenceTraining(e.target.checked)}
+              className="size-4 rounded border-border bg-surface accent-primary"
+            />
             {t("adherenceTrainingLabel")}
           </Label>
         </div>
 
-        {/* Textareas */}
         <TextareaField
           label={t("whatWentWellPrompt")}
           value={whatWentWell}
@@ -272,85 +370,17 @@ export default function CheckinPage() {
           placeholder={t("textareaPlaceholder")}
         />
 
-        {/* Overall rating */}
-        <SliderField
+        <SliderRow
           label={t("overallRatingPrompt")}
           value={overallRating}
           onChange={setOverallRating}
         />
 
-        {/* Submit */}
-        <Button
-          type="submit"
-          disabled={saving}
-          className="h-12 w-full text-base font-semibold"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 size-5 animate-spin" />
-              {t("sendLoading")}
-            </>
-          ) : (
-            t("submit")
-          )}
+        <Button type="submit" size="lg" disabled={saving} className="w-full mt-2">
+          {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+          {saving ? t("sendLoading") : t("submit")}
         </Button>
       </form>
-    </div>
-  );
-}
-
-function SliderField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div>
-      <Label>
-        {label}: <span className="text-blue-400">{value}</span>/10
-      </Label>
-      <input
-        type="range"
-        min={1}
-        max={10}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-2 h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-700 accent-blue-500"
-      />
-      <div className="mt-1 flex justify-between text-xs text-gray-500">
-        <span>1</span>
-        <span>5</span>
-        <span>10</span>
-      </div>
-    </div>
-  );
-}
-
-function TextareaField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <div>
-      <Label>{label}</Label>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-      />
     </div>
   );
 }
@@ -367,24 +397,26 @@ function MetricCard({
   unit?: string;
 }) {
   return (
-    <Card size="sm">
-      <CardContent className="p-3 text-center">
-        <p className="text-xs text-gray-400">{label}</p>
-        <p className="text-lg font-semibold">
-          {value != null ? value : "\u2014"}
-          {max && <span className="text-xs text-gray-500">/{max}</span>}
-          {unit && <span className="text-xs text-gray-500"> {unit}</span>}
-        </p>
-      </CardContent>
-    </Card>
+    <div className="rounded-xl border border-border bg-card p-3">
+      <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+        {label}
+      </span>
+      <p className="mt-1.5 font-mono text-[20px] font-semibold text-ink tabular-nums leading-none">
+        {value != null ? value : "—"}
+        {max ? <span className="text-ink-3 text-xs">/{max}</span> : null}
+        {unit ? <span className="text-ink-3 text-xs ml-0.5">{unit}</span> : null}
+      </p>
+    </div>
   );
 }
 
 function TextBlock({ label, text }: { label: string; text: string }) {
   return (
-    <div>
-      <p className="text-xs font-medium text-gray-500">{label}</p>
-      <p className="mt-1 text-gray-300">{text}</p>
+    <div className="rounded-xl border border-border bg-card p-4">
+      <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+        {label}
+      </span>
+      <p className="mt-1.5 text-sm text-ink-2 leading-relaxed">{text}</p>
     </div>
   );
 }

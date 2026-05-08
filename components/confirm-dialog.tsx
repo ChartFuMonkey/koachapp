@@ -49,10 +49,10 @@ export default function ConfirmDialog({
         className="absolute inset-0 bg-black/60"
         onClick={onCancel}
       />
-      <div className="relative mx-4 w-full max-w-sm rounded-lg border border-gray-800 bg-gray-950 p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <div className="relative mx-4 w-full max-w-sm rounded-lg border border-border bg-bg p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-ink">{title}</h3>
         {description && (
-          <p className="mt-2 text-sm text-gray-400">{description}</p>
+          <p className="mt-2 text-sm text-ink-2">{description}</p>
         )}
         <div className="mt-6 flex justify-end gap-2">
           <Button ref={cancelRef} variant="outline" onClick={onCancel}>

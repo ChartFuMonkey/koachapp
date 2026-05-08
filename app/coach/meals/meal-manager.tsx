@@ -259,7 +259,7 @@ export default function MealManager({
       )}
 
       {initialMeals.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-ink-3">
           {t("emptyList")}
         </p>
       ) : (
@@ -303,7 +303,7 @@ export default function MealManager({
                       ) : (
                         <h3 className="font-medium text-gray-200">{meal.name}</h3>
                       )}
-                      <p className="mt-0.5 text-xs text-gray-500">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         {t("mealMeta", { count: meal.meal_foods.length })} &middot;{" "}
                         {totals.cal} kcal &middot; {totals.protein}P &middot;{" "}
                         {totals.carbs}C &middot; {totals.fat}F
@@ -329,23 +329,23 @@ export default function MealManager({
                           e.stopPropagation();
                           setDeleteTarget({ id: meal.id, name: meal.name });
                         }}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-danger hover:text-red-300"
                       >
                         <Trash2 size={12} />
                       </Button>
                       {isExpanded ? (
-                        <ChevronUp size={16} className="text-gray-500" />
+                        <ChevronUp size={16} className="text-ink-3" />
                       ) : (
-                        <ChevronDown size={16} className="text-gray-500" />
+                        <ChevronDown size={16} className="text-ink-3" />
                       )}
                     </div>
                   </div>
 
                   {/* Expanded content */}
                   {isExpanded && (
-                    <div className="border-t border-gray-800 p-4">
+                    <div className="border-t border-border p-4">
                       {meal.meal_foods.length === 0 ? (
-                        <p className="mb-3 text-sm text-gray-500">
+                        <p className="mb-3 text-sm text-ink-3">
                           {t("noFoodsInMeal")}
                         </p>
                       ) : (
@@ -356,16 +356,16 @@ export default function MealManager({
                             return (
                               <div
                                 key={mf.id}
-                                className="flex items-center gap-2 rounded-lg bg-gray-900/50 p-2 text-sm"
+                                className="flex items-center gap-2 rounded-lg bg-surface-2/50 p-2 text-sm"
                               >
                                 <div className="min-w-0 flex-1">
-                                  <span className="font-medium text-gray-300">
+                                  <span className="font-medium text-ink-2">
                                     {foodDisplayName(mf.foods, locale)}
                                   </span>
-                                  <span className="ml-2 text-gray-500">
+                                  <span className="ml-2 text-ink-3">
                                     {mf.quantity_g}g
                                   </span>
-                                  <span className="ml-2 text-xs text-gray-500">
+                                  <span className="ml-2 text-xs text-ink-3">
                                     {m.cal} kcal / {m.protein}P / {m.carbs}C / {m.fat}F
                                   </span>
                                 </div>
@@ -389,7 +389,7 @@ export default function MealManager({
                                   <Button
                                     variant="ghost"
                                     size="icon-xs"
-                                    className="text-red-400 hover:text-red-300"
+                                    className="text-danger hover:text-red-300"
                                     onClick={() => handleRemoveFood(mf.id)}
                                   >
                                     <X size={12} />
@@ -400,9 +400,9 @@ export default function MealManager({
                           })}
 
                           {/* Totals row */}
-                          <div className="flex items-center rounded-lg bg-gray-800/50 p-2 text-sm font-medium">
-                            <span className="flex-1 text-gray-300">{t("totalLabel")}</span>
-                            <span className="text-xs text-gray-400">
+                          <div className="flex items-center rounded-lg bg-surface-2/50 p-2 text-sm font-medium">
+                            <span className="flex-1 text-ink-2">{t("totalLabel")}</span>
+                            <span className="text-xs text-ink-2">
                               {totals.cal} kcal / {totals.protein}P / {totals.carbs}C / {totals.fat}F
                             </span>
                           </div>
@@ -411,7 +411,7 @@ export default function MealManager({
 
                       {/* Add food */}
                       {addingFoodFor === meal.id ? (
-                        <div className="space-y-2 rounded-lg border border-gray-800 p-3">
+                        <div className="space-y-2 rounded-lg border border-border p-3">
                           <Input
                             value={foodSearch}
                             onChange={(e) => setFoodSearch(e.target.value)}
@@ -438,7 +438,7 @@ export default function MealManager({
                               placeholder="100"
                               className="h-8 w-24"
                             />
-                            <span className="text-xs text-gray-500">{t("gramsSuffix")}</span>
+                            <span className="text-xs text-ink-3">{t("gramsSuffix")}</span>
                             <Button
                               size="sm"
                               disabled={!selectedFoodId || saving}

@@ -12,8 +12,9 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
+import { Chip } from "@/components/ui/athletic/chip";
 import { getActiveProgram, createWorkoutSession } from "@/actions/workout";
 
 type Exercise = {
@@ -72,6 +73,9 @@ export default function WorkoutPage() {
         toast.error(translateError(res.error));
       } else {
         setProgram(res.data as Program | null);
+        if (res.data && (res.data as Program).days.length > 0) {
+          setExpandedDay((res.data as Program).days[0].id);
+        }
       }
       setLoading(false);
     });
@@ -86,141 +90,153 @@ export default function WorkoutPage() {
       setStarting(false);
       return;
     }
-    router.push(
-      `/app/workout/log?session_id=${res.data!.id}&day_id=${dayId}`
-    );
+    router.push(`/app/workout/log?session_id=${res.data!.id}&day_id=${dayId}`);
   }
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-gray-400" />
+        <Loader2 className="size-6 animate-spin text-ink-3" />
       </div>
     );
   }
 
   if (!program) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
-        <Dumbbell className="mb-4 size-14 text-gray-600" />
-        <h2 className="text-xl font-semibold text-gray-300">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+        <Dumbbell className="mb-4 size-12 text-ink-4" />
+        <h2 className="text-lg font-semibold text-ink">
           {t("noProgramTitle")}
         </h2>
-        <p className="mt-2 text-gray-500">{t("noProgramSubtitle")}</p>
+        <p className="mt-2 text-sm text-ink-3 max-w-xs">
+          {t("noProgramSubtitle")}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">{program.name}</h1>
-      <p className="mt-1 text-sm text-gray-400">{t("chooseDay")}</p>
+    <div className="px-5 pt-5 pb-6">
+      <MicroLabel>~/Training</MicroLabel>
+      <h1 className="mt-1 text-[26px] font-semibold leading-tight text-ink tracking-tight">
+        {program.name}
+      </h1>
+      <p className="mt-1 text-sm text-ink-3">{t("chooseDay")}</p>
 
-      <div className="mt-6 space-y-3">
-        {program.days.map((day) => {
+      <div className="mt-5 space-y-3">
+        {program.days.map((day, idx) => {
           const isExpanded = expandedDay === day.id;
-
           return (
-            <Card key={day.id} className="overflow-hidden">
-              {/* Day header — tappable */}
+            <div
+              key={day.id}
+              className={`overflow-hidden rounded-xl border bg-surface transition-colors ${
+                isExpanded ? "border-primary/30" : "border-border"
+              }`}
+            >
               <button
                 type="button"
-                className="flex w-full items-center justify-between p-5 text-left active:bg-white/5"
-                onClick={() =>
-                  setExpandedDay(isExpanded ? null : day.id)
-                }
+                className="flex w-full items-center justify-between px-5 py-4 text-left active:bg-surface-2/50"
+                onClick={() => setExpandedDay(isExpanded ? null : day.id)}
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/20">
-                    <Dumbbell className="size-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <span className="text-lg font-semibold">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+                    D{(idx + 1).toString().padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-base font-semibold text-ink truncate block">
                       {day.day_label}
                     </span>
-                    <p className="text-sm text-gray-400">
+                    <span className="font-mono text-[10px] text-ink-3 uppercase tracking-[0.06em]">
                       {t("exerciseCountShort", {
                         count: day.program_exercises.length,
                       })}
-                    </p>
+                    </span>
                   </div>
                 </div>
                 {isExpanded ? (
-                  <ChevronUp className="size-5 text-gray-400" />
+                  <ChevronUp size={16} className="text-ink-3 shrink-0" />
                 ) : (
-                  <ChevronDown className="size-5 text-gray-400" />
+                  <ChevronDown size={16} className="text-ink-3 shrink-0" />
                 )}
               </button>
 
-              {/* Expanded exercise list */}
               {isExpanded && (
-                <CardContent className="border-t border-gray-800 pt-4">
-                  <div className="space-y-4">
-                    {day.program_exercises.map((pe, idx) => {
+                <div className="border-t border-border px-5 py-4">
+                  <ul className="space-y-2">
+                    {day.program_exercises.map((pe, i) => {
                       const ex = pe.exercises;
                       return (
-                        <div
+                        <li
                           key={pe.id}
-                          className="rounded-lg bg-gray-800/50 p-4"
+                          className="rounded-lg bg-surface-2/50 border border-border p-3"
                         >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-bold">
-                                {idx + 1}. {ex.name}
-                              </p>
-                              <div className="mt-1 flex flex-wrap gap-3 text-sm text-gray-300">
-                                <span>
-                                  {pe.sets} x {pe.reps}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[10px] text-ink-3 shrink-0">
+                                  {(i + 1).toString().padStart(2, "0")}
                                 </span>
-                                {pe.rest_sec && (
-                                  <span className="flex items-center gap-1">
-                                    <Timer className="size-3.5" />
-                                    {t("restSecondsShort", { sec: pe.rest_sec })}
-                                  </span>
-                                )}
-                                {pe.rpe && (
-                                  <span className="text-orange-400">
-                                    RPE {pe.rpe}
-                                  </span>
-                                )}
+                                <span className="text-sm font-medium text-ink truncate">
+                                  {ex.name}
+                                </span>
                               </div>
+                              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                <Chip variant="ghost" size="sm">
+                                  {pe.sets} × {pe.reps}
+                                </Chip>
+                                {pe.rest_sec ? (
+                                  <Chip variant="ghost" size="sm">
+                                    <Timer className="size-2.5" />
+                                    {t("restSecondsShort", {
+                                      sec: pe.rest_sec,
+                                    })}
+                                  </Chip>
+                                ) : null}
+                                {pe.rpe ? (
+                                  <Chip variant="warn" size="sm">
+                                    RPE {pe.rpe}
+                                  </Chip>
+                                ) : null}
+                              </div>
+                              {ex.notes && (
+                                <p className="mt-2 text-xs text-ink-3 leading-relaxed">
+                                  {ex.notes}
+                                </p>
+                              )}
                             </div>
                             {ex.video_url && (
                               <a
                                 href={ex.video_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex shrink-0 items-center gap-1.5 rounded-md bg-blue-500/20 px-3 py-2 text-sm font-medium text-blue-400"
+                                aria-label="Video"
+                                className="shrink-0 inline-flex items-center justify-center size-8 rounded-md border border-border bg-surface text-ink-2 hover:bg-surface-3"
                               >
-                                <Play className="size-3.5" /> Video
+                                <Play className="size-3.5" />
                               </a>
                             )}
                           </div>
-                          {ex.notes && (
-                            <p className="mt-2 text-sm text-gray-500">
-                              {ex.notes}
-                            </p>
-                          )}
-                        </div>
+                        </li>
                       );
                     })}
-                  </div>
+                  </ul>
 
                   <Button
-                    className="mt-5 h-14 w-full text-lg font-bold"
+                    size="lg"
+                    className="mt-5 w-full"
                     disabled={starting}
                     onClick={() => handleStartWorkout(day.id)}
                   >
                     {starting ? (
-                      <Loader2 className="mr-2 size-5 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      <Play className="mr-2 size-5" />
+                      <Play className="size-4" />
                     )}
                     {t("startWorkout")}
                   </Button>
-                </CardContent>
+                </div>
               )}
-            </Card>
+            </div>
           );
         })}
       </div>

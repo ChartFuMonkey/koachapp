@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
+import { Num } from "@/components/ui/athletic/num";
 import type { MealSlot } from "@/actions/client-meal-plan";
 
 export default function MealPlanToday({ meals }: { meals: MealSlot[] }) {
@@ -24,55 +25,72 @@ export default function MealPlanToday({ meals }: { meals: MealSlot[] }) {
       {meals.map((meal) => {
         const isOpen = expanded.has(meal.slot_number);
         return (
-          <Card key={meal.slot_number}>
-            <CardContent className="p-0">
-              <div
-                className="flex cursor-pointer items-center justify-between p-3"
-                onClick={() => toggle(meal.slot_number)}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs font-semibold text-gray-500">
-                      {t("slotPrefix", { n: meal.slot_number })}
-                    </span>
-                    <span className="font-medium text-gray-200">
-                      {meal.meal_name}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-gray-500">
-                    {meal.totals.cal} kcal &middot; {meal.totals.protein}P &middot;{" "}
-                    {meal.totals.carbs}UH &middot; {meal.totals.fat}M
-                  </p>
+          <div
+            key={meal.slot_number}
+            className="rounded-xl border border-border bg-surface overflow-hidden"
+          >
+            <button
+              type="button"
+              className="flex w-full cursor-pointer items-center justify-between p-3.5 text-left active:bg-surface-2/40"
+              onClick={() => toggle(meal.slot_number)}
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <MicroLabel>
+                    {t("slotPrefix", { n: meal.slot_number }).toUpperCase()}
+                  </MicroLabel>
+                  <span className="font-medium text-sm text-ink truncate">
+                    {meal.meal_name}
+                  </span>
                 </div>
-                {isOpen ? (
-                  <ChevronUp size={16} className="shrink-0 text-gray-500" />
-                ) : (
-                  <ChevronDown size={16} className="shrink-0 text-gray-500" />
-                )}
+                <div className="mt-1 flex flex-wrap gap-x-3 font-mono text-[11px] text-ink-3">
+                  <span>
+                    <Num value={meal.totals.cal} /> kcal
+                  </span>
+                  <span>
+                    <span className="text-protein">P</span>{" "}
+                    <Num value={meal.totals.protein} />
+                  </span>
+                  <span>
+                    <span className="text-carb">C</span>{" "}
+                    <Num value={meal.totals.carbs} />
+                  </span>
+                  <span>
+                    <span className="text-fat">F</span>{" "}
+                    <Num value={meal.totals.fat} />
+                  </span>
+                </div>
               </div>
-
-              {isOpen && (
-                <div className="border-t border-gray-800 p-3">
-                  <div className="space-y-1.5">
-                    {meal.foods.map((food, i) => (
-                      <div
-                        key={i}
-                        className="flex items-baseline justify-between text-sm"
-                      >
-                        <span className="text-gray-300">
-                          {food.name}{" "}
-                          <span className="text-gray-500">{food.quantity_g}g</span>
-                        </span>
-                        <span className="shrink-0 text-xs text-gray-500">
-                          {food.calories} kcal / {food.protein}P / {food.carbs}UH / {food.fat}M
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {isOpen ? (
+                <ChevronUp size={16} className="shrink-0 text-ink-3" />
+              ) : (
+                <ChevronDown size={16} className="shrink-0 text-ink-3" />
               )}
-            </CardContent>
-          </Card>
+            </button>
+
+            {isOpen && (
+              <div className="border-t border-border px-3.5 py-3 bg-surface-2/30">
+                <ul className="space-y-1.5">
+                  {meal.foods.map((food, i) => (
+                    <li
+                      key={i}
+                      className="flex items-baseline justify-between gap-3 text-sm"
+                    >
+                      <span className="text-ink-2 truncate">
+                        {food.name}{" "}
+                        <span className="font-mono text-[11px] text-ink-3">
+                          <Num value={food.quantity_g} />g
+                        </span>
+                      </span>
+                      <span className="shrink-0 font-mono text-[10px] text-ink-3">
+                        <Num value={food.calories} /> kcal · {food.protein}/{food.carbs}/{food.fat}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         );
       })}
     </div>

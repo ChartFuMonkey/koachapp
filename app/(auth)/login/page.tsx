@@ -66,17 +66,17 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-      <Card className="w-full max-w-sm border-gray-800 bg-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-bg px-4">
+      <Card className="w-full max-w-sm border-border bg-surface">
         <CardHeader>
-          <h1 className="text-center text-2xl font-bold text-white">
+          <h1 className="text-center text-2xl font-bold text-ink">
             {t("title")}
           </h1>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email" className="text-gray-300">
+              <Label htmlFor="email" className="text-ink-2">
                 {tCommon("email")}
               </Label>
               <Input
@@ -86,11 +86,11 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder={t("emailPlaceholder")}
-                className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
+                className="h-11 text-base border-border bg-surface-2 text-ink placeholder:text-ink-3"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password" className="text-gray-300">
+              <Label htmlFor="password" className="text-ink-2">
                 {tCommon("password")}
               </Label>
               <Input
@@ -100,11 +100,11 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder={t("passwordPlaceholder")}
-                className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
+                className="h-11 text-base border-border bg-surface-2 text-ink placeholder:text-ink-3"
               />
             </div>
             {errorCode && (
-              <p className="text-sm text-red-500">{t(errorCode)}</p>
+              <p className="text-sm text-danger">{t(errorCode)}</p>
             )}
           </CardContent>
           <CardFooter>

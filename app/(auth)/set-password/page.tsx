@@ -55,12 +55,12 @@ export default function SetPasswordPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-        <Card className="w-full max-w-sm border-gray-800 bg-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-bg px-4">
+        <Card className="w-full max-w-sm border-border bg-surface">
           <CardContent className="flex flex-col items-center gap-4 p-6">
-            <CheckCircle size={48} className="text-green-400" />
-            <h2 className="text-xl font-bold text-white">{t("successTitle")}</h2>
-            <p className="text-center text-sm text-gray-400">
+            <CheckCircle size={48} className="text-good" />
+            <h2 className="text-xl font-bold text-ink">{t("successTitle")}</h2>
+            <p className="text-center text-sm text-ink-2">
               {t("successDescription")}
             </p>
             <Button
@@ -76,20 +76,20 @@ export default function SetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-      <Card className="w-full max-w-sm border-gray-800 bg-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-bg px-4">
+      <Card className="w-full max-w-sm border-border bg-surface">
         <CardHeader>
-          <h1 className="text-center text-2xl font-bold text-white">
+          <h1 className="text-center text-2xl font-bold text-ink">
             {t("title")}
           </h1>
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-ink-2">
             {t("description")}
           </p>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password" className="text-gray-300">
+              <Label htmlFor="password" className="text-ink-2">
                 {t("newPasswordLabel")}
               </Label>
               <Input
@@ -99,11 +99,11 @@ export default function SetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder={t("newPasswordPlaceholder")}
-                className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
+                className="h-11 text-base border-border bg-surface-2 text-ink placeholder:text-ink-3"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="confirmPassword" className="text-gray-300">
+              <Label htmlFor="confirmPassword" className="text-ink-2">
                 {t("confirmLabel")}
               </Label>
               <Input
@@ -113,11 +113,11 @@ export default function SetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder={t("confirmPlaceholder")}
-                className="h-11 text-base border-gray-700 bg-gray-800 text-white placeholder:text-gray-500"
+                className="h-11 text-base border-border bg-surface-2 text-ink placeholder:text-ink-3"
               />
             </div>
             {errorCode && (
-              <p className="text-sm text-red-500">{t(errorCode)}</p>
+              <p className="text-sm text-danger">{t(errorCode)}</p>
             )}
           </CardContent>
           <CardFooter>
