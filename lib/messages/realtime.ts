@@ -19,6 +19,15 @@ export async function ensureRealtimeAuth(supabase: SupabaseClient): Promise<void
   }
 }
 
+// Multiple hooks may watch the same client on one page (e.g. the nav unread
+// badge and the home preview). Supabase needs a distinct channel topic per
+// subscription, so we append a process-unique sequence number.
+let channelSeq = 0;
+function nextChannelId(): number {
+  channelSeq += 1;
+  return channelSeq;
+}
+
 interface SubscribeArgs {
   /** Filter to one client's thread, or null for the coach (all threads). */
   clientId: string | null;
@@ -40,7 +49,8 @@ export function subscribeToMessages(
   { clientId, onInsert, onUpdate, onResubscribe }: SubscribeArgs
 ): RealtimeChannel {
   const filter = clientId ? `client_id=eq.${clientId}` : undefined;
-  const channelName = clientId ? `messages:${clientId}` : "messages:all";
+  const base = clientId ? `messages:${clientId}` : "messages:all";
+  const channelName = `${base}:${nextChannelId()}`;
 
   return supabase
     .channel(channelName)
