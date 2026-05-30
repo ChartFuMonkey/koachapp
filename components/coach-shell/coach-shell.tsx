@@ -12,7 +12,7 @@ import { LiveTimestamp } from "./live-timestamp";
 import { CommandPalette } from "./command-palette";
 
 interface NavLink {
-  labelKey: "clients" | "exercises" | "foods" | "meals";
+  labelKey: "clients" | "exercises" | "foods" | "meals" | "reports";
   route: string;
   hotkey: string;
 }
@@ -27,6 +27,7 @@ const navLinks: NavLink[] = [
   { labelKey: "exercises", route: "/coach/exercises", hotkey: "E" },
   { labelKey: "foods", route: "/coach/foods", hotkey: "F" },
   { labelKey: "meals", route: "/coach/meals", hotkey: "M" },
+  { labelKey: "reports", route: "/coach/reports", hotkey: "R" },
 ];
 
 function buildBreadcrumb(pathname: string): string {
