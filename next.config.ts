@@ -7,6 +7,14 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   customWorkerDir: "worker",
+  register: true,
+  skipWaiting: true,
+  cacheOnFrontEndNav: true,
+  reloadOnOnline: true,
+  // Branded offline screen shown when a navigation can't reach the network.
+  fallbacks: {
+    document: "/offline",
+  },
 });
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");

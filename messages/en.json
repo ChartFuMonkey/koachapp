@@ -797,5 +797,10 @@
       "notFound": "Report not found.",
       "loadFailed": "Could not load reports."
     }
+  },
+  "offline": {
+    "title": "You’re offline",
+    "body": "Koach needs a connection for this. Your logged data is saved and will sync when you’re back online.",
+    "hint": "Check your connection"
   }
 }

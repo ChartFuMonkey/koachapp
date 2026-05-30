@@ -797,5 +797,10 @@
       "notFound": "Izvještaj nije pronađen.",
       "loadFailed": "Izvještaje nije moguće učitati."
     }
+  },
+  "offline": {
+    "title": "Bez veze ste",
+    "body": "Koach treba vezu za ovo. Tvoji uneseni podaci su spremljeni i sinkronizirat će se kad se vratiš online.",
+    "hint": "Provjeri vezu"
   }
 }

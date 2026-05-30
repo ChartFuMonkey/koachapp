@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -16,11 +16,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Drives installability theming AND fixes safe-area insets on notched iPhones
+// (env(safe-area-inset-*) resolves to 0 without viewport-fit=cover).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#06070A",
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
   return {
     title: t("title"),
     description: t("description"),
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Koach",
+    },
+    icons: {
+      icon: [
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    },
   };
 }
 
