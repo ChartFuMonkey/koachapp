@@ -246,7 +246,9 @@ export default function CoachShell({
                   <div className="text-[12px] font-medium text-ink truncate">
                     {coachName}
                   </div>
-                  <div className="font-mono text-[10px] text-good">● online</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+                    {t("roleLabel")}
+                  </div>
                 </div>
                 <LanguageSwitcher />
               </>

@@ -12,12 +12,15 @@ import {
   createProgram,
   deleteProgram,
   activateProgram,
+  updateProgramMeta,
+  duplicateProgram,
   addProgramDay,
   deleteProgramDay,
   addProgramExercise,
   removeProgramExercise,
   reorderProgramExercise,
 } from "@/actions/programs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
   Trash2,
@@ -55,19 +58,10 @@ type Program = {
   id: string;
   name: string;
   is_active: boolean;
+  goal: string | null;
+  total_weeks: number | null;
+  coach_note: string | null;
   program_days: ProgramDay[];
-};
-
-const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
-// Spread N days across the week (visual default)
-const WEEKDAY_SPREAD: Record<number, number[]> = {
-  1: [2],
-  2: [1, 4],
-  3: [0, 2, 4],
-  4: [0, 1, 3, 4],
-  5: [0, 1, 2, 3, 4],
-  6: [0, 1, 2, 3, 4, 5],
-  7: [0, 1, 2, 3, 4, 5, 6],
 };
 
 function dayCodeFromLabel(label: string, index: number): string {
@@ -107,6 +101,7 @@ export default function ProgramBuilder({
     id: string;
     label: string;
   } | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Pick the "active" program for the detail view: prefer is_active, else first.
   const activeProgram = programs.find((p) => p.is_active) ?? programs[0] ?? null;
@@ -151,6 +146,41 @@ export default function ProgramBuilder({
     }
 
     toast.success(t("programActivatedToast"));
+    router.refresh();
+  }
+
+  async function handleSaveSettings(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!activeProgram) return;
+    setSaving(true);
+    const fd = new FormData(e.currentTarget);
+    const weeksRaw = (fd.get("total_weeks") as string)?.trim();
+    const res = await updateProgramMeta(activeProgram.id, {
+      name: (fd.get("name") as string) ?? undefined,
+      goal: ((fd.get("goal") as string) ?? "").trim() || null,
+      total_weeks: weeksRaw ? parseInt(weeksRaw, 10) : null,
+      coach_note: ((fd.get("coach_note") as string) ?? "").trim() || null,
+    });
+    setSaving(false);
+    if ("error" in res) {
+      toast.error(t("settingsSaveFailed"));
+      return;
+    }
+    toast.success(t("settingsSaved"));
+    setSettingsOpen(false);
+    router.refresh();
+  }
+
+  async function handleDuplicate() {
+    if (!activeProgram) return;
+    setSaving(true);
+    const res = await duplicateProgram(activeProgram.id);
+    setSaving(false);
+    if ("error" in res) {
+      toast.error(t("duplicateFailed"));
+      return;
+    }
+    toast.success(t("duplicatedToast"));
     router.refresh();
   }
 
@@ -278,7 +308,6 @@ export default function ProgramBuilder({
   // ── Render with active program ─────────────────────────────
   const prog = activeProgram;
   const dayCount = prog.program_days.length;
-  const spread = WEEKDAY_SPREAD[Math.min(7, dayCount)] ?? [];
 
   // Aggregate volume per muscle_group across all days
   const volumeByGroup = (() => {
@@ -322,8 +351,14 @@ export default function ProgramBuilder({
               {dayCount > 0 && (
                 <Chip variant="neutral">{dayCount}D/WEEK</Chip>
               )}
-              <Chip variant="neutral">WEEK 1/8</Chip>
-              <Chip variant="accent">HYPERTROPHY</Chip>
+              {prog.total_weeks != null && (
+                <Chip variant="neutral">
+                  {t("weeksChip", { count: prog.total_weeks })}
+                </Chip>
+              )}
+              {prog.goal && (
+                <Chip variant="accent">{prog.goal.toUpperCase()}</Chip>
+              )}
               {prog.is_active && <Chip variant="good">{t("active")}</Chip>}
             </div>
           </div>
@@ -338,11 +373,20 @@ export default function ProgramBuilder({
                 <Zap size={12} /> {t("activate")}
               </Button>
             )}
-            <Button variant="outline" size="sm" disabled>
-              Duplicate
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDuplicate}
+              disabled={saving}
+            >
+              {t("duplicate")}
             </Button>
-            <Button size="sm" disabled>
-              Save
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSettingsOpen((v) => !v)}
+            >
+              {t("settings")}
             </Button>
             <Button
               variant="ghost"
@@ -361,6 +405,72 @@ export default function ProgramBuilder({
             </Button>
           </div>
         </div>
+
+        {/* Program settings (goal / weeks / coach note) */}
+        {settingsOpen && (
+          <form
+            onSubmit={handleSaveSettings}
+            className="mt-4 rounded-md border border-lime/40 bg-surface-1 p-4 space-y-3"
+          >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <Label className="mb-1 block text-xs text-ink-3">
+                  {t("programNameLabel")}
+                </Label>
+                <Input name="name" defaultValue={prog.name} />
+              </div>
+              <div>
+                <Label className="mb-1 block text-xs text-ink-3">
+                  {t("goalLabel")}
+                </Label>
+                <Input
+                  name="goal"
+                  defaultValue={prog.goal ?? ""}
+                  placeholder={t("goalPlaceholder")}
+                />
+              </div>
+              <div>
+                <Label className="mb-1 block text-xs text-ink-3">
+                  {t("totalWeeksLabel")}
+                </Label>
+                <Input
+                  name="total_weeks"
+                  type="number"
+                  min={1}
+                  defaultValue={prog.total_weeks ?? ""}
+                  placeholder="8"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="mb-1 block text-xs text-ink-3">
+                {t("coachNoteLabel")}
+              </Label>
+              <Textarea
+                name="coach_note"
+                rows={2}
+                defaultValue={prog.coach_note ?? ""}
+                placeholder={t("coachNotePlaceholder")}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm" disabled={saving}>
+                {saving ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : null}
+                {tCommon("save")}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSettingsOpen(false)}
+              >
+                <X size={14} /> {tCommon("cancel")}
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
 
       {/* Body: 2-column grid */}
@@ -639,38 +749,37 @@ export default function ProgramBuilder({
 
         {/* Right rail */}
         <aside className="border-t border-border bg-surface-1 p-6 lg:border-l lg:border-t-0">
-          {/* SCHEDULE */}
-          <MicroLabel className="block">SCHEDULE</MicroLabel>
-          <div className="mt-2.5 grid grid-cols-7 gap-1">
-            {WEEKDAY_LETTERS.map((letter, i) => {
-              const dayIdx = spread.indexOf(i);
-              const isAssigned = dayIdx >= 0;
-              const day = isAssigned ? prog.program_days[dayIdx] : null;
-              const code = day
-                ? dayCodeFromLabel(day.day_label, dayIdx)
-                : "";
-              return (
+          {/* DAYS — the program's actual training days */}
+          <MicroLabel className="block">{t("daysLabel")}</MicroLabel>
+          {prog.program_days.length > 0 ? (
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              {prog.program_days.map((day, i) => (
                 <div
-                  key={i}
-                  className={`flex aspect-square flex-col items-center justify-center rounded-[6px] border ${
-                    isAssigned
-                      ? "border-transparent text-bg"
-                      : "border-border bg-surface-2 text-ink-3"
-                  }`}
-                  style={
-                    isAssigned ? { background: "var(--lime)" } : undefined
-                  }
+                  key={day.id}
+                  className="flex items-center gap-2.5 rounded-[6px] border border-border bg-surface-2 px-2.5 py-2"
                 >
-                  <span className="font-mono text-[10px]">{letter}</span>
-                  {isAssigned && (
-                    <span className="text-[13px] font-bold leading-none">
-                      {code}
-                    </span>
-                  )}
+                  <span
+                    className="flex size-6 shrink-0 items-center justify-center rounded-[5px] font-mono text-[11px] font-bold text-bg"
+                    style={{ background: "var(--lime)" }}
+                  >
+                    {dayCodeFromLabel(day.day_label, i)}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-ink">
+                    {day.day_label}
+                  </span>
+                  <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
+                    {t("exerciseCount", {
+                      count: day.program_exercises.length,
+                    })}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2.5 text-[12px] text-ink-3">
+              {t("noDaysYet")}
+            </p>
+          )}
 
           {/* VOLUME / GROUP */}
           {volumeByGroup.length > 0 && (
@@ -710,12 +819,25 @@ export default function ProgramBuilder({
             </>
           )}
 
-          {/* COACH NOTE — placeholder always shown so the layout matches the prototype */}
-          <MicroLabel className="mt-7 mb-2 block">COACH NOTE</MicroLabel>
-          <div className="rounded-md border border-border bg-surface-2 p-3 text-[12px] leading-relaxed text-ink-2">
-            Focus on bar speed and full ROM. Add 4th day in W5 if recovery
-            allows.
-          </div>
+          {/* COACH NOTE — real, editable via Settings */}
+          {prog.coach_note ? (
+            <>
+              <MicroLabel className="mt-7 mb-2 block">
+                {t("coachNoteLabel")}
+              </MicroLabel>
+              <div className="rounded-md border border-border bg-surface-2 p-3 text-[12px] leading-relaxed text-ink-2 whitespace-pre-wrap">
+                {prog.coach_note}
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="mt-7 block w-full rounded-md border border-dashed border-hairline-2 bg-surface-2/30 p-3 text-left text-[12px] text-ink-3 transition-colors hover:border-lime/40"
+            >
+              + {t("addCoachNote")}
+            </button>
+          )}
         </aside>
       </div>
 

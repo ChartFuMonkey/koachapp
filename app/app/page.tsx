@@ -83,7 +83,7 @@ export default async function TodayPage() {
       .select(
         `
         id, duration_min, session_date,
-        program_days ( day_label, program_exercises ( id ) ),
+        program_days ( day_label, program_exercises ( id, sets, rpe ) ),
         exercise_logs ( id )
       `
       )
@@ -164,10 +164,29 @@ export default async function TodayPage() {
       : (todaySession.program_days as
           | {
               day_label?: string;
-              program_exercises?: { id: string }[];
+              program_exercises?: {
+                id: string;
+                sets: number | null;
+                rpe: number | null;
+              }[];
             }
           | null)
     : null;
+
+  const plannedExerciseList = Array.isArray(programDay?.program_exercises)
+    ? programDay!.program_exercises!
+    : [];
+
+  // Average planned RPE across the day's exercises (only if any are set).
+  const rpeValues = plannedExerciseList
+    .map((pe) => pe.rpe)
+    .filter((r): r is number => r != null);
+  const avgPlannedRpe =
+    rpeValues.length > 0
+      ? Math.round(
+          (rpeValues.reduce((a, b) => a + b, 0) / rpeValues.length) * 10
+        ) / 10
+      : null;
 
   const workout = todaySession
     ? {
@@ -176,9 +195,12 @@ export default async function TodayPage() {
         loggedSets: Array.isArray(todaySession.exercise_logs)
           ? todaySession.exercise_logs.length
           : 0,
-        plannedExercises: Array.isArray(programDay?.program_exercises)
-          ? programDay!.program_exercises!.length
-          : 0,
+        plannedExercises: plannedExerciseList.length,
+        // Sum of planned sets across the day's exercises (default 3 when unset).
+        plannedSets: plannedExerciseList.reduce(
+          (sum, pe) => sum + (pe.sets ?? 3),
+          0
+        ),
         finished: todaySession.duration_min != null,
       }
     : null;
@@ -308,9 +330,11 @@ export default async function TodayPage() {
             <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
               TODAY&apos;S SESSION
             </span>
-            <span className="inline-flex rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 py-[3px] font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-ink-2">
-              RPE 7–8
-            </span>
+            {avgPlannedRpe != null && (
+              <span className="inline-flex rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 py-[3px] font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-ink-2">
+                RPE {avgPlannedRpe}
+              </span>
+            )}
           </div>
           {workout ? (
             <>
@@ -335,27 +359,28 @@ export default async function TodayPage() {
                   </div>
                 </div>
               </div>
-              {workout.plannedExercises > 0 && (
-                <div className="mt-3.5 flex gap-1">
-                  {Array.from({ length: workout.plannedExercises }).map(
-                    (_, i) => {
-                      const isDone =
-                        workout.loggedSets > 0 &&
-                        i < Math.ceil(workout.loggedSets / 4);
-                      return (
-                        <div
-                          key={i}
-                          className={`flex h-7 flex-1 items-center justify-center rounded-md border font-mono text-[10px] tabular-nums ${
-                            isDone
-                              ? "border-good/30 bg-good/10 text-good"
-                              : "border-hairline-2 bg-surface-2 text-ink-3"
-                          }`}
-                        >
-                          {i + 1}
-                        </div>
-                      );
-                    }
-                  )}
+              {workout.plannedSets > 0 && (
+                <div className="mt-3.5">
+                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
+                    <span>{t("setsLogged")}</span>
+                    <span className="tabular-nums">
+                      {Math.min(workout.loggedSets, workout.plannedSets)}/
+                      {workout.plannedSets}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-hairline">
+                    <div
+                      className="h-full rounded-full bg-good transition-[width] duration-400"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.round(
+                            (workout.loggedSets / workout.plannedSets) * 100
+                          )
+                        )}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               )}
               <Link
@@ -417,7 +442,9 @@ export default async function TodayPage() {
                     key={i}
                     className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 px-3.5 py-3"
                   >
-                    <span className="flex size-[18px] shrink-0 items-center justify-center rounded-[5px] border border-hairline-2 text-[11px]" />
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-[6px] bg-surface-2 font-mono text-[11px] text-ink-3 tabular-nums">
+                      {i + 1}
+                    </span>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-ink truncate">
                         {m.meal_name || t("training") + " " + (i + 1)}

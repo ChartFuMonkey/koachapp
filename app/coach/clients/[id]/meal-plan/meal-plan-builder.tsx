@@ -27,8 +27,6 @@ import Link from "next/link";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type FoodLine = {
   name: string;
   quantity_g: number;
@@ -59,13 +57,6 @@ type MealPlan = {
   meal_plan_entries: PlanEntry[];
 };
 
-// Placeholder time tags by slot index (mirrors prototype: AM / 13:00 / 16:00 / 20:00)
-const SLOT_TIME_TAGS = ["AM", "13:00", "16:00", "20:00", "22:00"];
-
-function slotTimeTag(slotNumber: number): string {
-  const idx = Math.max(0, slotNumber - 1);
-  return SLOT_TIME_TAGS[idx] ?? `+${slotNumber}`;
-}
 
 export default function MealPlanBuilder({
   clientId,
@@ -417,7 +408,7 @@ export default function MealPlanBuilder({
         <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
           {dayEntries.map((entry, idx) => {
             const meal = allMeals.find((m) => m.id === entry.meals?.id);
-            const tag = slotTimeTag(idx + 1);
+            const tag = t("slotLabel", { number: idx + 1 });
             const mealName = entry.meals?.name ?? "—";
             const kcal = meal?.cal ?? 0;
             const foods = meal?.foods ?? [];

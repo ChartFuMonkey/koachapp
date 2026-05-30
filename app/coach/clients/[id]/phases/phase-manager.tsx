@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createPhase, activatePhase, deletePhase } from "@/actions/phases";
+import {
+  createPhase,
+  updatePhase,
+  activatePhase,
+  deletePhase,
+} from "@/actions/phases";
 import { Plus, Trash2, ChevronLeft, X, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -22,6 +27,11 @@ type Phase = {
   start_date: string;
   end_date: string | null;
   target_kcal: number | null;
+  target_protein_g: number | null;
+  target_steps: number | null;
+  cardio_note: string | null;
+  lift_volume_note: string | null;
+  weighin_freq: string | null;
   notes: string | null;
   is_active: boolean;
 };
@@ -47,24 +57,154 @@ function daysBetween(a: string, b: string): number {
   return Math.round(ms / 86400000);
 }
 
-// Maps phase type to a sensible kcal delta string for the card / panel sub.
-function kcalDeltaForType(type: string | null, target: number | null): string {
-  switch (type) {
-    case "fat_loss":
-      return "−400";
-    case "muscle_gain":
-      return "+300";
-    case "recomp":
-      return "+50";
-    case "maintenance":
-      return "0";
-    case "strength":
-      return "+200";
-    case "rest":
-      return "0";
-    default:
-      return target != null ? `${target}` : "—";
-  }
+// Shared editable fields for both the create and edit phase forms.
+function PhaseFormFields({
+  phase,
+  t,
+  typeLabel,
+  selectClass,
+}: {
+  phase: Phase | null;
+  t: (key: string) => string;
+  typeLabel: (value: string) => string;
+  selectClass: string;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("nameLabel")} *
+          </Label>
+          <Input
+            name="name"
+            required
+            defaultValue={phase?.name ?? ""}
+            placeholder={t("namePlaceholder")}
+            autoFocus
+          />
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("typeLabel")}
+          </Label>
+          <select
+            name="type"
+            className={selectClass}
+            defaultValue={phase?.type ?? ""}
+          >
+            {PHASE_TYPE_VALUES.map((v) => (
+              <option key={v} value={v}>
+                {typeLabel(v)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("targetKcalLabel")}
+          </Label>
+          <Input
+            name="target_kcal"
+            type="number"
+            defaultValue={phase?.target_kcal ?? ""}
+            placeholder="2200"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("startDateLabel")} *
+          </Label>
+          <Input
+            name="start_date"
+            type="date"
+            required
+            defaultValue={phase?.start_date ?? ""}
+          />
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("endDateLabel")}
+          </Label>
+          <Input
+            name="end_date"
+            type="date"
+            defaultValue={phase?.end_date ?? ""}
+          />
+        </div>
+      </div>
+      {/* Prescription targets (all optional) */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("targetProteinLabel")}
+          </Label>
+          <Input
+            name="target_protein_g"
+            type="number"
+            defaultValue={phase?.target_protein_g ?? ""}
+            placeholder="180"
+          />
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("targetStepsLabel")}
+          </Label>
+          <Input
+            name="target_steps"
+            type="number"
+            defaultValue={phase?.target_steps ?? ""}
+            placeholder="10000"
+          />
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("weighinLabel")}
+          </Label>
+          <Input
+            name="weighin_freq"
+            defaultValue={phase?.weighin_freq ?? ""}
+            placeholder={t("weighinPlaceholder")}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("cardioLabel")}
+          </Label>
+          <Input
+            name="cardio_note"
+            defaultValue={phase?.cardio_note ?? ""}
+            placeholder={t("cardioPlaceholder")}
+          />
+        </div>
+        <div>
+          <Label className="mb-1 block text-xs text-ink-3">
+            {t("liftVolumeLabel")}
+          </Label>
+          <Input
+            name="lift_volume_note"
+            defaultValue={phase?.lift_volume_note ?? ""}
+            placeholder={t("liftVolumePlaceholder")}
+          />
+        </div>
+      </div>
+      <div>
+        <Label className="mb-1 block text-xs text-ink-3">
+          {t("notesLabel")}
+        </Label>
+        <Textarea
+          name="notes"
+          rows={2}
+          defaultValue={phase?.notes ?? ""}
+          placeholder={t("notesPlaceholder")}
+        />
+      </div>
+    </>
+  );
 }
 
 export default function PhaseManager({
@@ -86,6 +226,7 @@ export default function PhaseManager({
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
@@ -121,6 +262,22 @@ export default function PhaseManager({
     }
     toast.success(t("phaseCreatedToast"));
     setShowAddForm(false);
+    router.refresh();
+  }
+
+  async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editingPhase) return;
+    setSaving(true);
+    const formData = new FormData(e.currentTarget);
+    const res = await updatePhase(editingPhase.id, formData);
+    setSaving(false);
+    if ("error" in res) {
+      toast.error(translateError(res.error, tErr, tCommonErr));
+      return;
+    }
+    toast.success(t("phaseUpdatedToast"));
+    setEditingPhase(null);
     router.refresh();
   }
 
@@ -193,23 +350,25 @@ export default function PhaseManager({
     }
   }
 
-  // Active panel metric cells ----------------------------------------------
-  const activeMetrics: Array<[string, string, string]> = activePhase
-    ? [
-        [
-          "Calorie target",
-          activePhase.target_kcal != null
-            ? `${activePhase.target_kcal} kcal`
-            : "— kcal",
-          `${kcalDeltaForType(activePhase.type, activePhase.target_kcal)} from maint.`,
-        ],
-        ["Protein target", "180g", "2.2 g/kg"],
-        ["Step target", "10,000", "per day"],
-        ["Cardio", "2 × 30min", "zone 2"],
-        ["Lift volume", "−15%", "vs. baseline"],
-        ["Weigh-ins", "Daily", "fasted, AM"],
-      ]
-    : [];
+  // Active panel metric cells — only rows the coach actually set are shown.
+  const activeMetrics: Array<[string, string]> = [];
+  if (activePhase) {
+    if (activePhase.target_kcal != null)
+      activeMetrics.push([t("mCalories"), `${activePhase.target_kcal} kcal`]);
+    if (activePhase.target_protein_g != null)
+      activeMetrics.push([t("mProtein"), `${activePhase.target_protein_g} g`]);
+    if (activePhase.target_steps != null)
+      activeMetrics.push([
+        t("mSteps"),
+        activePhase.target_steps.toLocaleString(bcp47),
+      ]);
+    if (activePhase.cardio_note)
+      activeMetrics.push([t("mCardio"), activePhase.cardio_note]);
+    if (activePhase.lift_volume_note)
+      activeMetrics.push([t("mLiftVolume"), activePhase.lift_volume_note]);
+    if (activePhase.weighin_freq)
+      activeMetrics.push([t("mWeighins"), activePhase.weighin_freq]);
+  }
 
   return (
     <div className="px-10 py-8">
@@ -266,14 +425,14 @@ export default function PhaseManager({
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                   <span className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-ink-3">
-                    KCAL Δ
+                    {t("mCalories")}
                   </span>
                   <span
                     className={`font-mono text-base font-semibold tabular-nums ${
                       isActive ? "text-lime" : "text-ink"
                     }`}
                   >
-                    {kcalDeltaForType(p.type, p.target_kcal)}
+                    {p.target_kcal != null ? `${p.target_kcal}` : "—"}
                   </span>
                 </div>
               </div>
@@ -293,22 +452,25 @@ export default function PhaseManager({
               {weekChip}
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3">
-            {activeMetrics.map(([k, v, sub], i) => (
-              <div
-                key={k}
-                className={`p-5 ${
-                  i < 3 ? "border-b border-border" : ""
-                } ${i % 3 < 2 ? "sm:border-r sm:border-border" : ""}`}
-              >
-                <MicroLabel>{k}</MicroLabel>
-                <div className="mt-2 font-mono text-[22px] font-semibold leading-tight tracking-tight tabular-nums text-ink">
-                  {v}
+          {activeMetrics.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {activeMetrics.map(([k, v]) => (
+                <div
+                  key={k}
+                  className="border-b border-border p-5 sm:[&:nth-child(odd)]:sm:border-r lg:[&:nth-child(3n+1)]:border-r lg:[&:nth-child(3n+2)]:border-r"
+                >
+                  <MicroLabel>{k}</MicroLabel>
+                  <div className="mt-2 font-mono text-[20px] font-semibold leading-tight tracking-tight tabular-nums text-ink">
+                    {v}
+                  </div>
                 </div>
-                <div className="mt-1 text-[11px] text-ink-3">{sub}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="px-5 py-6 text-[13px] text-ink-3">
+              {t("noTargetsSet")}
+            </div>
+          )}
         </div>
       )}
 
@@ -319,8 +481,10 @@ export default function PhaseManager({
           className="rounded-md border border-border bg-surface-1 px-4 py-2.5 text-[13px] text-ink hover:bg-surface-2 transition-colors disabled:opacity-50"
           disabled={!activePhase}
           onClick={() => {
-            // Edit flow placeholder — dedicated edit modal lands in a follow-up.
-            toast.message(t("editComingSoon"));
+            if (activePhase) {
+              setShowAddForm(false);
+              setEditingPhase(activePhase);
+            }
           }}
         >
           {t("editPhase")}
@@ -337,63 +501,14 @@ export default function PhaseManager({
       {/* Add form */}
       {showAddForm && (
         <div className="mt-6 rounded-md border border-border bg-surface-1 p-5">
-          <MicroLabel>NEW PHASE</MicroLabel>
+          <MicroLabel>{t("newPhase")}</MicroLabel>
           <form onSubmit={handleCreate} className="mt-3 space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div>
-                <Label className="mb-1 block text-xs text-ink-3">
-                  {t("nameLabel")} *
-                </Label>
-                <Input
-                  name="name"
-                  required
-                  placeholder={t("namePlaceholder")}
-                  autoFocus
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-xs text-ink-3">
-                  {t("typeLabel")}
-                </Label>
-                <select name="type" className={selectClass}>
-                  {PHASE_TYPE_VALUES.map((v) => (
-                    <option key={v} value={v}>
-                      {typeLabel(v)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label className="mb-1 block text-xs text-ink-3">
-                  {t("targetKcalLabel")}
-                </Label>
-                <Input name="target_kcal" type="number" placeholder="2200" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="mb-1 block text-xs text-ink-3">
-                  {t("startDateLabel")} *
-                </Label>
-                <Input name="start_date" type="date" required />
-              </div>
-              <div>
-                <Label className="mb-1 block text-xs text-ink-3">
-                  {t("endDateLabel")}
-                </Label>
-                <Input name="end_date" type="date" />
-              </div>
-            </div>
-            <div>
-              <Label className="mb-1 block text-xs text-ink-3">
-                {t("notesLabel")}
-              </Label>
-              <Textarea
-                name="notes"
-                rows={2}
-                placeholder={t("notesPlaceholder")}
-              />
-            </div>
+            <PhaseFormFields
+              phase={null}
+              t={t}
+              typeLabel={typeLabel}
+              selectClass={selectClass}
+            />
             <div className="flex gap-2">
               <Button type="submit" disabled={saving}>
                 {saving ? (
@@ -407,6 +522,36 @@ export default function PhaseManager({
                 type="button"
                 variant="ghost"
                 onClick={() => setShowAddForm(false)}
+              >
+                <X size={14} /> {tCommon("cancel")}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Edit form */}
+      {editingPhase && (
+        <div className="mt-6 rounded-md border border-lime/40 bg-surface-1 p-5">
+          <MicroLabel>{t("editingPhase", { name: editingPhase.name })}</MicroLabel>
+          <form onSubmit={handleEdit} className="mt-3 space-y-3">
+            <PhaseFormFields
+              phase={editingPhase}
+              t={t}
+              typeLabel={typeLabel}
+              selectClass={selectClass}
+            />
+            <div className="flex gap-2">
+              <Button type="submit" disabled={saving}>
+                {saving ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : null}
+                {tCommon("save")}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setEditingPhase(null)}
               >
                 <X size={14} /> {tCommon("cancel")}
               </Button>

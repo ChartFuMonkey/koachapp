@@ -15,7 +15,7 @@ import {
   updateExercise,
   deleteExercise,
 } from "@/actions/exercises";
-import { Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Check, X, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { translateError } from "@/lib/translate-error";
@@ -39,15 +39,12 @@ const selectClass =
 const FILTERS = ["All", "Legs", "Back", "Chest", "Shoulders", "Arms", "Core"] as const;
 type Filter = (typeof FILTERS)[number];
 
-// Deterministic pseudo-random bar height (0..100) — stable per (card, bar) so SSR/CSR agree.
-function barHeight(i: number, j: number) {
-  return 20 + Math.sin(i * 1.3 + j) * 50 + 50;
-}
-
 export default function ExerciseManager({
   initialExercises,
+  usageMap = {},
 }: {
   initialExercises: Exercise[];
+  usageMap?: Record<string, number>;
 }) {
   const router = useRouter();
   const t = useTranslations("coach.exercises");
@@ -245,9 +242,6 @@ export default function ExerciseManager({
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled>
-            Import CSV
-          </Button>
           {!showAddForm && (
             <Button
               size="sm"
@@ -321,7 +315,7 @@ export default function ExerciseManager({
             }
 
             const indexLabel = String(i + 1).padStart(3, "0");
-            const usedCount = 0; // TODO: wire to real workout usage count
+            const usedCount = usageMap[ex.id] ?? 0;
 
             return (
               <div
@@ -374,27 +368,24 @@ export default function ExerciseManager({
                   </div>
                 </div>
 
-                <div className="mt-3.5 flex items-baseline gap-3">
-                  <div>
-                    <MicroLabel className="text-[9px]">USED</MicroLabel>
-                    <div className="font-mono text-lg font-semibold text-ink tabular-nums">
-                      {usedCount}×
-                    </div>
+                <div className="mt-3.5 flex items-center gap-2">
+                  <MicroLabel className="text-[9px]">
+                    {t("usedInPrograms")}
+                  </MicroLabel>
+                  <div className="font-mono text-sm font-semibold text-ink tabular-nums">
+                    {usedCount}×
                   </div>
-                  <div className="flex h-5 flex-1 items-end gap-0.5">
-                    {Array.from({ length: 12 }).map((_, j) => {
-                      const h = barHeight(i, j);
-                      return (
-                        <div
-                          key={j}
-                          className={`flex-1 rounded-[1px] ${
-                            j > 8 ? "bg-lime" : "bg-hairline-2"
-                          }`}
-                          style={{ height: `${h}%` }}
-                        />
-                      );
-                    })}
-                  </div>
+                  {ex.video_url && (
+                    <a
+                      href={ex.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto inline-flex items-center gap-1 rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-2 transition-colors hover:text-lime"
+                    >
+                      <Play size={10} />
+                      {t("demo")}
+                    </a>
+                  )}
                 </div>
               </div>
             );

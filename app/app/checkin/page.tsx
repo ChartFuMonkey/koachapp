@@ -111,7 +111,7 @@ export default function CheckinPage() {
     return (
       <div className="px-5 pt-5 pb-6">
         <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
-          WEEK {isoWeek} · SUNDAY REVIEW
+          WEEK {isoWeek} · {t("weeklyReview")}
         </div>
         <div className="mt-1.5 flex items-center gap-3">
           <h1 className="text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
@@ -185,7 +185,7 @@ export default function CheckinPage() {
       {/* Sticky header */}
       <div className="px-5 pt-5 pb-4 border-b border-border">
         <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
-          WEEK {isoWeek} · SUNDAY REVIEW
+          WEEK {isoWeek} · {t("weeklyReview")}
         </div>
         <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
           {t("title")}

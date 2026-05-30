@@ -14,7 +14,8 @@
       "seeProgress": "Napredak",
       "setsSuffix": "setova",
       "training": "Trening",
-      "workoutFallback": "Trening"
+      "workoutFallback": "Trening",
+      "setsLogged": "Zabilježene serije"
     },
     "checkin": {
       "adherenceDietLabel": "Usklađenost s prehranom (%)",
@@ -47,7 +48,8 @@
       "errors": {
         "loadFailed": "Greška pri dohvaćanju prijave.",
         "submitFailed": "Slanje neuspješno. Pokušaj ponovo."
-      }
+      },
+      "weeklyReview": "TJEDNI PREGLED"
     },
     "log": {
       "calories": "Kalorije (kcal)",
@@ -270,7 +272,8 @@
       "signOut": "Odjava",
       "openMenu": "Otvori izbornik",
       "closeMenu": "Zatvori izbornik",
-      "reports": "Izvještaji"
+      "reports": "Izvještaji",
+      "roleLabel": "Trener"
     },
     "home": {
       "title": "Klijenti",
@@ -430,7 +433,9 @@
         "nameRequired": "Naziv vježbe obavezan.",
         "duplicateName": "Naziv već postoji.",
         "exerciseInUse": "Vježba je u programu — najprije ukloni iz programa."
-      }
+      },
+      "usedInPrograms": "Korišteno u",
+      "demo": "Demo"
     },
     "mealPlan": {
       "title": "Plan prehrane",
@@ -463,13 +468,13 @@
         "removeMealFailed": "Greška pri uklanjanju obroka iz plana.",
         "addOverrideFailed": "Greška pri dodavanju override-a.",
         "removeOverrideFailed": "Greška pri uklanjanju override-a."
-      }
+      },
+      "slotLabel": "Obrok {number}"
     },
     "phases": {
       "title": "Phase Manager",
       "addPhase": "Dodaj fazu",
       "editPhase": "Uredi fazu",
-      "editComingSoon": "Uređivanje uskoro",
       "active": "Aktivan",
       "activate": "Aktiviraj",
       "phaseCreatedToast": "Faza kreirana",
@@ -503,8 +508,27 @@
         "activateFailed": "Greška pri aktivaciji faze.",
         "deactivateFailed": "Greška pri deaktivaciji faza.",
         "nameRequired": "Naziv faze obavezan.",
-        "startDateRequired": "Datum početka obavezan."
-      }
+        "startDateRequired": "Datum početka obavezan.",
+        "updateFailed": "Ažuriranje faze nije uspjelo."
+      },
+      "phaseUpdatedToast": "Faza ažurirana",
+      "newPhase": "Nova faza",
+      "editingPhase": "Uređivanje — {name}",
+      "noTargetsSet": "Za ovu fazu još nisu postavljeni ciljevi. Koristite Uredi za dodavanje.",
+      "mCalories": "Kalorije",
+      "mProtein": "Proteini",
+      "mSteps": "Koraci",
+      "mCardio": "Kardio",
+      "mLiftVolume": "Volumen treninga",
+      "mWeighins": "Vaganja",
+      "targetProteinLabel": "Cilj proteina (g)",
+      "targetStepsLabel": "Cilj koraka",
+      "weighinLabel": "Vaganja",
+      "weighinPlaceholder": "npr. Dnevno, natašte ujutro",
+      "cardioLabel": "Kardio",
+      "cardioPlaceholder": "npr. 2 × 30 min zona 2",
+      "liftVolumeLabel": "Volumen treninga",
+      "liftVolumePlaceholder": "npr. −15% od baze"
     },
     "program": {
       "title": "Program Builder",
@@ -553,7 +577,22 @@
         "addExerciseFailed": "Greška pri dodavanju vježbe.",
         "removeExerciseFailed": "Greška pri uklanjanju vježbe.",
         "reorderFailed": "Greška pri promjeni redoslijeda."
-      }
+      },
+      "duplicate": "Dupliciraj",
+      "settings": "Postavke",
+      "duplicatedToast": "Program dupliciran",
+      "duplicateFailed": "Dupliciranje programa nije uspjelo.",
+      "settingsSaved": "Program ažuriran",
+      "settingsSaveFailed": "Spremanje postavki nije uspjelo.",
+      "goalLabel": "Cilj",
+      "goalPlaceholder": "npr. Hipertrofija",
+      "totalWeeksLabel": "Ukupno tjedana",
+      "coachNoteLabel": "Bilješka trenera",
+      "coachNotePlaceholder": "Bilješke za ovaj program…",
+      "addCoachNote": "Dodaj bilješku trenera",
+      "weeksChip": "Blok od {count} tj.",
+      "daysLabel": "Dani",
+      "noDaysYet": "Još nema dana"
     },
     "clients": {
       "detail": {
