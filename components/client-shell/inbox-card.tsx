@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  listMessages,
-  sendMessage,
-  markMessagesRead,
-  type Message,
-} from "@/actions/messages";
+import { useMessageThread } from "@/lib/messages/use-message-thread";
 
 interface InboxCardProps {
   clientId: string;
@@ -35,40 +31,28 @@ export default function InboxCard({
   coachInitials,
   coachFirstName,
 }: InboxCardProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Live thread (loads + subscribes). We intentionally do NOT mark messages
+  // read here — only opening the full chat screen clears the unread badge.
+  const { messages, loading, send } = useMessageThread({
+    clientId,
+    currentUserId,
+  });
   const [composing, setComposing] = useState(false);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    listMessages(clientId, 20).then((res) => {
-      if (cancelled) return;
-      setMessages(res.data ?? []);
-      setLoading(false);
-      // Mark as read in background
-      markMessagesRead(clientId).catch(() => {});
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [clientId]);
 
   async function handleSend() {
     const trimmed = body.trim();
     if (!trimmed || sending) return;
     setSending(true);
-    const res = await sendMessage(clientId, trimmed);
-    if (res.error || !res.data) {
+    const res = await send(trimmed);
+    setSending(false);
+    if (res.error) {
       toast.error("Couldn't send. Retry.");
-      setSending(false);
       return;
     }
-    setMessages((prev) => [...prev, res.data!]);
     setBody("");
     setComposing(false);
-    setSending(false);
   }
 
   // Show only the last 3 messages on the card
@@ -97,13 +81,12 @@ export default function InboxCard({
           <span className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
             FROM COACH
           </span>
-          <button
-            type="button"
-            onClick={() => setComposing(true)}
+          <Link
+            href="/app/messages"
             className="font-mono text-[11px] text-lime hover:text-lime-hover"
           >
-            + Reply
-          </button>
+            Open chat →
+          </Link>
         </div>
         <div className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
           NO MESSAGES YET
@@ -122,13 +105,21 @@ export default function InboxCard({
             </span>
           )}
         </span>
-        <button
-          type="button"
-          onClick={() => setComposing((v) => !v)}
-          className="font-mono text-[11px] text-lime hover:text-lime-hover"
-        >
-          {composing ? "Cancel" : "+ Reply"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setComposing((v) => !v)}
+            className="font-mono text-[11px] text-lime hover:text-lime-hover"
+          >
+            {composing ? "Cancel" : "+ Reply"}
+          </button>
+          <Link
+            href="/app/messages"
+            className="font-mono text-[11px] text-lime hover:text-lime-hover"
+          >
+            Open chat →
+          </Link>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-col gap-2">
