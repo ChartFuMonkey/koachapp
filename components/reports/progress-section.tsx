@@ -19,8 +19,8 @@ export function ProgressSection({ report, locale }: { report: WeeklyReportRow; l
         target={m.weight.targetWeightKg}
         labels={{ start: t("goalStart"), now: t("goalNow"), target: t("goalTarget") }}
       />
-      <WeightTrendChart points={m.trends.weightByWeek} target={m.weight.targetWeightKg} title={t("weightTrend")} />
-      <MeasurementsChart points={m.trends.measurements} titles={{ waist: t("waist"), bodyFat: t("bodyFat") }} />
+      <WeightTrendChart points={m.trends?.weightByWeek ?? []} target={m.weight.targetWeightKg} title={t("weightTrend")} />
+      <MeasurementsChart points={m.trends?.measurements ?? []} titles={{ waist: t("waist"), bodyFat: t("bodyFat") }} />
       <div className="grid grid-cols-2 gap-3">
         <StatCard label={tm("sleep")} value={`${num(m.sleepH.value, 1)} h`} />
         <StatCard label={tm("energy")} value={num(m.energy.value, 1)} />

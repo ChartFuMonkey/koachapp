@@ -20,7 +20,7 @@ export function TrainingSection({ report }: { report: WeeklyReportRow }) {
         <StatCard label="Volume" value={m.training.totalVolumeKg == null ? "—" : `${m.training.totalVolumeKg} kg`} />
       </div>
       <PersonalBests bests={m.training.personalBests} title={t("personalBests")} />
-      <StrengthChart series={m.trends.strength} title={t("strengthTrend")} />
+      <StrengthChart series={m.trends?.strength ?? []} title={t("strengthTrend")} />
     </section>
   );
 }
