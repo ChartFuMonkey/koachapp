@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/athletic/avatar";
 import { StatusDot } from "@/components/ui/athletic/status-dot";
+import { useClientUnreadCount } from "@/components/coach-shell/coach-unread-context";
 
 export type MobileRosterClient = {
   id: string;
@@ -21,6 +22,53 @@ function toneFor(weekLogs: number): "good" | "warn" | "danger" {
   if (weekLogs >= 4) return "good";
   if (weekLogs >= 1) return "warn";
   return "danger";
+}
+
+function MobileRosterRow({ c }: { c: MobileRosterClient }) {
+  const unread = useClientUnreadCount(c.id);
+  const tone = toneFor(c.weekLogs);
+  const borderClass =
+    tone === "warn"
+      ? "border-warn/30"
+      : tone === "danger"
+        ? "border-danger/30"
+        : "border-border";
+  const microClass =
+    tone === "warn"
+      ? "text-warn"
+      : tone === "danger"
+        ? "text-danger"
+        : "text-ink-3";
+  return (
+    <Link
+      href={`/coach/clients/${c.id}`}
+      className={`flex items-center gap-3 rounded-lg border bg-surface-1 px-3.5 py-3 transition-colors hover:bg-surface-2/40 ${borderClass}`}
+    >
+      <Avatar name={c.name} size="sm" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm text-ink truncate">
+            {c.name}
+          </span>
+          {unread > 0 && (
+            <span className="inline-flex min-w-[18px] items-center justify-center rounded-full bg-lime px-1.5 text-[10px] font-bold text-bg">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </div>
+        <div
+          className={`mt-0.5 flex items-center gap-2 font-mono text-[10px] ${microClass}`}
+        >
+          <span>{c.phaseName}</span>
+          <span>·</span>
+          <span>{c.lastAgo}</span>
+          <span>·</span>
+          <span>{c.adherencePct}%</span>
+        </div>
+      </div>
+      <StatusDot tone={tone} size="sm" />
+    </Link>
+  );
 }
 
 export function MobileRoster({ clients }: { clients: MobileRosterClient[] }) {
@@ -69,47 +117,7 @@ export function MobileRoster({ clients }: { clients: MobileRosterClient[] }) {
 
       {/* Rows */}
       <div className="flex flex-col gap-1.5 p-2">
-        {filtered.map((c) => {
-          const tone = toneFor(c.weekLogs);
-          const borderClass =
-            tone === "warn"
-              ? "border-warn/30"
-              : tone === "danger"
-                ? "border-danger/30"
-                : "border-border";
-          const microClass =
-            tone === "warn"
-              ? "text-warn"
-              : tone === "danger"
-                ? "text-danger"
-                : "text-ink-3";
-          return (
-            <Link
-              key={c.id}
-              href={`/coach/clients/${c.id}`}
-              className={`flex items-center gap-3 rounded-lg border bg-surface-1 px-3.5 py-3 transition-colors hover:bg-surface-2/40 ${borderClass}`}
-            >
-              <Avatar name={c.name} size="sm" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm text-ink truncate">
-                    {c.name}
-                  </span>
-                </div>
-                <div
-                  className={`mt-0.5 flex items-center gap-2 font-mono text-[10px] ${microClass}`}
-                >
-                  <span>{c.phaseName}</span>
-                  <span>·</span>
-                  <span>{c.lastAgo}</span>
-                  <span>·</span>
-                  <span>{c.adherencePct}%</span>
-                </div>
-              </div>
-              <StatusDot tone={tone} size="sm" />
-            </Link>
-          );
-        })}
+        {filtered.map((c) => (<MobileRosterRow key={c.id} c={c} />))}
       </div>
     </div>
   );

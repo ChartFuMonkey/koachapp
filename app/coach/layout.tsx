@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import CoachShell from "@/components/coach-shell/coach-shell";
+import { getCoachUnreadCounts } from "@/actions/messages";
 
 export default async function CoachLayout({
   children,
@@ -35,8 +36,10 @@ export default async function CoachLayout({
   const coachName =
     (coachProfileRes.data?.full_name as string | null) || "Coach";
 
+  const initialUnread = await getCoachUnreadCounts();
+
   return (
-    <CoachShell clients={clientList} coachName={coachName}>
+    <CoachShell clients={clientList} coachName={coachName} initialUnread={initialUnread}>
       {children}
     </CoachShell>
   );
