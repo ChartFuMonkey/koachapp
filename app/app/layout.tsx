@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import PushBanner from "@/components/push-banner";
-import InstallBanner from "@/components/install-banner";
 import ClientContextRail from "@/components/client-shell/context-rail";
 import NavUnreadBadge from "@/components/client-shell/nav-unread-badge";
 import { createClient } from "@/lib/supabase/client";
@@ -145,7 +144,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
           <PushBanner />
-          <InstallBanner />
 
           {/* Bottom tab bar — mobile only; the side rail takes over at MD. */}
           <nav className="fixed bottom-0 inset-x-0 border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)] z-30 md:hidden">

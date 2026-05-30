@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
+import InstallGate from "@/components/install/install-gate";
 import { resolveLocale } from "@/i18n/request";
 import "./globals.css";
 
@@ -60,7 +61,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col dark">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <InstallGate>{children}</InstallGate>
         </NextIntlClientProvider>
         <Toaster position="top-center" />
       </body>
