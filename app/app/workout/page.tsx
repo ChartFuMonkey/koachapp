@@ -3,18 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  ChevronDown,
-  ChevronUp,
-  Dumbbell,
-  Play,
-  Timer,
-  Loader2,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import { Chip } from "@/components/ui/athletic/chip";
+import { EmptyState } from "@/components/ui/athletic/empty-state";
 import { getActiveProgram, createWorkoutSession } from "@/actions/workout";
 
 type Exercise = {
@@ -103,50 +95,57 @@ export default function WorkoutPage() {
 
   if (!program) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-        <Dumbbell className="mb-4 size-12 text-ink-4" />
-        <h2 className="text-lg font-semibold text-ink">
-          {t("noProgramTitle")}
-        </h2>
-        <p className="mt-2 text-sm text-ink-3 max-w-xs">
-          {t("noProgramSubtitle")}
-        </p>
+      <div className="px-5 pt-8">
+        <EmptyState
+          glyph="◎"
+          label={t("noProgramTitle")}
+          hint={t("noProgramSubtitle").toUpperCase()}
+        />
       </div>
     );
   }
 
   return (
     <div className="px-5 pt-5 pb-6">
-      <MicroLabel>~/Training</MicroLabel>
-      <h1 className="mt-1 text-[26px] font-semibold leading-tight text-ink tracking-tight">
+      <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+        ~/TRAINING
+      </div>
+      <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
         {program.name}
       </h1>
-      <p className="mt-1 text-sm text-ink-3">{t("chooseDay")}</p>
+      <p className="mt-2 text-sm text-ink-2">{t("chooseDay")}</p>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 flex flex-col gap-2.5">
         {program.days.map((day, idx) => {
           const isExpanded = expandedDay === day.id;
+          const code = String.fromCharCode(65 + idx); // A, B, C, ...
           return (
             <div
               key={day.id}
-              className={`overflow-hidden rounded-xl border bg-surface transition-colors ${
-                isExpanded ? "border-primary/30" : "border-border"
+              className={`overflow-hidden rounded-xl border bg-surface-1 transition-colors ${
+                isExpanded ? "border-lime/30" : "border-border"
               }`}
             >
               <button
                 type="button"
-                className="flex w-full items-center justify-between px-5 py-4 text-left active:bg-surface-2/50"
+                className="flex w-full items-center justify-between px-4 py-4 text-left active:bg-surface-2/50"
                 onClick={() => setExpandedDay(isExpanded ? null : day.id)}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
-                    D{(idx + 1).toString().padStart(2, "0")}
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-md font-mono text-[13px] font-bold ${
+                      isExpanded
+                        ? "bg-lime text-bg"
+                        : "border border-hairline-2 bg-surface-2 text-ink-2"
+                    }`}
+                  >
+                    {code}
                   </span>
                   <div className="min-w-0">
-                    <span className="text-base font-semibold text-ink truncate block">
+                    <span className="block truncate text-base font-semibold text-ink">
                       {day.day_label}
                     </span>
-                    <span className="font-mono text-[10px] text-ink-3 uppercase tracking-[0.06em]">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
                       {t("exerciseCountShort", {
                         count: day.program_exercises.length,
                       })}
@@ -154,86 +153,56 @@ export default function WorkoutPage() {
                   </div>
                 </div>
                 {isExpanded ? (
-                  <ChevronUp size={16} className="text-ink-3 shrink-0" />
+                  <ChevronUp size={16} className="shrink-0 text-ink-3" />
                 ) : (
-                  <ChevronDown size={16} className="text-ink-3 shrink-0" />
+                  <ChevronDown size={16} className="shrink-0 text-ink-3" />
                 )}
               </button>
 
               {isExpanded && (
-                <div className="border-t border-border px-5 py-4">
-                  <ul className="space-y-2">
+                <div className="border-t border-border px-4 py-4">
+                  <ul className="flex flex-col gap-1.5">
                     {day.program_exercises.map((pe, i) => {
                       const ex = pe.exercises;
                       return (
                         <li
                           key={pe.id}
-                          className="rounded-lg bg-surface-2/50 border border-border p-3"
+                          className="grid grid-cols-[24px_1fr_auto] items-center gap-3 rounded-lg border border-border bg-surface-1 px-3 py-2.5"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-[10px] text-ink-3 shrink-0">
-                                  {(i + 1).toString().padStart(2, "0")}
-                                </span>
-                                <span className="text-sm font-medium text-ink truncate">
-                                  {ex.name}
-                                </span>
-                              </div>
-                              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                <Chip variant="ghost" size="sm">
-                                  {pe.sets} × {pe.reps}
-                                </Chip>
-                                {pe.rest_sec ? (
-                                  <Chip variant="ghost" size="sm">
-                                    <Timer className="size-2.5" />
-                                    {t("restSecondsShort", {
-                                      sec: pe.rest_sec,
-                                    })}
-                                  </Chip>
-                                ) : null}
-                                {pe.rpe ? (
-                                  <Chip variant="warn" size="sm">
-                                    RPE {pe.rpe}
-                                  </Chip>
-                                ) : null}
-                              </div>
-                              {ex.notes && (
-                                <p className="mt-2 text-xs text-ink-3 leading-relaxed">
-                                  {ex.notes}
-                                </p>
-                              )}
+                          <span className="font-mono text-[11px] text-ink-3 tabular-nums">
+                            {(i + 1).toString().padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-ink truncate">
+                              {ex.name}
                             </div>
-                            {ex.video_url && (
-                              <a
-                                href={ex.video_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Video"
-                                className="shrink-0 inline-flex items-center justify-center size-8 rounded-md border border-border bg-surface text-ink-2 hover:bg-surface-3"
-                              >
-                                <Play className="size-3.5" />
-                              </a>
-                            )}
+                            <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
+                              {pe.sets} × {pe.reps}
+                              {pe.rpe ? ` · RPE ${pe.rpe}` : ""}
+                              {pe.rest_sec
+                                ? ` · ${t("restSecondsShort", {
+                                    sec: pe.rest_sec,
+                                  })}`
+                                : ""}
+                            </div>
                           </div>
+                          <span className="text-ink-3">›</span>
                         </li>
                       );
                     })}
                   </ul>
 
-                  <Button
-                    size="lg"
-                    className="mt-5 w-full"
-                    disabled={starting}
+                  <button
+                    type="button"
                     onClick={() => handleStartWorkout(day.id)}
+                    disabled={starting}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-lime px-4 py-3.5 text-sm font-bold text-bg hover:bg-lime-hover active:bg-lime-press disabled:opacity-50 transition-all"
                   >
                     {starting ? (
                       <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Play className="size-4" />
-                    )}
-                    {t("startWorkout")}
-                  </Button>
+                    ) : null}
+                    ▶ {t("startWorkout")}
+                  </button>
                 </div>
               )}
             </div>

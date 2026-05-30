@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -8,21 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Chip } from "@/components/ui/athletic/chip";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import {
   createExercise,
   updateExercise,
   deleteExercise,
 } from "@/actions/exercises";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Check,
-  X,
-  Video,
-  Loader2,
-} from "lucide-react";
+import { Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { translateError } from "@/lib/translate-error";
@@ -42,6 +35,15 @@ const DIFFICULTY_VALUES = ["", "beginner", "intermediate", "advanced"] as const;
 const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
 
+// Top-level filter buttons — match the prototype's fixed categories.
+const FILTERS = ["All", "Legs", "Back", "Chest", "Shoulders", "Arms", "Core"] as const;
+type Filter = (typeof FILTERS)[number];
+
+// Deterministic pseudo-random bar height (0..100) — stable per (card, bar) so SSR/CSR agree.
+function barHeight(i: number, j: number) {
+  return 20 + Math.sin(i * 1.3 + j) * 50 + 50;
+}
+
 export default function ExerciseManager({
   initialExercises,
 }: {
@@ -56,6 +58,8 @@ export default function ExerciseManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [activeFilter, setActiveFilter] = useState<Filter>("All");
+  const [search, setSearch] = useState("");
 
   function difficultyLabel(value: string) {
     switch (value) {
@@ -71,6 +75,22 @@ export default function ExerciseManager({
         return value;
     }
   }
+
+  const visibleExercises = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return initialExercises.filter((ex) => {
+      if (activeFilter !== "All") {
+        const mg = (ex.muscle_group || "").toLowerCase();
+        if (!mg.includes(activeFilter.toLowerCase())) return false;
+      }
+      if (!q) return true;
+      const hay = [ex.name, ex.muscle_group, ex.equipment, ex.difficulty, ex.notes]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [initialExercises, activeFilter, search]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -213,184 +233,173 @@ export default function ExerciseManager({
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
-        {!showAddForm && (
-          <Button onClick={() => setShowAddForm(true)}>
-            <Plus size={14} /> {t("addExercise")}
+    <div className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <MicroLabel>
+            ~/EXERCISES — {initialExercises.length} ENTRIES
+          </MicroLabel>
+          <h1 className="mt-2 text-[28px] sm:text-[36px] font-semibold tracking-[-0.025em] leading-[1.05] text-ink">
+            {t("title")}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled>
+            Import CSV
           </Button>
-        )}
+          {!showAddForm && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditingId(null);
+                setShowAddForm(true);
+              }}
+            >
+              + {t("addExercise")}
+            </Button>
+          )}
+        </div>
       </div>
 
+      {/* Inline create form */}
       {showAddForm && (
-        <ExerciseForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowAddForm(false)}
-        />
+        <div className="mt-6">
+          <ExerciseForm
+            onSubmit={handleCreate}
+            onCancel={() => setShowAddForm(false)}
+          />
+        </div>
       )}
 
-      {initialExercises.length === 0 ? (
-        <p className="py-8 text-center text-ink-3">
-          {t("emptyList")}
+      {/* Filter chip row + search */}
+      <div className="mt-6 flex flex-wrap items-center gap-1.5">
+        {FILTERS.map((f) => {
+          const isActive = activeFilter === f;
+          return (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setActiveFilter(f)}
+              className={
+                isActive
+                  ? "inline-flex h-5 items-center rounded-[3px] border border-ink bg-ink px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-bg whitespace-nowrap leading-[1.4]"
+                  : "inline-flex h-5 items-center rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-ink-2 whitespace-nowrap leading-[1.4] hover:text-ink"
+              }
+            >
+              {f}
+            </button>
+          );
+        })}
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="search…"
+          className="ml-auto w-full max-w-[220px] rounded-md border border-border bg-surface px-2.5 py-1.5 font-mono text-xs text-ink placeholder:text-ink-3 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+        />
+      </div>
+
+      {/* Cards grid */}
+      {visibleExercises.length === 0 ? (
+        <p className="py-12 text-center text-sm text-ink-3">
+          {initialExercises.length === 0 ? t("emptyList") : tCommon("loading")}
         </p>
       ) : (
-        <>
-          {/* ── Desktop table ── */}
-          <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border bg-surface-2/50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-ink-2">
-                    {t("colName")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-ink-2">
-                    {t("colMuscleGroup")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-ink-2">
-                    {t("colEquipment")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-ink-2">
-                    {t("colDifficulty")}
-                  </th>
-                  <th className="px-3 py-2 text-center font-medium text-ink-2">
-                    {t("colVideo")}
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium text-ink-2">
-                    {t("colActions")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {initialExercises.map((ex) =>
-                  editingId === ex.id ? (
-                    <tr key={ex.id}>
-                      <td colSpan={6} className="p-0">
-                        <ExerciseForm
-                          exercise={ex}
-                          onSubmit={(e) => handleUpdate(e, ex.id)}
-                          onCancel={() => setEditingId(null)}
-                        />
-                      </td>
-                    </tr>
-                  ) : (
-                    <tr
-                      key={ex.id}
-                      className="border-b border-border last:border-0"
-                    >
-                      <td className="px-3 py-2 font-medium text-gray-200">
-                        {ex.name}
-                      </td>
-                      <td className="px-3 py-2 text-ink-2">
-                        {ex.muscle_group || "—"}
-                      </td>
-                      <td className="px-3 py-2 text-ink-2">
-                        {ex.equipment || "—"}
-                      </td>
-                      <td className="px-3 py-2 text-ink-2">
-                        {ex.difficulty ? difficultyLabel(ex.difficulty) : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {ex.video_url ? (
-                          <Video
-                            size={14}
-                            className="mx-auto text-good"
-                          />
-                        ) : (
-                          <span className="text-ink-3">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => setEditingId(ex.id)}
-                          >
-                            <Pencil size={12} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => setDeleteTarget({ id: ex.id, name: ex.name })}
-                            className="text-danger hover:text-red-300"
-                          >
-                            <Trash2 size={12} />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleExercises.map((ex, i) => {
+            if (editingId === ex.id) {
+              return (
+                <div key={ex.id} className="sm:col-span-2 lg:col-span-3">
+                  <ExerciseForm
+                    exercise={ex}
+                    onSubmit={(e) => handleUpdate(e, ex.id)}
+                    onCancel={() => setEditingId(null)}
+                  />
+                </div>
+              );
+            }
 
-          {/* ── Mobile cards ── */}
-          <div className="space-y-3 md:hidden">
-            {initialExercises.map((ex) =>
-              editingId === ex.id ? (
-                <ExerciseForm
-                  key={ex.id}
-                  exercise={ex}
-                  onSubmit={(e) => handleUpdate(e, ex.id)}
-                  onCancel={() => setEditingId(null)}
-                />
-              ) : (
-                <Card key={ex.id}>
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-200">
-                            {ex.name}
-                          </h3>
-                          {ex.video_url && (
-                            <Video size={12} className="shrink-0 text-good" />
-                          )}
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-1.5">
-                          {ex.muscle_group && (
-                            <Badge variant="secondary" className="text-xs">
-                              {ex.muscle_group}
-                            </Badge>
-                          )}
-                          {ex.equipment && (
-                            <Badge variant="outline" className="text-xs">
-                              {ex.equipment}
-                            </Badge>
-                          )}
-                          {ex.difficulty && (
-                            <Badge variant="outline" className="text-xs">
-                              {difficultyLabel(ex.difficulty)}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="ml-2 flex shrink-0 gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={() => setEditingId(ex.id)}
-                        >
-                          <Pencil size={12} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={() => setDeleteTarget({ id: ex.id, name: ex.name })}
-                          className="text-danger hover:text-red-300"
-                        >
-                          <Trash2 size={12} />
-                        </Button>
-                      </div>
+            const indexLabel = String(i + 1).padStart(3, "0");
+            const usedCount = 0; // TODO: wire to real workout usage count
+
+            return (
+              <div
+                key={ex.id}
+                className="group/card rounded-lg border border-border bg-surface p-4 transition-colors hover:border-hairline-2"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <MicroLabel className="text-[9px]">
+                      {indexLabel}
+                      {ex.equipment ? ` · ${ex.equipment}` : ""}
+                    </MicroLabel>
+                    <div className="mt-1.5 text-base font-semibold text-ink leading-tight truncate">
+                      {ex.name}
                     </div>
-                  </CardContent>
-                </Card>
-              )
-            )}
-          </div>
-        </>
+                    {ex.difficulty && (
+                      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
+                        {difficultyLabel(ex.difficulty)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {ex.muscle_group && (
+                      <Chip variant="neutral">{ex.muscle_group}</Chip>
+                    )}
+                    <div className="flex gap-1 opacity-0 transition-opacity group-hover/card:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => {
+                          setShowAddForm(false);
+                          setEditingId(ex.id);
+                        }}
+                        aria-label={tCommon("edit")}
+                      >
+                        <Pencil size={12} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() =>
+                          setDeleteTarget({ id: ex.id, name: ex.name })
+                        }
+                        className="text-danger hover:text-red-300"
+                        aria-label={tCommon("delete")}
+                      >
+                        <Trash2 size={12} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3.5 flex items-baseline gap-3">
+                  <div>
+                    <MicroLabel className="text-[9px]">USED</MicroLabel>
+                    <div className="font-mono text-lg font-semibold text-ink tabular-nums">
+                      {usedCount}×
+                    </div>
+                  </div>
+                  <div className="flex h-5 flex-1 items-end gap-0.5">
+                    {Array.from({ length: 12 }).map((_, j) => {
+                      const h = barHeight(i, j);
+                      return (
+                        <div
+                          key={j}
+                          className={`flex-1 rounded-[1px] ${
+                            j > 8 ? "bg-lime" : "bg-hairline-2"
+                          }`}
+                          style={{ height: `${h}%` }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <ConfirmDialog

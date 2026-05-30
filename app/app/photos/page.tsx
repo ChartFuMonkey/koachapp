@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/athletic/chip";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import { Num } from "@/components/ui/athletic/num";
+import { EmptyState } from "@/components/ui/athletic/empty-state";
 import {
   getPhotos,
   uploadPhoto,
@@ -236,9 +237,7 @@ export default function PhotosPage() {
 
       {/* Sessions */}
       {sessions.length === 0 ? (
-        <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
-          {t("addFirstPhoto")}
-        </p>
+        <EmptyState glyph="◐" label={t("addFirstPhoto")} hint="TAP + TO ADD" />
       ) : (
         <div className="space-y-4">
           {sessions.map((session) => (

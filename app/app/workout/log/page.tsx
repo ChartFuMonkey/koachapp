@@ -4,19 +4,11 @@ import { Suspense } from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  Check,
-  Loader2,
-  Play,
-  SkipForward,
-  Trophy,
-  ArrowLeft,
-} from "lucide-react";
+import { Check, Loader2, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import { Chip } from "@/components/ui/athletic/chip";
-import { Num } from "@/components/ui/athletic/num";
 import {
   getDayExercises,
   logExerciseSet,
@@ -41,7 +33,13 @@ type ProgramExercise = {
   exercises: Exercise;
 };
 
-// ── Elapsed timer (top of screen) ───────────────────────────────────
+function fmtClock(sec: number): string {
+  const m = Math.floor(Math.max(0, sec) / 60);
+  const s = Math.max(0, sec) % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+// ── Elapsed chip (header right) ─────────────────────────────────────
 function ElapsedChip({ startTimestamp }: { startTimestamp: number }) {
   const t = useTranslations("app.workout");
   const [elapsed, setElapsed] = useState(() =>
@@ -62,40 +60,33 @@ function ElapsedChip({ startTimestamp }: { startTimestamp: number }) {
     };
   }, [startTimestamp]);
 
-  const mm = Math.floor(elapsed / 60);
-  const ss = elapsed % 60;
   return (
     <Chip variant="ghost" className="gap-1.5">
-      <span className="size-1 rounded-full bg-good shadow-[0_0_6px_rgba(61,232,160,0.5)]" />
-      <span>{t("elapsedLabel")}</span>
-      <span className="text-ink">
-        {mm}:{ss.toString().padStart(2, "0")}
+      <span className="font-mono tabular-nums text-ink">
+        {fmtClock(elapsed)}
       </span>
+      <span>{t("elapsedLabel")}</span>
     </Chip>
   );
 }
 
-// ── Rest timer (sessionStorage-anchored) ────────────────────────────
-function RestTimer({
+// ── Rest timer card (anchored in sessionStorage) ────────────────────
+function RestTimerCard({
   seconds,
   storageKey,
   onDone,
-  onSkip,
 }: {
   seconds: number;
   storageKey: string;
   onDone: () => void;
-  onSkip: () => void;
 }) {
-  const t = useTranslations("app.workout");
   const [remaining, setRemaining] = useState<number>(() => {
     if (typeof window === "undefined") return seconds;
     const stored = sessionStorage.getItem(storageKey);
     if (stored) {
       const startedAt = parseInt(stored, 10);
       const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-      const left = Math.max(0, seconds - elapsed);
-      return left;
+      return Math.max(0, seconds - elapsed);
     }
     sessionStorage.setItem(storageKey, Date.now().toString());
     return seconds;
@@ -125,50 +116,29 @@ function RestTimer({
     };
   }, [seconds, storageKey, onDone]);
 
-  function handleSkip() {
-    sessionStorage.removeItem(storageKey);
-    onSkip();
-  }
-
-  const mins = Math.floor(remaining / 60);
-  const secs = remaining % 60;
   const elapsed = seconds - remaining;
-  const pct = (elapsed / seconds) * 100;
+  const pct = Math.min(100, Math.max(0, (elapsed / seconds) * 100));
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 mt-4">
-      <div className="flex items-center justify-between">
-        <MicroLabel className="text-primary">● {t("restingNow")}</MicroLabel>
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
-          {seconds}s
-        </span>
+    <div className="mt-4 rounded-xl border border-border bg-surface-1 p-4 text-center">
+      <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+        REST TIMER
       </div>
       <div
-        className="mt-4 text-center font-mono font-bold text-primary tabular-nums"
-        style={{
-          fontSize: "56px",
-          letterSpacing: "-0.04em",
-          lineHeight: 1,
-          textShadow: "0 0 24px rgba(197, 247, 59, 0.35)",
-        }}
+        className="my-2 font-mono font-bold tabular-nums text-lime"
+        style={{ fontSize: 56, lineHeight: 1, letterSpacing: "-0.04em" }}
       >
-        {mins}:{secs.toString().padStart(2, "0")}
+        {fmtClock(remaining)}
       </div>
-      <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-hairline">
+      <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+        OF {fmtClock(seconds)} · TARGET
+      </div>
+      <div className="mt-3 h-[3px] overflow-hidden rounded-sm bg-border">
         <div
-          className="h-full rounded-full bg-primary transition-all duration-200 ease-linear"
+          className="h-full rounded-sm bg-lime transition-all duration-200 ease-linear"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <Button
-        variant="outline"
-        size="lg"
-        className="mt-5 w-full"
-        onClick={handleSkip}
-      >
-        <SkipForward className="size-4" />
-        {t("skipRest")}
-      </Button>
     </div>
   );
 }
@@ -188,9 +158,9 @@ function WorkoutLogInner() {
   const [prevWeights, setPrevWeights] = useState<Record<string, number>>({});
   const [currentExIdx, setCurrentExIdx] = useState(0);
   const [currentSetNum, setCurrentSetNum] = useState(1);
-  const [completedSets, setCompletedSets] = useState<Record<string, number[]>>(
-    {}
-  );
+  const [completedSets, setCompletedSets] = useState<
+    Record<string, Array<{ setNum: number; weight: number; reps: number; rpe: number | null }>>
+  >({});
   const [showRest, setShowRest] = useState(false);
   const [saving, setSaving] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -256,9 +226,11 @@ function WorkoutLogInner() {
 
   const currentExercise = exercises[currentExIdx];
   const totalExercises = exercises.length;
+  const doneSetsForCurrent = currentExercise
+    ? completedSets[currentExercise.id] ?? []
+    : [];
   const currentExDone =
-    currentExercise &&
-    (completedSets[currentExercise.id]?.length ?? 0) >= currentExercise.sets;
+    currentExercise && doneSetsForCurrent.length >= currentExercise.sets;
   const isLastExercise = currentExIdx === totalExercises - 1;
 
   const advanceToNextExercise = useCallback(() => {
@@ -277,6 +249,20 @@ function WorkoutLogInner() {
     setShowRest(false);
     if (currentExDone) advanceToNextExercise();
   }, [currentExDone, advanceToNextExercise]);
+
+  // ── Steppers ──────────────────────────────────────────────────────
+  function bumpWeight(delta: number) {
+    const cur = parseFloat(weightInput) || 0;
+    const next = Math.max(0, cur + delta);
+    setWeightInput(Number.isInteger(next) ? next.toString() : next.toFixed(1));
+  }
+  function bumpReps(delta: number) {
+    const cur = parseInt(repsInput, 10) || 0;
+    setRepsInput(Math.max(0, cur + delta).toString());
+  }
+  function bumpRpe(delta: number) {
+    setRpeInput((r) => Math.min(10, Math.max(0, r + delta)));
+  }
 
   async function handleSaveSet() {
     if (!sessionId || !currentExercise) return;
@@ -301,9 +287,16 @@ function WorkoutLogInner() {
       toast.error(translateError(res.error));
       return;
     }
+    const savedRpe = rpeInput > 0 ? rpeInput : null;
     setCompletedSets((prev) => {
       const arr = prev[currentExercise.id] ?? [];
-      return { ...prev, [currentExercise.id]: [...arr, currentSetNum] };
+      return {
+        ...prev,
+        [currentExercise.id]: [
+          ...arr,
+          { setNum: currentSetNum, weight, reps, rpe: savedRpe },
+        ],
+      };
     });
     const nextSetNum = currentSetNum + 1;
     const allSetsDone = nextSetNum > currentExercise.sets;
@@ -372,11 +365,11 @@ function WorkoutLogInner() {
     );
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
-        <div className="mb-5 flex size-20 items-center justify-center rounded-full bg-good/10 border border-good/30">
+        <div className="mb-5 flex size-20 items-center justify-center rounded-full border border-good/30 bg-good/10">
           <Trophy className="size-9 text-good" />
         </div>
         <h2 className="text-2xl font-bold text-ink">{t("allDone")}</h2>
-        <p className="mt-2 text-ink-2 font-mono">
+        <p className="mt-2 font-mono text-ink-2">
           {t("durationMinutes", { min: durationMin })}
         </p>
         <Button
@@ -397,127 +390,97 @@ function WorkoutLogInner() {
   }
 
   const ex = currentExercise.exercises;
-  const prevWeight = prevWeights[ex.id];
-  const doneSets = completedSets[currentExercise.id] ?? [];
 
-  // Build set log table data: status per set + last logged values
+  // Build set log rows: completed sets carry their saved values; current = inputs; rest = NEXT
   const setRows = Array.from({ length: currentExercise.sets }, (_, i) => {
     const setNum = i + 1;
-    const isDone = doneSets.includes(setNum);
-    const isCurrent = setNum === currentSetNum && !showRest;
-    const status: "done" | "now" | "next" = isDone
-      ? "done"
-      : isCurrent
-        ? "now"
-        : "next";
-    return { setNum, status };
+    const done = doneSetsForCurrent.find((d) => d.setNum === setNum);
+    if (done) {
+      return {
+        setNum,
+        status: "done" as const,
+        weight: done.weight,
+        reps: done.reps,
+        rpe: done.rpe,
+      };
+    }
+    if (setNum === currentSetNum && !showRest) {
+      const w = parseFloat(weightInput);
+      const r = parseInt(repsInput, 10);
+      return {
+        setNum,
+        status: "now" as const,
+        weight: Number.isFinite(w) && weightInput !== "" ? w : null,
+        reps: Number.isFinite(r) && repsInput !== "" ? r : null,
+        rpe: rpeInput > 0 ? rpeInput : null,
+      };
+    }
+    return {
+      setNum,
+      status: "next" as const,
+      weight: null,
+      reps: null,
+      rpe: null,
+    };
   });
 
-  // ── Header (shared) ─────────────────────────────────────────────
-  const Header = (
-    <div className="flex items-center justify-between gap-3 mb-3">
-      <button
-        type="button"
-        onClick={handleFinishWorkout}
-        aria-label={t("finishEarly")}
-        className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink"
-      >
-        <ArrowLeft size={18} />
-      </button>
-      <div className="flex-1 text-center">
-        <MicroLabel>
-          {t("exShort")} {(currentExIdx + 1).toString().padStart(2, "0")} /{" "}
-          {totalExercises.toString().padStart(2, "0")} ·{" "}
-          {t("setShort")} {currentSetNum.toString().padStart(2, "0")} /{" "}
-          {currentExercise.sets.toString().padStart(2, "0")}
-        </MicroLabel>
-      </div>
-      <ElapsedChip startTimestamp={sessionStartRef.current} />
-    </div>
-  );
+  const upcoming = exercises.slice(currentExIdx + 1);
+  const restTarget =
+    currentExercise.rest_sec && currentExercise.rest_sec > 0
+      ? currentExercise.rest_sec
+      : 120;
 
   return (
-    <div className="px-5 pt-5 pb-6">
-      {Header}
-
-      {/* Exercise name */}
-      <h1 className="text-[26px] font-semibold leading-tight text-ink tracking-tight">
-        {ex.name}
-      </h1>
-      <p className="mt-1 font-mono text-xs text-ink-3">
-        {currentExercise.sets} × {currentExercise.reps}
-        {currentExercise.rpe ? ` · RPE ${currentExercise.rpe}` : ""}
-      </p>
-
-      {/* Set dots */}
-      <div className="mt-4 flex gap-2">
-        {Array.from({ length: currentExercise.sets }, (_, i) => {
-          const setNum = i + 1;
-          const isDone = doneSets.includes(setNum);
-          const isCurrent = setNum === currentSetNum && !showRest;
-          return (
-            <div
-              key={setNum}
-              className={`flex h-8 flex-1 items-center justify-center rounded-md font-mono text-[11px] font-medium transition-colors ${
-                isDone
-                  ? "bg-good/10 text-good border border-good/30"
-                  : isCurrent
-                    ? "bg-primary/10 text-primary border border-primary/40"
-                    : "bg-surface-2 text-ink-3 border border-border"
-              }`}
-            >
-              {isDone ? (
-                <Check className="size-3.5" />
-              ) : (
-                setNum.toString().padStart(2, "0")
-              )}
-            </div>
-          );
-        })}
+    <div className="pb-6">
+      {/* Sticky-ish header */}
+      <div className="border-b border-border px-5 py-4">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+            {t("exShort")} {(currentExIdx + 1).toString().padStart(2, "0")}/
+            {totalExercises.toString().padStart(2, "0")} · {t("setShort")}{" "}
+            {currentSetNum.toString().padStart(2, "0")}/
+            {currentExercise.sets.toString().padStart(2, "0")}
+          </span>
+          <ElapsedChip startTimestamp={sessionStartRef.current} />
+        </div>
+        <h1
+          className="mt-1.5 font-semibold text-ink"
+          style={{ fontSize: 28, letterSpacing: "-0.02em", lineHeight: 1.1 }}
+        >
+          {ex.name}
+        </h1>
+        {ex.notes ? (
+          <p className="mt-1 text-xs text-ink-2">{ex.notes}</p>
+        ) : null}
       </div>
 
-      {/* Rest timer state */}
-      {showRest ? (
-        <RestTimer
-          seconds={currentExercise.rest_sec ?? 60}
-          storageKey={`rest-${sessionId}-${currentExercise.id}-${currentSetNum}`}
-          onDone={handleRestDone}
-          onSkip={handleRestDone}
-        />
-      ) : (
-        <>
-          {/* Live workout card — lime-glow */}
+      <div className="px-5 py-4">
+        {/* Big lifting card */}
+        <div
+          className="relative overflow-hidden rounded-2xl border border-lime/30 p-5"
+          style={{ background: "linear-gradient(180deg, #1A1F12, var(--surface-1))" }}
+        >
           <div
-            className="relative mt-5 overflow-hidden rounded-2xl border p-5"
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
             style={{
-              background: "linear-gradient(180deg, #1A1F12, #111317)",
-              borderColor: "rgba(197, 247, 59, 0.2)",
+              background:
+                "radial-gradient(circle at 80% 20%, rgba(197,247,59,0.13), transparent 50%)",
             }}
-          >
-            <div
-              aria-hidden
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle at 80% 20%, rgba(197,247,59,0.13), transparent 50%)",
-              }}
-            />
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <MicroLabel className="text-primary">
-                  ● {t("liftingNow")}
-                </MicroLabel>
-                {prevWeight != null && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
-                    {t("previous")}: <Num value={prevWeight} /> kg
-                  </span>
-                )}
-              </div>
+          />
+          <div className="relative">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-lime">
+              <span className="pulse-live">●</span>
+              <span>{t("liftingNow")}</span>
+            </div>
 
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                {/* Weight */}
-                <div className="flex flex-col items-start">
-                  <MicroLabel>{t("loadLabel")}</MicroLabel>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              {/* LOAD */}
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink-3">
+                  {t("loadLabel")}
+                </div>
+                <div className="mt-1.5 flex items-baseline gap-1">
                   <input
                     type="number"
                     inputMode="decimal"
@@ -525,167 +488,237 @@ function WorkoutLogInner() {
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     placeholder="0"
-                    className="mt-1 w-full bg-transparent border-b border-border/60 pb-1 font-mono text-[28px] font-semibold text-ink tabular-nums focus:border-primary outline-none"
+                    className="w-full min-w-0 bg-transparent p-0 font-mono font-bold tabular-nums text-ink outline-none focus:text-lime"
+                    style={{ fontSize: 36, letterSpacing: "-0.02em", lineHeight: 1 }}
                   />
-                  <span className="font-mono text-[10px] text-ink-3 mt-1">kg</span>
+                  <span className="font-mono text-[11px] text-ink-3">kg</span>
                 </div>
-                {/* Reps */}
-                <div className="flex flex-col items-start">
-                  <MicroLabel>{t("repsLabelShort")}</MicroLabel>
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => bumpWeight(-2.5)}
+                    className="h-6 w-7 rounded-md border border-border bg-surface-2 font-mono text-[11px] text-ink-2 hover:text-ink"
+                    aria-label="−2.5"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => bumpWeight(2.5)}
+                    className="h-6 w-7 rounded-md border border-border bg-surface-2 font-mono text-[11px] text-ink-2 hover:text-ink"
+                    aria-label="+2.5"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* REPS */}
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink-3">
+                  {t("repsLabelShort")}
+                </div>
+                <div className="mt-1.5 flex items-baseline gap-1">
                   <input
                     type="number"
                     inputMode="numeric"
                     value={repsInput}
                     onChange={(e) => setRepsInput(e.target.value)}
-                    className="mt-1 w-full bg-transparent border-b border-border/60 pb-1 font-mono text-[28px] font-semibold text-ink tabular-nums focus:border-primary outline-none"
+                    placeholder="0"
+                    className="w-full min-w-0 bg-transparent p-0 font-mono font-bold tabular-nums text-ink outline-none focus:text-lime"
+                    style={{ fontSize: 36, letterSpacing: "-0.02em", lineHeight: 1 }}
                   />
-                  <span className="font-mono text-[10px] text-ink-3 mt-1">
-                    × {currentExercise.reps}
-                  </span>
                 </div>
-                {/* RPE */}
-                <div className="flex flex-col items-start">
-                  <MicroLabel>{t("rpeLabel")}</MicroLabel>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min="0"
-                    max="10"
-                    value={rpeInput || ""}
-                    onChange={(e) =>
-                      setRpeInput(parseInt(e.target.value, 10) || 0)
-                    }
-                    placeholder="—"
-                    className="mt-1 w-full bg-transparent border-b border-border/60 pb-1 font-mono text-[28px] font-semibold text-ink tabular-nums focus:border-primary outline-none"
-                  />
-                  <span className="font-mono text-[10px] text-ink-3 mt-1">
-                    /10
-                  </span>
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => bumpReps(-1)}
+                    className="h-6 w-7 rounded-md border border-border bg-surface-2 font-mono text-[11px] text-ink-2 hover:text-ink"
+                    aria-label="−1"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => bumpReps(1)}
+                    className="h-6 w-7 rounded-md border border-border bg-surface-2 font-mono text-[11px] text-ink-2 hover:text-ink"
+                    aria-label="+1"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
-              <Button
-                size="lg"
-                className="mt-6 w-full"
-                disabled={saving}
-                onClick={handleSaveSet}
-              >
-                {saving ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Check className="size-4" />
-                )}
-                {t("saveSet")}
-              </Button>
+              {/* RPE */}
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-[0.08em] text-ink-3">
+                  {t("rpeLabel")}
+                </div>
+                <div className="mt-1.5 flex items-baseline gap-1">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={10}
+                    value={rpeInput || ""}
+                    onChange={(e) =>
+                      setRpeInput(
+                        Math.min(10, Math.max(0, parseInt(e.target.value, 10) || 0))
+                      )
+                    }
+                    placeholder="—"
+                    className="w-full min-w-0 bg-transparent p-0 font-mono font-bold tabular-nums text-ink outline-none focus:text-lime"
+                    style={{ fontSize: 36, letterSpacing: "-0.02em", lineHeight: 1 }}
+                  />
+                  <span className="font-mono text-[11px] text-ink-3">/10</span>
+                </div>
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => bumpRpe(-1)}
+                    className="h-6 w-7 rounded-md border border-border bg-surface-2 font-mono text-[11px] text-ink-2 hover:text-ink"
+                    aria-label="−1"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => bumpRpe(1)}
+                    className="h-6 w-7 rounded-md border border-border bg-surface-2 font-mono text-[11px] text-ink-2 hover:text-ink"
+                    aria-label="+1"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* SET LOG table */}
-          <div className="mt-5 rounded-xl border border-border bg-card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-              <MicroLabel>SET LOG</MicroLabel>
-              <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
-                {currentExercise.sets} × {currentExercise.reps}
-              </span>
-            </div>
-            {setRows.map((r, i) => (
+            <button
+              type="button"
+              onClick={handleSaveSet}
+              disabled={saving}
+              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-[10px] bg-lime px-4 py-3.5 text-sm font-bold text-bg transition hover:bg-lime/90 disabled:opacity-60"
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Check className="size-4" />
+              )}
+              <span>{t("saveSet")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Set log card */}
+        <div className="mt-4 overflow-hidden rounded-xl border border-border bg-surface-1">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">
+              SET LOG
+            </span>
+            <span className="font-mono text-[11px] tabular-nums text-ink-3">
+              {currentExercise.sets} × {currentExercise.reps}
+            </span>
+          </div>
+          {setRows.map((r, i) => {
+            const isLast = i === setRows.length - 1;
+            const inkClass = r.status === "next" ? "text-ink-3" : "text-ink";
+            return (
               <div
                 key={r.setNum}
-                className={`grid grid-cols-[32px_1fr_1fr_1fr_72px] items-center px-4 py-2.5 font-mono text-[12px] ${
-                  i < setRows.length - 1 ? "border-b border-border" : ""
-                } ${r.status === "now" ? "bg-primary/[0.04]" : ""}`}
+                className={`grid items-center px-4 py-3.5 font-mono text-[13px] tabular-nums ${
+                  isLast ? "" : "border-b border-border"
+                } ${r.status === "now" ? "bg-lime/5" : ""}`}
+                style={{ gridTemplateColumns: "40px 1fr 1fr 1fr 80px" }}
               >
                 <span
-                  className={`text-[14px] font-bold ${
+                  className={`text-[16px] font-bold ${
                     r.status === "next" ? "text-ink-3" : "text-ink"
                   }`}
                 >
                   #{r.setNum}
                 </span>
-                <span className={r.status === "next" ? "text-ink-3" : "text-ink"}>
-                  {r.status === "now"
-                    ? `${weightInput || "—"}${weightInput ? " kg" : ""}`
-                    : r.status === "done"
-                      ? "—"
-                      : "—"}
+                <span className={inkClass}>
+                  {r.weight != null ? `${r.weight}kg` : "—"}
                 </span>
-                <span className={r.status === "next" ? "text-ink-3" : "text-ink"}>
-                  {r.status === "now"
-                    ? `${repsInput || "—"}${repsInput ? " rep" : ""}`
-                    : "—"}
+                <span className={inkClass}>
+                  {r.reps != null ? `${r.reps} rep` : "—"}
                 </span>
-                <span className={r.status === "next" ? "text-ink-3" : "text-ink"}>
-                  {r.status === "now" && rpeInput > 0
-                    ? `@${rpeInput}`
-                    : "—"}
+                <span className={inkClass}>
+                  {r.rpe != null ? `@${r.rpe}` : "—"}
                 </span>
-                <Chip
-                  variant={
-                    r.status === "done"
-                      ? "good"
-                      : r.status === "now"
-                        ? "accent"
-                        : "neutral"
-                  }
-                  className="justify-self-end"
-                >
-                  {r.status === "done"
-                    ? t("doneSet")
-                    : r.status === "now"
-                      ? t("currentSet")
-                      : t("upNext").toUpperCase().slice(0, 4)}
-                </Chip>
+                <span className="justify-self-end">
+                  {r.status === "done" ? (
+                    <Chip variant="good">DONE</Chip>
+                  ) : r.status === "now" ? (
+                    <span className="inline-flex h-5 items-center rounded-[3px] border border-transparent bg-lime/20 px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-lime">
+                      NOW
+                    </span>
+                  ) : (
+                    <Chip variant="neutral">NEXT</Chip>
+                  )}
+                </span>
               </div>
-            ))}
-          </div>
-
-          {/* Notes */}
-          {ex.notes && (
-            <p className="mt-4 text-sm text-ink-3 leading-relaxed">
-              {ex.notes}
-            </p>
-          )}
-
-          {/* Video link */}
-          {ex.video_url && (
-            <a
-              href={ex.video_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-2 hover:bg-surface-3"
-            >
-              <Play className="size-3" /> Video
-            </a>
-          )}
-        </>
-      )}
-
-      {/* Up next */}
-      {currentExIdx + 1 < totalExercises && (
-        <div className="mt-7">
-          <MicroLabel>{t("upNext")}</MicroLabel>
-          <ul className="mt-2 space-y-1">
-            {exercises.slice(currentExIdx + 1, currentExIdx + 4).map((pe, i) => (
-              <li
-                key={pe.id}
-                className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-mono text-[10px] text-ink-3 shrink-0">
-                    {(currentExIdx + 2 + i).toString().padStart(2, "0")}
-                  </span>
-                  <span className="text-sm text-ink truncate">
-                    {pe.exercises.name}
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-ink-3">
-                  {pe.sets} × {pe.reps}
-                </span>
-              </li>
-            ))}
-          </ul>
+            );
+          })}
         </div>
-      )}
+
+        {/* Rest timer (only while resting) */}
+        {showRest && (
+          <RestTimerCard
+            seconds={restTarget}
+            storageKey={`rest-${sessionId}-${currentExercise.id}-${currentSetNum}`}
+            onDone={handleRestDone}
+          />
+        )}
+
+        {/* Up next */}
+        {upcoming.length > 0 && (
+          <div className="mt-4">
+            <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+              {t("upNext").toUpperCase()}
+            </div>
+            <ul className="space-y-1.5">
+              {upcoming.map((pe, i) => {
+                const n = (currentExIdx + 2 + i).toString().padStart(2, "0");
+                const meta = `${pe.sets} × ${pe.reps}${
+                  pe.rpe ? ` @${pe.rpe}` : ""
+                }`;
+                return (
+                  <li
+                    key={pe.id}
+                    className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-3"
+                  >
+                    <span className="w-6 shrink-0 font-mono text-[14px] font-bold tabular-nums text-ink-3">
+                      {n}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-ink">
+                        {pe.exercises.name}
+                      </div>
+                      <div className="mt-0.5 font-mono text-[11px] tabular-nums text-ink-3">
+                        {meta}
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-ink-3">›</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* Bottom action — finish session */}
+        <Button
+          variant="outline"
+          size="lg"
+          className="mt-5 w-full"
+          disabled={saving}
+          onClick={handleFinishWorkout}
+        >
+          {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+          {t("finishWorkout")}
+        </Button>
+      </div>
     </div>
   );
 }

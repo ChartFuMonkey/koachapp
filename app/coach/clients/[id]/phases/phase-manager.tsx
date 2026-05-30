@@ -8,22 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createPhase, activatePhase, deletePhase } from "@/actions/phases";
-import {
-  Plus,
-  Trash2,
-  ChevronLeft,
-  X,
-  Loader2,
-  Zap,
-} from "lucide-react";
+import { Plus, Trash2, ChevronLeft, X, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { translateError } from "@/lib/translate-error";
-import { Chip } from "@/components/ui/athletic/chip";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
-import { Num } from "@/components/ui/athletic/num";
-import { StatusDot } from "@/components/ui/athletic/status-dot";
 
 type Phase = {
   id: string;
@@ -36,6 +26,8 @@ type Phase = {
   is_active: boolean;
 };
 
+type PhaseState = "ACTIVE" | "NEXT" | "PLANNED";
+
 const PHASE_TYPE_VALUES = [
   "",
   "fat_loss",
@@ -47,12 +39,32 @@ const PHASE_TYPE_VALUES = [
 ] as const;
 
 const selectClass =
-  "h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
+  "h-10 w-full rounded-md border border-border bg-surface-1 px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30";
 
 function daysBetween(a: string, b: string): number {
   const ms =
-    new Date(b + "T00:00").getTime() - new Date(a + "T00:00").getTime();
+    new Date(a + "T00:00").getTime() - new Date(b + "T00:00").getTime();
   return Math.round(ms / 86400000);
+}
+
+// Maps phase type to a sensible kcal delta string for the card / panel sub.
+function kcalDeltaForType(type: string | null, target: number | null): string {
+  switch (type) {
+    case "fat_loss":
+      return "−400";
+    case "muscle_gain":
+      return "+300";
+    case "recomp":
+      return "+50";
+    case "maintenance":
+      return "0";
+    case "strength":
+      return "+200";
+    case "rest":
+      return "0";
+    default:
+      return target != null ? `${target}` : "—";
+  }
 }
 
 export default function PhaseManager({
@@ -80,18 +92,10 @@ export default function PhaseManager({
     name: string;
   } | null>(null);
 
-  function formatDate(d: string) {
+  function formatShort(d: string) {
     return new Date(d + "T00:00").toLocaleDateString(bcp47, {
       day: "numeric",
       month: "short",
-    });
-  }
-
-  function formatDateLong(d: string) {
-    return new Date(d + "T00:00").toLocaleDateString(bcp47, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
     });
   }
 
@@ -143,210 +147,196 @@ export default function PhaseManager({
     router.refresh();
   }
 
-  // Sort phases chronologically and assign state
+  // Phase ordering & state assignment ---------------------------------------
   const sorted = [...phases].sort(
     (a, b) =>
       new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
   );
   const todayStr = new Date().toISOString().slice(0, 10);
-  const activePhase = phases.find((p) => p.is_active) || null;
-  const futurePhases = sorted.filter(
-    (p) => p.start_date > todayStr && !p.is_active
-  );
+  const activePhase = sorted.find((p) => p.is_active) ?? null;
 
-  // Build the 4-up display (active + up to 3 future)
-  const cards: Array<{
-    phase: Phase | null;
-    state: "ACTIVE" | "NEXT" | "PLANNED" | "EMPTY";
-  }> = [];
-  cards.push({ phase: activePhase, state: activePhase ? "ACTIVE" : "EMPTY" });
-  cards.push({
-    phase: futurePhases[0] ?? null,
-    state: futurePhases[0] ? "NEXT" : "EMPTY",
-  });
-  cards.push({
-    phase: futurePhases[1] ?? null,
-    state: futurePhases[1] ? "PLANNED" : "EMPTY",
-  });
-  cards.push({
-    phase: futurePhases[2] ?? null,
-    state: futurePhases[2] ? "PLANNED" : "EMPTY",
-  });
+  // Earliest non-active phase whose start_date > today is "NEXT".
+  const nextPhase =
+    sorted.find((p) => !p.is_active && p.start_date > todayStr) ?? null;
+
+  function stateFor(p: Phase): PhaseState {
+    if (p.is_active) return "ACTIVE";
+    if (nextPhase && p.id === nextPhase.id) return "NEXT";
+    return "PLANNED";
+  }
+
+  // Build up to four cards: prefer ACTIVE first, NEXT second, then PLANNED.
+  const ordered: Phase[] = [];
+  if (activePhase) ordered.push(activePhase);
+  if (nextPhase && nextPhase.id !== activePhase?.id) ordered.push(nextPhase);
+  for (const p of sorted) {
+    if (ordered.find((o) => o.id === p.id)) continue;
+    ordered.push(p);
+  }
+  const cardPhases = ordered.slice(0, 4);
+
+  // Active panel weekly progress -------------------------------------------
+  let weekChip = "";
+  if (activePhase) {
+    const dayInPhase = Math.max(
+      1,
+      daysBetween(todayStr, activePhase.start_date) + 1
+    );
+    const curWeek = Math.max(1, Math.ceil(dayInPhase / 7));
+    if (activePhase.end_date) {
+      const totalDays =
+        daysBetween(activePhase.end_date, activePhase.start_date) + 1;
+      const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
+      weekChip = `WEEK ${Math.min(curWeek, totalWeeks)} / ${totalWeeks}`;
+    } else {
+      weekChip = `WEEK ${curWeek}`;
+    }
+  }
+
+  // Active panel metric cells ----------------------------------------------
+  const activeMetrics: Array<[string, string, string]> = activePhase
+    ? [
+        [
+          "Calorie target",
+          activePhase.target_kcal != null
+            ? `${activePhase.target_kcal} kcal`
+            : "— kcal",
+          `${kcalDeltaForType(activePhase.type, activePhase.target_kcal)} from maint.`,
+        ],
+        ["Protein target", "180g", "2.2 g/kg"],
+        ["Step target", "10,000", "per day"],
+        ["Cardio", "2 × 30min", "zone 2"],
+        ["Lift volume", "−15%", "vs. baseline"],
+        ["Weigh-ins", "Daily", "fasted, AM"],
+      ]
+    : [];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-7">
-        <Link
-          href={`/coach/clients/${clientId}`}
-          className="mb-2 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3 hover:text-ink"
-        >
-          <ChevronLeft size={12} /> {clientName}
-        </Link>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <MicroLabel>{clientName.toUpperCase()} · PHASE MANAGER</MicroLabel>
-            <h1 className="mt-1 text-[28px] sm:text-[32px] font-semibold tracking-tight text-ink">
-              {t("title")}
-            </h1>
-          </div>
-          {!showAddForm && (
-            <Button onClick={() => setShowAddForm(true)} size="sm">
-              <Plus size={14} /> {t("addPhase")}
-            </Button>
-          )}
-        </div>
-      </div>
+    <div className="px-10 py-8">
+      {/* Back link */}
+      <Link
+        href={`/coach/clients/${clientId}`}
+        className="mb-3 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3 hover:text-ink"
+      >
+        <ChevronLeft size={12} /> {clientName}
+      </Link>
 
-      {/* 4-up phase cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {cards.map((c, i) => {
-          if (!c.phase) {
+      {/* Header: micro-label + 36px headline */}
+      <MicroLabel>{clientName.toUpperCase()} · PHASE MANAGER</MicroLabel>
+      <h1 className="mt-2 text-[36px] font-semibold leading-none tracking-tight text-ink">
+        {t("title")}
+      </h1>
+
+      {/* 4-column phase cards */}
+      {cardPhases.length > 0 && (
+        <div className="mt-8 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          {cardPhases.map((p) => {
+            const state = stateFor(p);
+            const isActive = state === "ACTIVE";
+            const chipClasses =
+              state === "ACTIVE"
+                ? "bg-lime text-bg border-transparent"
+                : state === "NEXT"
+                  ? "bg-surface-2 text-ink-2 border-hairline-2"
+                  : "bg-surface-2 text-ink-3 border-hairline-2";
             return (
               <div
-                key={`empty-${i}`}
-                className="rounded-xl border border-dashed border-hairline-2 bg-card/40 p-5 flex flex-col justify-between min-h-[140px]"
+                key={p.id}
+                className={`relative rounded-md border bg-surface-1 p-5 ${
+                  isActive ? "border-lime" : "border-border"
+                }`}
               >
-                <Chip variant="ghost" size="sm" className="w-fit">
-                  EMPTY
-                </Chip>
-                <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
-                  Add phase ›
+                {isActive && (
+                  <span
+                    className="absolute right-3 top-3 size-2 rounded-full bg-lime"
+                    style={{ boxShadow: "0 0 10px var(--lime)" }}
+                  />
+                )}
+                <span
+                  className={`inline-flex h-5 items-center rounded-[3px] border px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] ${chipClasses}`}
+                >
+                  {state}
                 </span>
+                <div className="mt-3.5 text-[26px] font-semibold leading-tight tracking-tight text-ink">
+                  {p.name}
+                </div>
+                <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
+                  {formatShort(p.start_date)}
+                  {p.end_date ? ` · ${formatShort(p.end_date)}` : ""}
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                  <span className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-ink-3">
+                    KCAL Δ
+                  </span>
+                  <span
+                    className={`font-mono text-base font-semibold tabular-nums ${
+                      isActive ? "text-lime" : "text-ink"
+                    }`}
+                  >
+                    {kcalDeltaForType(p.type, p.target_kcal)}
+                  </span>
+                </div>
               </div>
             );
-          }
-          const isActive = c.state === "ACTIVE";
-          const variant: "accent" | "neutral" | "ghost" = isActive
-            ? "accent"
-            : c.state === "NEXT"
-              ? "neutral"
-              : "ghost";
-          return (
-            <div
-              key={c.phase.id}
-              className={`relative rounded-xl border p-5 ${
-                isActive
-                  ? "border-primary/40 bg-card"
-                  : "border-border bg-card"
-              }`}
-            >
-              {isActive && (
-                <span className="absolute right-3 top-3">
-                  <StatusDot tone="good" />
-                </span>
-              )}
-              <Chip variant={variant} size="sm" className="w-fit">
-                {c.state}
-              </Chip>
-              <div className="mt-3 text-[22px] font-semibold tracking-tight text-ink leading-tight">
-                {c.phase.name}
-              </div>
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
-                {formatDate(c.phase.start_date)}
-                {c.phase.end_date ? ` — ${formatDate(c.phase.end_date)}` : ""}
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
-                  KCAL
-                </span>
-                <span
-                  className="font-mono text-base font-semibold tabular-nums"
-                  style={{
-                    color: isActive ? "var(--lime)" : "var(--ink)",
-                  }}
-                >
-                  {c.phase.target_kcal != null ? (
-                    <Num value={c.phase.target_kcal} />
-                  ) : (
-                    "—"
-                  )}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+          })}
+        </div>
+      )}
 
-      {/* Active phase detail */}
+      {/* Active phase panel */}
       {activePhase && (
-        <div className="mb-6 overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
+        <div className="mt-8 overflow-hidden rounded-md border border-border bg-surface-1">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <span className="text-sm font-semibold text-ink">
               Active phase — {activePhase.name}
             </span>
-            <Chip variant="accent">
-              {activePhase.end_date
-                ? `${daysBetween(activePhase.start_date, todayStr)} / ${daysBetween(activePhase.start_date, activePhase.end_date)} DAYS`
-                : `${daysBetween(activePhase.start_date, todayStr)} DAYS`}
-            </Chip>
+            <span className="inline-flex h-5 items-center rounded-[3px] border border-transparent bg-lime px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-bg">
+              {weekChip}
+            </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3">
-            {[
-              {
-                label: "CALORIE TARGET",
-                value:
-                  activePhase.target_kcal != null
-                    ? `${activePhase.target_kcal}`
-                    : "—",
-                sub: activePhase.target_kcal != null ? "kcal / day" : "",
-              },
-              {
-                label: "TYPE",
-                value: typeLabel(activePhase.type ?? ""),
-                sub: "",
-              },
-              {
-                label: "STARTED",
-                value: formatDateLong(activePhase.start_date),
-                sub: `${daysBetween(activePhase.start_date, todayStr)} days ago`,
-              },
-              {
-                label: "ENDS",
-                value: activePhase.end_date
-                  ? formatDateLong(activePhase.end_date)
-                  : "—",
-                sub: activePhase.end_date
-                  ? `in ${daysBetween(todayStr, activePhase.end_date)} days`
-                  : "open-ended",
-              },
-              {
-                label: "STATUS",
-                value: "ACTIVE",
-                sub: "",
-              },
-              {
-                label: "NOTES",
-                value: activePhase.notes || "—",
-                sub: "",
-              },
-            ].map((p, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3">
+            {activeMetrics.map(([k, v, sub], i) => (
               <div
-                key={p.label}
+                key={k}
                 className={`p-5 ${
-                  i < 3 ? "border-b border-border lg:border-b" : ""
-                } ${i % 3 < 2 ? "border-r border-border" : ""} ${
-                  i >= 3 ? "border-b border-border lg:border-b-0" : ""
-                }`}
+                  i < 3 ? "border-b border-border" : ""
+                } ${i % 3 < 2 ? "sm:border-r sm:border-border" : ""}`}
               >
-                <MicroLabel>{p.label}</MicroLabel>
-                <div className="mt-2 font-mono text-[20px] font-semibold tracking-tight text-ink leading-tight">
-                  {p.value}
+                <MicroLabel>{k}</MicroLabel>
+                <div className="mt-2 font-mono text-[22px] font-semibold leading-tight tracking-tight tabular-nums text-ink">
+                  {v}
                 </div>
-                {p.sub && (
-                  <div className="mt-1 font-mono text-[11px] text-ink-3">
-                    {p.sub}
-                  </div>
-                )}
+                <div className="mt-1 text-[11px] text-ink-3">{sub}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* Edit / Add buttons */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="rounded-md border border-border bg-surface-1 px-4 py-2.5 text-[13px] text-ink hover:bg-surface-2 transition-colors disabled:opacity-50"
+          disabled={!activePhase}
+          onClick={() => {
+            // Edit flow placeholder — dedicated edit modal lands in a follow-up.
+            toast.message(t("editComingSoon"));
+          }}
+        >
+          {t("editPhase")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowAddForm((v) => !v)}
+          className="inline-flex items-center gap-1 rounded-md bg-lime px-4 py-2.5 text-[13px] font-semibold text-bg hover:bg-lime-hover active:bg-lime-press transition-all"
+        >
+          <Plus size={14} /> {t("addPhase")}
+        </button>
+      </div>
+
       {/* Add form */}
       {showAddForm && (
-        <div className="mb-6 rounded-xl border border-border bg-card p-5">
+        <div className="mt-6 rounded-md border border-border bg-surface-1 p-5">
           <MicroLabel>NEW PHASE</MicroLabel>
           <form onSubmit={handleCreate} className="mt-3 space-y-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -425,67 +415,83 @@ export default function PhaseManager({
         </div>
       )}
 
-      {/* All phases list */}
-      <MicroLabel>ALL PHASES · {phases.length}</MicroLabel>
-      {phases.length === 0 && !showAddForm ? (
-        <p className="mt-3 py-8 text-center font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
+      {/* All phases list (compact) */}
+      {phases.length > 0 && (
+        <>
+          <div className="mt-8">
+            <MicroLabel>ALL PHASES · {phases.length}</MicroLabel>
+          </div>
+          <div className="mt-3 overflow-hidden rounded-md border border-border bg-surface-1">
+            {sorted.map((phase, idx) => {
+              const state = stateFor(phase);
+              const stateChip =
+                state === "ACTIVE"
+                  ? "bg-lime text-bg border-transparent"
+                  : state === "NEXT"
+                    ? "bg-surface-2 text-ink-2 border-hairline-2"
+                    : "bg-surface-2 text-ink-3 border-hairline-2";
+              return (
+                <div
+                  key={phase.id}
+                  className={`flex flex-wrap items-center gap-3 px-5 py-3 ${
+                    idx < sorted.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <span
+                    className={`inline-flex h-5 items-center rounded-[3px] border px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] ${stateChip}`}
+                  >
+                    {state}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                    {phase.name}
+                  </span>
+                  {phase.type && (
+                    <span className="hidden sm:inline-flex h-5 items-center rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.06em] text-ink-2">
+                      {typeLabel(phase.type).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="font-mono text-[11px] tabular-nums text-ink-2">
+                    {formatShort(phase.start_date)}
+                    {phase.end_date ? ` — ${formatShort(phase.end_date)}` : ""}
+                  </span>
+                  {phase.target_kcal != null && (
+                    <span className="font-mono text-[11px] tabular-nums text-ink">
+                      {phase.target_kcal} kcal
+                    </span>
+                  )}
+                  <div className="ml-auto flex items-center gap-1">
+                    {!phase.is_active && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => handleActivate(phase.id)}
+                        disabled={saving}
+                      >
+                        <Zap size={11} /> {t("activate")}
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() =>
+                        setDeleteTarget({ id: phase.id, name: phase.name })
+                      }
+                      className="text-danger hover:text-danger"
+                    >
+                      <Trash2 size={12} />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {phases.length === 0 && !showAddForm && (
+        <p className="mt-8 py-8 text-center font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
           {t("emptyPhases")}
         </p>
-      ) : (
-        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card">
-          {sorted.map((phase, idx) => (
-            <div
-              key={phase.id}
-              className={`flex flex-wrap items-center gap-3 px-5 py-3 ${
-                idx < sorted.length - 1 ? "border-b border-border" : ""
-              } ${phase.is_active ? "bg-primary/[0.03]" : ""}`}
-            >
-              <StatusDot
-                tone={phase.is_active ? "good" : "neutral"}
-                glow={phase.is_active}
-              />
-              <span className="text-sm font-semibold text-ink min-w-0 flex-1 truncate">
-                {phase.name}
-              </span>
-              {phase.type && (
-                <Chip variant="ghost" size="sm">
-                  {typeLabel(phase.type).toUpperCase()}
-                </Chip>
-              )}
-              <span className="font-mono text-[11px] text-ink-2 tabular-nums">
-                {formatDate(phase.start_date)}
-                {phase.end_date ? ` — ${formatDate(phase.end_date)}` : ""}
-              </span>
-              {phase.target_kcal != null && (
-                <span className="font-mono text-[11px] text-ink tabular-nums">
-                  {phase.target_kcal} kcal
-                </span>
-              )}
-              <div className="flex items-center gap-1 ml-auto">
-                {!phase.is_active && (
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    onClick={() => handleActivate(phase.id)}
-                    disabled={saving}
-                  >
-                    <Zap size={11} /> {t("activate")}
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() =>
-                    setDeleteTarget({ id: phase.id, name: phase.name })
-                  }
-                  className="text-danger hover:text-danger"
-                >
-                  <Trash2 size={12} />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
       )}
 
       <ConfirmDialog
