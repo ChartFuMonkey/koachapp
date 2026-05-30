@@ -2,8 +2,10 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -69,20 +71,26 @@ export default function InstallGate({ children }: { children: ReactNode }) {
     }
   }, [pathname, router]);
 
-  const promptInstall: InstallPromptValue["promptInstall"] = async () => {
-    if (!deferredPrompt) return "unavailable";
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
-    return outcome;
-  };
+  const promptInstall = useCallback<InstallPromptValue["promptInstall"]>(
+    async () => {
+      if (!deferredPrompt) return "unavailable";
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      return outcome;
+    },
+    [deferredPrompt]
+  );
+
+  const value = useMemo<InstallPromptValue>(
+    () => ({ canPrompt: !!deferredPrompt, installed, promptInstall }),
+    [deferredPrompt, installed, promptInstall]
+  );
 
   return (
-    <InstallPromptContext.Provider
-      value={{ canPrompt: !!deferredPrompt, installed, promptInstall }}
-    >
+    <InstallPromptContext.Provider value={value}>
       {redirecting ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg">
+        <div role="status" aria-label="Loading" className="fixed inset-0 z-50 flex items-center justify-center bg-bg">
           <div className="flex size-12 items-center justify-center rounded-xl bg-lime text-bg text-xl font-bold">
             K
           </div>
