@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronUp, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
-import { Chip } from "@/components/ui/athletic/chip";
 import { EmptyState } from "@/components/ui/athletic/empty-state";
 import { getActiveProgram, createWorkoutSession } from "@/actions/workout";
 import { ExerciseDemo } from "@/components/exercise-demo";
