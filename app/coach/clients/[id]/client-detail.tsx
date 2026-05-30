@@ -342,7 +342,7 @@ export default function ClientDetail({
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-4 px-10 py-6">
+      <div className="flex flex-wrap items-center gap-4 px-4 sm:px-6 lg:px-10 py-6">
         <Avatar name={fullName} size="lg" />
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -393,7 +393,7 @@ export default function ClientDetail({
         </div>
       </div>
 
-      <div className="px-10 pb-10">
+      <div className="px-4 sm:px-6 lg:px-10 pb-10">
         {/* Macro ring grid */}
         <div className="mb-3 flex items-center justify-between">
           <MicroLabel>~/Latest snapshot</MicroLabel>
@@ -686,7 +686,8 @@ function LogsTab({
     );
   }
   return (
-    <>
+    <div className="-mx-4 overflow-x-auto sm:mx-0">
+      <div className="min-w-[560px]">
       <div className="grid grid-cols-[1fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr_0.7fr] items-center px-5 py-2.5 border-b border-border font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
         <span>{t("colDate")}</span>
         <span>{t("colWeight")}</span>
@@ -721,7 +722,8 @@ function LogsTab({
           <CellNum value={l.sleep_h as number | null} decimals={1} />
         </div>
       ))}
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -766,7 +768,8 @@ function CheckinsTab({
     );
   }
   return (
-    <>
+    <div className="-mx-4 overflow-x-auto sm:mx-0">
+      <div className="min-w-[520px]">
       <div className="grid grid-cols-[1fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr] items-center px-5 py-2.5 border-b border-border font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
         <span>{t("colDate")}</span>
         <span>{t("ciEnergy")}</span>
@@ -799,7 +802,8 @@ function CheckinsTab({
           <CellNum value={ci.appetite as number | null} />
         </div>
       ))}
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -820,7 +824,8 @@ function MeasurementsTab({
     );
   }
   return (
-    <>
+    <div className="-mx-4 overflow-x-auto sm:mx-0">
+      <div className="min-w-[760px]">
       <div className="grid grid-cols-[1fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr_0.6fr] items-center px-5 py-2.5 border-b border-border font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
         <span>{t("colDate")}</span>
         <span>{t("colNeck")}</span>
@@ -861,7 +866,8 @@ function MeasurementsTab({
           <CellNum value={m.body_fat_pct as number | null} decimals={1} />
         </div>
       ))}
-    </>
+      </div>
+    </div>
   );
 }
 

@@ -17,7 +17,7 @@ export default async function ProgramBuilderPage({
       .from("workout_programs")
       .select(
         `
-        id, name, is_active, created_at,
+        id, name, is_active, created_at, goal, total_weeks, coach_note,
         program_days (
           id, day_label, sort_order,
           program_exercises (

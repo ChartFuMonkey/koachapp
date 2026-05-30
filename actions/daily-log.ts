@@ -100,7 +100,7 @@ export async function getClientTargets() {
   const { data, error } = await supabase
     .from("clients")
     .select(
-      "first_name, target_calories, target_protein_g, target_carbs_g, target_fat_g, target_steps, target_sleep_h"
+      "target_calories, target_protein_g, target_carbs_g, target_fat_g, target_steps, target_sleep_h"
     )
     .eq("id", user.id)
     .maybeSingle();

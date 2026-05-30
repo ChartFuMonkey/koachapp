@@ -14,7 +14,8 @@
       "seeProgress": "Napredak",
       "setsSuffix": "setova",
       "training": "Trening",
-      "workoutFallback": "Trening"
+      "workoutFallback": "Trening",
+      "setsLogged": "Zabilježene serije"
     },
     "checkin": {
       "adherenceDietLabel": "Usklađenost s prehranom (%)",
@@ -47,7 +48,8 @@
       "errors": {
         "loadFailed": "Greška pri dohvaćanju prijave.",
         "submitFailed": "Slanje neuspješno. Pokušaj ponovo."
-      }
+      },
+      "weeklyReview": "TJEDNI PREGLED"
     },
     "log": {
       "calories": "Kalorije (kcal)",
@@ -111,6 +113,26 @@
       "errors": {
         "loadFailed": "Greška pri dohvaćanju profila.",
         "updateFailed": "Greška pri ažuriranju profila."
+      },
+      "editProfile": "Uredi profil",
+      "personalDetails": "Osobni podaci",
+      "account": "Račun",
+      "emailLabel": "E-pošta",
+      "heightLabel": "Visina",
+      "genderLabel": "Spol",
+      "edit": {
+        "title": "Uredi profil",
+        "name": "Ime i prezime",
+        "height": "Visina (cm)",
+        "dateOfBirth": "Datum rođenja",
+        "gender": "Spol",
+        "gender_male": "Muški",
+        "gender_female": "Ženski",
+        "gender_other": "Ostalo",
+        "nameRequired": "Unesite svoje ime",
+        "heightInvalid": "Unesite valjanu visinu",
+        "saved": "Profil ažuriran",
+        "saveFailed": "Spremanje nije uspjelo. Pokušajte ponovno."
       }
     },
     "progress": {
@@ -250,7 +272,9 @@
       "signOut": "Odjava",
       "openMenu": "Otvori izbornik",
       "closeMenu": "Zatvori izbornik",
-      "reports": "Izvještaji"
+      "reports": "Izvještaji",
+      "roleLabel": "Trener",
+      "search": "Pretraži"
     },
     "home": {
       "title": "Klijenti",
@@ -265,7 +289,25 @@
       "never": "Nikad",
       "daysSuffix": "{count}/7 dana",
       "active": "Aktivan",
-      "inactive": "Neaktivan"
+      "inactive": "Neaktivan",
+      "search": "Pretraži",
+      "colClient": "Klijent",
+      "colLast": "Zadnji",
+      "colDelta": "7D Δ",
+      "colAdherence": "Pridržavanje",
+      "colRpe": "RPE",
+      "sort": "Poredaj",
+      "sortLastLog": "Zadnji log",
+      "sortAdherence": "Pridržavanje",
+      "sortName": "Ime",
+      "sortDelta": "Težina Δ",
+      "filterAll": "Svi",
+      "filterOnTrack": "Na cilju",
+      "filterAttention": "Pažnja",
+      "filterOverdue": "Kasni",
+      "filterCut": "Rezanje",
+      "filterBulk": "Masa",
+      "filterRecomp": "Rekomp"
     },
     "meals": {
       "title": "Obroci",
@@ -392,7 +434,9 @@
         "nameRequired": "Naziv vježbe obavezan.",
         "duplicateName": "Naziv već postoji.",
         "exerciseInUse": "Vježba je u programu — najprije ukloni iz programa."
-      }
+      },
+      "usedInPrograms": "Korišteno u",
+      "demo": "Demo"
     },
     "mealPlan": {
       "title": "Plan prehrane",
@@ -425,7 +469,8 @@
         "removeMealFailed": "Greška pri uklanjanju obroka iz plana.",
         "addOverrideFailed": "Greška pri dodavanju override-a.",
         "removeOverrideFailed": "Greška pri uklanjanju override-a."
-      }
+      },
+      "slotLabel": "Obrok {number}"
     },
     "phases": {
       "title": "Phase Manager",
@@ -465,8 +510,27 @@
         "activateFailed": "Greška pri aktivaciji faze.",
         "deactivateFailed": "Greška pri deaktivaciji faza.",
         "nameRequired": "Naziv faze obavezan.",
-        "startDateRequired": "Datum početka obavezan."
-      }
+        "startDateRequired": "Datum početka obavezan.",
+        "updateFailed": "Ažuriranje faze nije uspjelo."
+      },
+      "phaseUpdatedToast": "Faza ažurirana",
+      "newPhase": "Nova faza",
+      "editingPhase": "Uređivanje — {name}",
+      "noTargetsSet": "Za ovu fazu još nisu postavljeni ciljevi. Koristite Uredi za dodavanje.",
+      "mCalories": "Kalorije",
+      "mProtein": "Proteini",
+      "mSteps": "Koraci",
+      "mCardio": "Kardio",
+      "mLiftVolume": "Volumen treninga",
+      "mWeighins": "Vaganja",
+      "targetProteinLabel": "Cilj proteina (g)",
+      "targetStepsLabel": "Cilj koraka",
+      "weighinLabel": "Vaganja",
+      "weighinPlaceholder": "npr. Dnevno, natašte ujutro",
+      "cardioLabel": "Kardio",
+      "cardioPlaceholder": "npr. 2 × 30 min zona 2",
+      "liftVolumeLabel": "Volumen treninga",
+      "liftVolumePlaceholder": "npr. −15% od baze"
     },
     "program": {
       "title": "Program Builder",
@@ -515,7 +579,22 @@
         "addExerciseFailed": "Greška pri dodavanju vježbe.",
         "removeExerciseFailed": "Greška pri uklanjanju vježbe.",
         "reorderFailed": "Greška pri promjeni redoslijeda."
-      }
+      },
+      "duplicate": "Dupliciraj",
+      "settings": "Postavke",
+      "duplicatedToast": "Program dupliciran",
+      "duplicateFailed": "Dupliciranje programa nije uspjelo.",
+      "settingsSaved": "Program ažuriran",
+      "settingsSaveFailed": "Spremanje postavki nije uspjelo.",
+      "goalLabel": "Cilj",
+      "goalPlaceholder": "npr. Hipertrofija",
+      "totalWeeksLabel": "Ukupno tjedana",
+      "coachNoteLabel": "Bilješka trenera",
+      "coachNotePlaceholder": "Bilješke za ovaj program…",
+      "addCoachNote": "Dodaj bilješku trenera",
+      "weeksChip": "Blok od {count} tj.",
+      "daysLabel": "Dani",
+      "noDaysYet": "Još nema dana"
     },
     "clients": {
       "detail": {
@@ -642,7 +721,8 @@
     "password": "Lozinka",
     "save": "Spremi",
     "saving": "Spremam…",
-    "yes": "Da"
+    "yes": "Da",
+    "close": "Zatvori"
   },
   "errors": {
     "genericLoad": "Učitavanje neuspješno. Pokušaj ponovo.",
@@ -743,5 +823,10 @@
     "recGeneralPlaceholder": "Općenita poruka / fokus za sljedeći tjedan…",
     "downloadPdf": "Preuzmi PDF",
     "generatedOn": "Generirano {date}"
+  },
+  "offline": {
+    "title": "Bez veze ste",
+    "body": "Koach treba vezu za ovo. Tvoji uneseni podaci su spremljeni i sinkronizirat će se kad se vratiš online.",
+    "hint": "Provjeri vezu"
   }
 }

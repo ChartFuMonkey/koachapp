@@ -86,19 +86,20 @@ export default function ProgressPage() {
   const stepsData = chartData.filter((d) => d.steps != null);
 
   return (
-    <div className="px-5 pt-5 pb-6">
+    <div className="px-5 md:px-8 pt-5 pb-6">
       <MicroLabel>~/Progress</MicroLabel>
-      <h1 className="mt-1 mb-5 text-[28px] font-semibold leading-tight text-ink tracking-tight">
+      <h1 className="mt-1 mb-5 text-[28px] md:text-[32px] font-semibold leading-tight text-ink tracking-tight">
         {t("title")}
       </h1>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3.5">
       {/* Weight */}
-      <section className="mb-5 rounded-xl border border-border bg-card p-5">
+      <section className="rounded-xl border border-border bg-card p-5 lg:col-span-2 xl:col-span-1">
         <MicroLabel>{t("weightTitle").toUpperCase()}</MicroLabel>
         {weightData.length < 3 ? (
           <NoData text={t("noData")} />
         ) : (
-          <div className="mt-3 h-[180px]">
+          <div className="mt-3 h-[180px] lg:h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={weightData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
@@ -128,12 +129,12 @@ export default function ProgressPage() {
       </section>
 
       {/* Calories */}
-      <section className="mb-5 rounded-xl border border-border bg-card p-5">
+      <section className="rounded-xl border border-border bg-card p-5">
         <MicroLabel>{t("caloriesTitle").toUpperCase()}</MicroLabel>
         {caloriesData.length < 3 ? (
           <NoData text={t("noData")} />
         ) : (
-          <div className="mt-3 h-[180px]">
+          <div className="mt-3 h-[180px] lg:h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={caloriesData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" vertical={false} />
@@ -161,7 +162,7 @@ export default function ProgressPage() {
         {stepsData.length < 3 ? (
           <NoData text={t("noData")} />
         ) : (
-          <div className="mt-3 h-[180px]">
+          <div className="mt-3 h-[180px] lg:h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stepsData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" vertical={false} />
@@ -179,6 +180,7 @@ export default function ProgressPage() {
           </div>
         )}
       </section>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todayCET } from "@/lib/date";
 
-const ALLOWED_ANGLES = ["front", "side", "back"] as const;
+const ALLOWED_ANGLES = ["front", "side", "back", "other"] as const;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 

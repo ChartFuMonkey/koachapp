@@ -171,12 +171,12 @@ export default function PhotosPage() {
   });
 
   return (
-    <div className="px-5 pt-5 pb-6">
+    <div className="px-5 md:px-8 pt-5 pb-6">
       <MicroLabel>
         PROGRESS · {sortedDates.length}{" "}
         {sortedDates.length === 1 ? "SESSION" : "SESSIONS"}
       </MicroLabel>
-      <h1 className="mt-1 mb-4 text-[28px] font-semibold leading-tight text-ink tracking-tight">
+      <h1 className="mt-1 mb-4 text-[28px] md:text-[32px] font-semibold leading-tight text-ink tracking-tight">
         {t("title")}
       </h1>
 
@@ -239,7 +239,7 @@ export default function PhotosPage() {
       {sessions.length === 0 ? (
         <EmptyState glyph="◐" label={t("addFirstPhoto")} hint="TAP + TO ADD" />
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {sessions.map((session) => (
             <div
               key={session.date}

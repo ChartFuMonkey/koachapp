@@ -29,7 +29,7 @@ export async function getProfile() {
 }
 
 export async function updateProfile(formData: {
-  full_name: string;
+  full_name: string | null;
   height_cm: number | null;
   date_of_birth: string | null;
   gender: string | null;
@@ -45,10 +45,15 @@ export async function updateProfile(formData: {
     return { error: "unauthenticated" };
   }
 
+  const name = (formData.full_name ?? "").trim();
+  if (!name) {
+    return { error: "nameRequired" };
+  }
+
   const { error } = await supabase
     .from("profiles")
     .update({
-      full_name: formData.full_name,
+      full_name: name,
       height_cm: formData.height_cm,
       date_of_birth: formData.date_of_birth,
       gender: formData.gender,

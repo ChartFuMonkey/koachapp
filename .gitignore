@@ -33,9 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# PWA auto-generated files
+# PWA auto-generated files (next-pwa / workbox output — regenerated each build)
 public/sw.js
+public/sw*.js
 public/workbox-*.js
+public/worker-*.js
+public/fallback-*.js
 
 # supabase cli
 supabase/.temp/
