@@ -220,6 +220,8 @@
       "previous": "Prethodno",
       "currentSet": "TRENUTNA",
       "doneSet": "GOTOVO",
+      "demo": "Demo",
+      "description": "Opis",
       "errors": {
         "createSessionFailed": "Greška pri kreiranju sesije.",
         "finishSessionFailed": "Greška pri završavanju treninga.",
@@ -413,6 +415,15 @@
       "difficultyIntermediate": "Srednje",
       "difficultyAdvanced": "Napredno",
       "videoUrlLabel": "Video URL",
+      "videoLabel": "Video",
+      "videoModeLink": "Poveznica",
+      "videoModeUpload": "Učitaj",
+      "videoLinkPlaceholder": "https://youtube.com/…",
+      "videoUploadHint": "Kratki isječak, maks. 50 MB. Za duže videe koristi YouTube poveznicu.",
+      "videoCurrent": "Trenutni video spremljen",
+      "videoRemove": "Ukloni video",
+      "descriptionLabel": "Opis",
+      "descriptionPlaceholder": "Kako izvesti — savjeti, upute (vidljivo klijentu)",
       "notesLabel": "Bilješke",
       "notesPlaceholder": "Savjeti, upute…",
       "saveLabel": "Spremi",
@@ -433,7 +444,10 @@
         "deleteFailed": "Greška pri brisanju vježbe.",
         "nameRequired": "Naziv vježbe obavezan.",
         "duplicateName": "Naziv već postoji.",
-        "exerciseInUse": "Vježba je u programu — najprije ukloni iz programa."
+        "exerciseInUse": "Vježba je u programu — najprije ukloni iz programa.",
+        "videoTooLarge": "Video je prevelik (maks. 50 MB).",
+        "invalidVideoType": "Nepodržan format — koristi MP4, WebM ili MOV.",
+        "videoUploadFailed": "Greška pri učitavanju videa."
       },
       "usedInPrograms": "Korišteno u",
       "demo": "Demo"

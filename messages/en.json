@@ -220,6 +220,8 @@
       "previous": "Previous",
       "currentSet": "CURRENT",
       "doneSet": "DONE",
+      "demo": "Demo",
+      "description": "Description",
       "errors": {
         "createSessionFailed": "Couldn't start session.",
         "finishSessionFailed": "Couldn't finish session.",
@@ -413,6 +415,15 @@
       "difficultyIntermediate": "Intermediate",
       "difficultyAdvanced": "Advanced",
       "videoUrlLabel": "Video URL",
+      "videoLabel": "Video",
+      "videoModeLink": "Link",
+      "videoModeUpload": "Upload",
+      "videoLinkPlaceholder": "https://youtube.com/…",
+      "videoUploadHint": "Short clip, max 50 MB. For longer videos, use a YouTube link.",
+      "videoCurrent": "Current video saved",
+      "videoRemove": "Remove video",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "How to do it — cues, tips (shown to the client)",
       "notesLabel": "Notes",
       "notesPlaceholder": "Cues, tips…",
       "saveLabel": "Save",
@@ -433,7 +444,10 @@
         "deleteFailed": "Couldn't delete exercise.",
         "nameRequired": "Exercise name required.",
         "duplicateName": "Name already exists.",
-        "exerciseInUse": "Exercise is in a program — remove from program first."
+        "exerciseInUse": "Exercise is in a program — remove from program first.",
+        "videoTooLarge": "Video is too large (max 50 MB).",
+        "invalidVideoType": "Unsupported format — use MP4, WebM, or MOV.",
+        "videoUploadFailed": "Couldn't upload video."
       },
       "usedInPrograms": "Used in",
       "demo": "Demo"
