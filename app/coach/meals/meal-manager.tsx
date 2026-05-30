@@ -234,14 +234,14 @@ export default function MealManager({
     : allFoods;
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <MicroLabel>
             ~/MEALS — {initialMeals.length} TEMPLATES
           </MicroLabel>
-          <h1 className="mt-2 text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
+          <h1 className="mt-2 text-[28px] sm:text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
             {t("title")}
           </h1>
         </div>
@@ -304,7 +304,7 @@ export default function MealManager({
       {initialMeals.length === 0 ? (
         <p className="mt-10 py-8 text-center text-ink-3">{t("emptyList")}</p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {initialMeals.map((meal) => {
             const totals = mealTotals(meal.meal_foods);
             const isExpanded = expandedMeals.has(meal.id);

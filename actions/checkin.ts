@@ -36,20 +36,24 @@ export async function getThisWeekCheckin() {
   monday.setDate(now.getDate() - diffToMonday);
   const mondayStr = monday.toISOString().split("T")[0];
 
+  // Uniqueness on checkins is per (client_id, checkin_date), not per week — so
+  // a week can legitimately hold more than one row. Order newest-first and take
+  // one instead of .maybeSingle(), which would throw PGRST116 on >1 match.
   const { data, error } = await supabase
     .from("checkins")
     .select("*")
     .eq("client_id", user.id)
     .gte("checkin_date", mondayStr)
     .lte("checkin_date", todayStr)
-    .maybeSingle();
+    .order("checkin_date", { ascending: false })
+    .limit(1);
 
   if (error) {
     console.error("Checkin fetch error:", error);
     return { error: "loadFailed" };
   }
 
-  return { data };
+  return { data: data?.[0] ?? null };
 }
 
 export async function submitCheckin(formData: CheckinData) {

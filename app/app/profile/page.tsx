@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Loader2, ChevronRight } from "lucide-react";
+import { Loader2, ChevronRight, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -13,6 +13,10 @@ import {
 } from "@/actions/profile";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Num } from "@/components/ui/athletic/num";
+import {
+  EditProfileDialog,
+  type EditableProfile,
+} from "./edit-profile-dialog";
 
 type Profile = {
   full_name: string | null;
@@ -55,6 +59,7 @@ export default function ProfilePage() {
   const [streak, setStreak] = useState<number>(0);
   const [workoutCount, setWorkoutCount] = useState<number>(0);
   const [logCount, setLogCount] = useState<number>(0);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -144,17 +149,26 @@ export default function ProfilePage() {
         .toUpperCase()
     : null;
 
-  const menuItems = [
-    { label: t("targets"), href: "#targets" },
-    { label: t("photosLink"), href: "/app/photos" },
-    { label: t("language"), href: "#language" },
-    { label: t("dateOfBirth"), href: "#dob" },
-  ];
+  const dobText = profile.date_of_birth
+    ? new Intl.DateTimeFormat(bcp47, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(profile.date_of_birth + "T00:00"))
+    : null;
+
+  function genderLabel(g: string | null): string | null {
+    if (!g) return null;
+    if (g === "male" || g === "female" || g === "other") {
+      return t(`edit.gender_${g}`);
+    }
+    return g;
+  }
 
   return (
     <div className="flex flex-col">
       {/* Centered header with glow */}
-      <div className="relative border-b border-border px-5 pt-6 pb-5 text-center overflow-hidden">
+      <div className="relative border-b border-border px-5 md:px-8 pt-6 pb-5 text-center overflow-hidden">
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
@@ -180,10 +194,18 @@ export default function ProfilePage() {
               ATHLETIC OS · SINCE {sinceText}
             </div>
           )}
+          <button
+            type="button"
+            onClick={() => setEditOpen(true)}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-1 px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-1"
+          >
+            <Pencil size={13} />
+            {t("editProfile")}
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 px-5 py-5">
+      <div className="flex flex-col gap-5 px-5 md:px-8 py-5 lg:max-w-[640px] lg:mx-auto lg:w-full">
         {/* 3-stat strip */}
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -266,25 +288,57 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Personal details */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
+              {t("personalDetails")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="font-mono text-[11px] uppercase tracking-[0.06em] text-lime hover:underline"
+            >
+              {tCommon("edit")}
+            </button>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-border bg-surface-1">
+            {[
+              { k: t("emailLabel"), v: profile.email ?? "—" },
+              {
+                k: t("heightLabel"),
+                v: profile.height_cm != null ? `${profile.height_cm} cm` : "—",
+              },
+              { k: t("dateOfBirth"), v: dobText ?? "—" },
+              { k: t("genderLabel"), v: genderLabel(profile.gender) ?? "—" },
+            ].map((row, idx, arr) => (
+              <div
+                key={row.k}
+                className={`flex items-center justify-between px-4 py-3.5 ${
+                  idx < arr.length - 1 ? "border-b border-border" : ""
+                }`}
+              >
+                <span className="text-sm text-ink-2">{row.k}</span>
+                <span className="text-sm text-ink">{row.v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ACCOUNT menu */}
         <div>
           <div className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
-            ACCOUNT
+            {t("account")}
           </div>
           <div className="overflow-hidden rounded-xl border border-border bg-surface-1">
-            {menuItems.map((item, idx) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex items-center justify-between px-4 py-3.5 hover:bg-surface-2/40 transition-colors ${
-                  idx < menuItems.length - 1 ? "border-b border-border" : ""
-                }`}
-              >
-                <span className="text-sm text-ink">{item.label}</span>
-                <ChevronRight size={14} className="text-ink-3" />
-              </Link>
-            ))}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <Link
+              href="/app/photos"
+              className="flex items-center justify-between px-4 py-3.5 hover:bg-surface-2/40 transition-colors border-b border-border"
+            >
+              <span className="text-sm text-ink">{t("photosLink")}</span>
+              <ChevronRight size={14} className="text-ink-3" />
+            </Link>
+            <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-ink">{t("language")}</span>
               <LanguageSwitcher />
             </div>
@@ -305,6 +359,20 @@ export default function ProfilePage() {
           )}
         </button>
       </div>
+
+      <EditProfileDialog
+        open={editOpen}
+        initial={{
+          full_name: profile.full_name,
+          height_cm: profile.height_cm,
+          date_of_birth: profile.date_of_birth,
+          gender: profile.gender,
+        }}
+        onClose={() => setEditOpen(false)}
+        onSaved={(next: EditableProfile) =>
+          setProfile((prev) => (prev ? { ...prev, ...next } : prev))
+        }
+      />
     </div>
   );
 }

@@ -5,10 +5,13 @@ import ExerciseManager from "./exercise-manager";
 export default async function ExerciseDatabasePage() {
   const t = await getTranslations("coach.exercises");
   const tErrors = await getTranslations("errors");
-  const { data, error } = await supabaseAdmin
-    .from("exercises")
-    .select("id, name, muscle_group, equipment, difficulty, notes, video_url")
-    .order("name", { ascending: true });
+  const [{ data, error }, { data: usageRows }] = await Promise.all([
+    supabaseAdmin
+      .from("exercises")
+      .select("id, name, muscle_group, equipment, difficulty, notes, video_url")
+      .order("name", { ascending: true }),
+    supabaseAdmin.from("program_exercises").select("exercise_id"),
+  ]);
 
   if (error) {
     return (
@@ -19,9 +22,16 @@ export default async function ExerciseDatabasePage() {
     );
   }
 
+  // Real "used in N programs" count per exercise.
+  const usageMap: Record<string, number> = {};
+  for (const row of usageRows ?? []) {
+    const id = row.exercise_id as string;
+    if (id) usageMap[id] = (usageMap[id] ?? 0) + 1;
+  }
+
   return (
     <div>
-      <ExerciseManager initialExercises={data ?? []} />
+      <ExerciseManager initialExercises={data ?? []} usageMap={usageMap} />
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { regenerateReport, releaseReport } from "@/actions/reports";
 import { translateError } from "@/lib/translate-error";
-import { ReportMetrics } from "@/components/reports/report-metrics";
+import { ReportView } from "@/components/reports/report-view";
 import { FlagList } from "@/components/reports/flag-list";
 import type { WeeklyReportRow } from "@/lib/reports/types";
 
@@ -26,6 +26,9 @@ export function ReviewForm({
   const published = report.status === "published";
   const [clientSummary, setClientSummary] = useState(report.client_summary ?? "");
   const [coachNote, setCoachNote] = useState(report.coach_note ?? "");
+  const [recTraining, setRecTraining] = useState(report.rec_training ?? "");
+  const [recNutrition, setRecNutrition] = useState(report.rec_nutrition ?? "");
+  const [recGeneral, setRecGeneral] = useState(report.rec_general ?? "");
   const [pending, start] = useTransition();
 
   function onRegenerate() {
@@ -42,7 +45,9 @@ export function ReviewForm({
 
   function onRelease() {
     start(async () => {
-      const res = await releaseReport(report.id, { clientSummary, coachNote });
+      const res = await releaseReport(report.id, {
+        clientSummary, coachNote, recTraining, recNutrition, recGeneral,
+      });
       if (res.error) toast.error(translateError(res.error, tErr, tCommon));
       else {
         toast.success(t("released"));
@@ -107,6 +112,16 @@ export function ReviewForm({
         className="mb-5 w-full rounded-xl border border-border bg-card p-3 text-[14px] text-ink outline-none focus:border-lime disabled:opacity-60"
       />
 
+      <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">🏋️ {t("recTraining")}</label>
+      <textarea value={recTraining} onChange={(e) => setRecTraining(e.target.value)} disabled={published || pending} rows={2}
+        placeholder={t("recTrainingPlaceholder")} className="mb-3 w-full rounded-xl border border-border bg-card p-3 text-[14px] text-ink outline-none focus:border-lime disabled:opacity-60" />
+      <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">🍽️ {t("recNutrition")}</label>
+      <textarea value={recNutrition} onChange={(e) => setRecNutrition(e.target.value)} disabled={published || pending} rows={2}
+        placeholder={t("recNutritionPlaceholder")} className="mb-3 w-full rounded-xl border border-border bg-card p-3 text-[14px] text-ink outline-none focus:border-lime disabled:opacity-60" />
+      <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">💬 {t("recGeneral")}</label>
+      <textarea value={recGeneral} onChange={(e) => setRecGeneral(e.target.value)} disabled={published || pending} rows={2}
+        placeholder={t("recGeneralPlaceholder")} className="mb-5 w-full rounded-xl border border-border bg-card p-3 text-[14px] text-ink outline-none focus:border-lime disabled:opacity-60" />
+
       {!published && (
         <div className="mb-7 flex gap-3">
           <button
@@ -154,7 +169,7 @@ export function ReviewForm({
         </section>
       )}
 
-      <ReportMetrics metrics={report.metrics} locale={locale} />
+      <ReportView report={report} locale={locale} />
     </div>
   );
 }

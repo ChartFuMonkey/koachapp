@@ -14,7 +14,8 @@
       "seeProgress": "Progress",
       "setsSuffix": "sets",
       "training": "Train",
-      "workoutFallback": "Session"
+      "workoutFallback": "Session",
+      "setsLogged": "Sets logged"
     },
     "checkin": {
       "adherenceDietLabel": "Diet adherence (%)",
@@ -47,7 +48,8 @@
       "errors": {
         "loadFailed": "Couldn't load check-in.",
         "submitFailed": "Couldn't send. Retry."
-      }
+      },
+      "weeklyReview": "WEEKLY REVIEW"
     },
     "log": {
       "calories": "Calories (kcal)",
@@ -111,6 +113,26 @@
       "errors": {
         "loadFailed": "Couldn't load profile.",
         "updateFailed": "Couldn't update profile."
+      },
+      "editProfile": "Edit profile",
+      "personalDetails": "Personal details",
+      "account": "Account",
+      "emailLabel": "Email",
+      "heightLabel": "Height",
+      "genderLabel": "Gender",
+      "edit": {
+        "title": "Edit profile",
+        "name": "Full name",
+        "height": "Height (cm)",
+        "dateOfBirth": "Date of birth",
+        "gender": "Gender",
+        "gender_male": "Male",
+        "gender_female": "Female",
+        "gender_other": "Other",
+        "nameRequired": "Please enter your name",
+        "heightInvalid": "Enter a valid height",
+        "saved": "Profile updated",
+        "saveFailed": "Could not save. Please try again."
       }
     },
     "progress": {
@@ -250,7 +272,9 @@
       "signOut": "Sign out",
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
-      "reports": "Reports"
+      "reports": "Reports",
+      "roleLabel": "Coach",
+      "search": "Search"
     },
     "home": {
       "title": "Clients",
@@ -265,7 +289,25 @@
       "never": "Never",
       "daysSuffix": "{count}/7 days",
       "active": "Active",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "search": "Search",
+      "colClient": "Client",
+      "colLast": "Last",
+      "colDelta": "7D Δ",
+      "colAdherence": "Adherence",
+      "colRpe": "RPE",
+      "sort": "Sort",
+      "sortLastLog": "Last log",
+      "sortAdherence": "Adherence",
+      "sortName": "Name",
+      "sortDelta": "Weight Δ",
+      "filterAll": "All",
+      "filterOnTrack": "On track",
+      "filterAttention": "Attention",
+      "filterOverdue": "Overdue",
+      "filterCut": "Cut",
+      "filterBulk": "Bulk",
+      "filterRecomp": "Recomp"
     },
     "meals": {
       "title": "Meals",
@@ -392,7 +434,9 @@
         "nameRequired": "Exercise name required.",
         "duplicateName": "Name already exists.",
         "exerciseInUse": "Exercise is in a program — remove from program first."
-      }
+      },
+      "usedInPrograms": "Used in",
+      "demo": "Demo"
     },
     "mealPlan": {
       "title": "Meal plan",
@@ -425,7 +469,8 @@
         "removeMealFailed": "Couldn't remove meal.",
         "addOverrideFailed": "Couldn't add override.",
         "removeOverrideFailed": "Couldn't remove override."
-      }
+      },
+      "slotLabel": "Meal {number}"
     },
     "phases": {
       "title": "Phase manager",
@@ -465,8 +510,27 @@
         "activateFailed": "Couldn't activate phase.",
         "deactivateFailed": "Couldn't deactivate phases.",
         "nameRequired": "Phase name required.",
-        "startDateRequired": "Start date required."
-      }
+        "startDateRequired": "Start date required.",
+        "updateFailed": "Couldn’t update phase."
+      },
+      "phaseUpdatedToast": "Phase updated",
+      "newPhase": "New phase",
+      "editingPhase": "Editing — {name}",
+      "noTargetsSet": "No targets set for this phase yet. Use Edit to add them.",
+      "mCalories": "Calories",
+      "mProtein": "Protein",
+      "mSteps": "Steps",
+      "mCardio": "Cardio",
+      "mLiftVolume": "Lift volume",
+      "mWeighins": "Weigh-ins",
+      "targetProteinLabel": "Protein target (g)",
+      "targetStepsLabel": "Step target",
+      "weighinLabel": "Weigh-ins",
+      "weighinPlaceholder": "e.g. Daily, fasted AM",
+      "cardioLabel": "Cardio",
+      "cardioPlaceholder": "e.g. 2 × 30 min zone 2",
+      "liftVolumeLabel": "Lift volume",
+      "liftVolumePlaceholder": "e.g. −15% vs. baseline"
     },
     "program": {
       "title": "Program builder",
@@ -515,7 +579,22 @@
         "addExerciseFailed": "Couldn't add exercise.",
         "removeExerciseFailed": "Couldn't remove exercise.",
         "reorderFailed": "Couldn't reorder."
-      }
+      },
+      "duplicate": "Duplicate",
+      "settings": "Settings",
+      "duplicatedToast": "Program duplicated",
+      "duplicateFailed": "Couldn’t duplicate program.",
+      "settingsSaved": "Program updated",
+      "settingsSaveFailed": "Couldn’t save settings.",
+      "goalLabel": "Goal",
+      "goalPlaceholder": "e.g. Hypertrophy",
+      "totalWeeksLabel": "Total weeks",
+      "coachNoteLabel": "Coach note",
+      "coachNotePlaceholder": "Notes for this program…",
+      "addCoachNote": "Add coach note",
+      "weeksChip": "{count}-week block",
+      "daysLabel": "Days",
+      "noDaysYet": "No days yet"
     },
     "clients": {
       "detail": {
@@ -642,7 +721,8 @@
     "password": "Password",
     "save": "Save",
     "saving": "Saving…",
-    "yes": "Yes"
+    "yes": "Yes",
+    "close": "Close"
   },
   "errors": {
     "genericLoad": "Couldn't load. Retry.",
@@ -717,6 +797,36 @@
       "alreadyPublished": "This report is already published.",
       "notFound": "Report not found.",
       "loadFailed": "Could not load reports."
-    }
+    },
+    "sections": {
+      "nutrition": "Nutrition",
+      "training": "Training",
+      "progress": "Progress"
+    },
+    "goalProgress": "Goal progress",
+    "goalStart": "Start",
+    "goalNow": "Now",
+    "goalTarget": "Goal",
+    "adherence7d": "Meal-plan days",
+    "weightTrend": "Weight trend",
+    "strengthTrend": "Strength progression",
+    "measurementsTrend": "Body measurements",
+    "waist": "Waist",
+    "bodyFat": "Body fat",
+    "macros": "Macros vs target",
+    "recommendations": "Coach's recommendations",
+    "recTraining": "Training",
+    "recNutrition": "Nutrition",
+    "recGeneral": "General",
+    "recTrainingPlaceholder": "Training advice for next week…",
+    "recNutritionPlaceholder": "Nutrition advice for next week…",
+    "recGeneralPlaceholder": "General message / focus for next week…",
+    "downloadPdf": "Download PDF",
+    "generatedOn": "Generated {date}"
+  },
+  "offline": {
+    "title": "You’re offline",
+    "body": "Koach needs a connection for this. Your logged data is saved and will sync when you’re back online.",
+    "hint": "Check your connection"
   }
 }

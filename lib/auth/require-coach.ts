@@ -138,7 +138,7 @@ export async function requireCoachOwnsPhase(phaseId: string) {
 
   const { data } = await supabaseAdmin
     .from("phases")
-    .select("id, clients!inner(coach_id)")
+    .select("id, client_id, is_active, clients!inner(coach_id)")
     .eq("id", phaseId)
     .eq("clients.coach_id", auth.user.id)
     .maybeSingle();
@@ -147,5 +147,12 @@ export async function requireCoachOwnsPhase(phaseId: string) {
     return { error: "unauthenticated" as const };
   }
 
-  return { user: auth.user };
+  return {
+    user: auth.user,
+    phase: {
+      id: data.id as string,
+      client_id: data.client_id as string,
+      is_active: data.is_active as boolean,
+    },
+  };
 }

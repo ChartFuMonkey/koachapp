@@ -27,8 +27,6 @@ import Link from "next/link";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type FoodLine = {
   name: string;
   quantity_g: number;
@@ -59,13 +57,6 @@ type MealPlan = {
   meal_plan_entries: PlanEntry[];
 };
 
-// Placeholder time tags by slot index (mirrors prototype: AM / 13:00 / 16:00 / 20:00)
-const SLOT_TIME_TAGS = ["AM", "13:00", "16:00", "20:00", "22:00"];
-
-function slotTimeTag(slotNumber: number): string {
-  const idx = Math.max(0, slotNumber - 1);
-  return SLOT_TIME_TAGS[idx] ?? `+${slotNumber}`;
-}
 
 export default function MealPlanBuilder({
   clientId,
@@ -237,7 +228,7 @@ export default function MealPlanBuilder({
   const upperClientName = clientName.toUpperCase();
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       {/* Back link */}
       <Link
         href={`/coach/clients/${clientId}`}
@@ -247,12 +238,12 @@ export default function MealPlanBuilder({
       </Link>
 
       {/* Top row: label + headline on left, totals on right */}
-      <div className="flex items-end justify-between gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <MicroLabel>
             {upperClientName} · {t("title").toUpperCase()}
           </MicroLabel>
-          <h1 className="mt-2 text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
+          <h1 className="mt-2 text-[28px] sm:text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
             {t("title")}
           </h1>
         </div>
@@ -358,7 +349,7 @@ export default function MealPlanBuilder({
 
       {/* Day selector (only when an active plan exists) */}
       {activePlan && (
-        <div className="mt-6 flex gap-1">
+        <div className="mt-6 flex gap-1 overflow-x-auto">
           {dayLabels.map((label, idx) => {
             const dayOfWeek = idx + 1;
             const isSelected = dayOfWeek === selectedDay;
@@ -368,7 +359,7 @@ export default function MealPlanBuilder({
                 type="button"
                 onClick={() => setSelectedDay(dayOfWeek)}
                 className={
-                  "rounded-[3px] border px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.08em] transition-colors " +
+                  "shrink-0 rounded-[3px] border px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.08em] transition-colors " +
                   (isSelected
                     ? "border-lime bg-lime/10 text-lime"
                     : "border-border bg-surface-2 text-ink-2 hover:text-ink")
@@ -417,7 +408,7 @@ export default function MealPlanBuilder({
         <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
           {dayEntries.map((entry, idx) => {
             const meal = allMeals.find((m) => m.id === entry.meals?.id);
-            const tag = slotTimeTag(idx + 1);
+            const tag = t("slotLabel", { number: idx + 1 });
             const mealName = entry.meals?.name ?? "—";
             const kcal = meal?.cal ?? 0;
             const foods = meal?.foods ?? [];

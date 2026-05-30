@@ -95,7 +95,7 @@ export default function WorkoutPage() {
 
   if (!program) {
     return (
-      <div className="px-5 pt-8">
+      <div className="px-5 md:px-8 pt-8">
         <EmptyState
           glyph="◎"
           label={t("noProgramTitle")}
@@ -106,11 +106,11 @@ export default function WorkoutPage() {
   }
 
   return (
-    <div className="px-5 pt-5 pb-6">
+    <div className="px-5 md:px-8 pt-5 pb-6">
       <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
         ~/TRAINING
       </div>
-      <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
+      <h1 className="mt-1.5 text-[28px] md:text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink">
         {program.name}
       </h1>
       <p className="mt-2 text-sm text-ink-2">{t("chooseDay")}</p>

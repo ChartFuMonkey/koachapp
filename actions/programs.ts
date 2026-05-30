@@ -78,6 +78,133 @@ export async function createProgram(clientId: string, name: string) {
   return { data };
 }
 
+export async function updateProgramMeta(
+  programId: string,
+  meta: { name?: string; goal: string | null; total_weeks: number | null; coach_note: string | null }
+) {
+  const auth = await requireCoachOwnsProgram(programId);
+  if (auth.error) return { error: auth.error };
+
+  const patch: Record<string, unknown> = {
+    goal: meta.goal,
+    total_weeks: meta.total_weeks,
+    coach_note: meta.coach_note,
+    updated_at: new Date().toISOString(),
+  };
+  if (meta.name != null && meta.name.trim() !== "") {
+    patch.name = meta.name.trim();
+  }
+
+  const { error } = await supabaseAdmin
+    .from("workout_programs")
+    .update(patch)
+    .eq("id", programId);
+
+  if (error) {
+    console.error("Program meta update error:", error);
+    return { error: "updateFailed" as const };
+  }
+
+  return { success: true };
+}
+
+export async function duplicateProgram(programId: string) {
+  const auth = await requireCoachOwnsProgram(programId);
+  if (auth.error) return { error: auth.error };
+
+  // Load the full source program (header + days + exercises).
+  const { data: source, error: loadErr } = await supabaseAdmin
+    .from("workout_programs")
+    .select(
+      `id, client_id, name, goal, total_weeks, coach_note,
+       program_days ( id, day_label, sort_order,
+         program_exercises ( exercise_id, sets, reps, rest_sec, rpe, tempo, sort_order ) )`
+    )
+    .eq("id", programId)
+    .single();
+
+  if (loadErr || !source) {
+    console.error("Program duplicate load error:", loadErr);
+    return { error: "loadFailed" as const };
+  }
+
+  // Create the cloned program (always inactive).
+  const { data: clone, error: cloneErr } = await supabaseAdmin
+    .from("workout_programs")
+    .insert({
+      client_id: source.client_id,
+      name: `${source.name} (copy)`,
+      goal: source.goal,
+      total_weeks: source.total_weeks,
+      coach_note: source.coach_note,
+      is_active: false,
+      created_by: auth.user.id,
+    })
+    .select("id")
+    .single();
+
+  if (cloneErr || !clone) {
+    console.error("Program duplicate create error:", cloneErr);
+    return { error: "createFailed" as const };
+  }
+
+  // Clone each day, then its exercises.
+  const days = (source.program_days ?? []) as Array<{
+    day_label: string;
+    sort_order: number;
+    program_exercises: Array<{
+      exercise_id: string;
+      sets: number | null;
+      reps: string | null;
+      rest_sec: number | null;
+      rpe: number | null;
+      tempo: string | null;
+      sort_order: number;
+    }>;
+  }>;
+
+  for (const day of days) {
+    const { data: newDay, error: dayErr } = await supabaseAdmin
+      .from("program_days")
+      .insert({
+        program_id: clone.id,
+        day_label: day.day_label,
+        sort_order: day.sort_order,
+      })
+      .select("id")
+      .single();
+
+    if (dayErr || !newDay) {
+      console.error("Program duplicate day error:", dayErr);
+      return { error: "createFailed" as const };
+    }
+
+    const exercises = day.program_exercises ?? [];
+    if (exercises.length > 0) {
+      const { error: exErr } = await supabaseAdmin
+        .from("program_exercises")
+        .insert(
+          exercises.map((pe) => ({
+            day_id: newDay.id,
+            exercise_id: pe.exercise_id,
+            sets: pe.sets,
+            reps: pe.reps,
+            rest_sec: pe.rest_sec,
+            rpe: pe.rpe,
+            tempo: pe.tempo,
+            sort_order: pe.sort_order,
+          }))
+        );
+      if (exErr) {
+        console.error("Program duplicate exercises error:", exErr);
+        return { error: "createFailed" as const };
+      }
+    }
+  }
+
+  return { data: { id: clone.id } };
+}
+
 export async function deleteProgram(programId: string) {
   const auth = await requireCoachOwnsProgram(programId);
   if (auth.error) return { error: auth.error };

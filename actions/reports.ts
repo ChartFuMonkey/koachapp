@@ -50,7 +50,13 @@ export async function regenerateReport(
 
 export async function releaseReport(
   reportId: string,
-  payload: { clientSummary: string; coachNote: string }
+  payload: {
+    clientSummary: string;
+    coachNote: string;
+    recTraining: string;
+    recNutrition: string;
+    recGeneral: string;
+  }
 ): Promise<{ success?: true; error?: string }> {
   const auth = await requireCoach();
   if (auth.error) return { error: auth.error };
@@ -68,6 +74,9 @@ export async function releaseReport(
     .update({
       client_summary: payload.clientSummary,
       coach_note: payload.coachNote,
+      rec_training: payload.recTraining,
+      rec_nutrition: payload.recNutrition,
+      rec_general: payload.recGeneral,
       status: "published",
       published_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
