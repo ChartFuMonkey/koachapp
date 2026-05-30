@@ -156,7 +156,8 @@
       "log": "Dnevnik",
       "photos": "Foto",
       "profile": "Profil",
-      "workout": "Trening"
+      "workout": "Trening",
+      "reports": "Izvještaji"
     },
     "workout": {
       "allDone": "Sve serije gotove",
@@ -248,7 +249,8 @@
       "meals": "Obroci",
       "signOut": "Odjava",
       "openMenu": "Otvori izbornik",
-      "closeMenu": "Zatvori izbornik"
+      "closeMenu": "Zatvori izbornik",
+      "reports": "Izvještaji"
     },
     "home": {
       "title": "Klijenti",
@@ -673,5 +675,48 @@
   "pushBanner": {
     "description": "Podsjetnici za dnevni log",
     "enable": "Uključi"
+  },
+  "reports": {
+    "title": "Tjedni izvještaji",
+    "weekOf": "Tjedan od {date}",
+    "empty": "Još nema izvještaja. Tvoj trener uskoro šalje prvi tjedni izvještaj.",
+    "coachEmpty": "Još nije generiran nijedan izvještaj.",
+    "draft": "Skica",
+    "published": "Objavljeno",
+    "released": "Poslano",
+    "generateNow": "Generiraj sada",
+    "regenerate": "Ponovno generiraj",
+    "release": "Pošalji klijentu",
+    "coachNote": "Osobna poruka klijentu",
+    "coachNotePlaceholder": "Dodaj osobnu poruku (nije obavezno)…",
+    "clientSummary": "Sažetak za klijenta",
+    "coachSummary": "Sažetak za trenera",
+    "flags": "Upozorenja",
+    "personalBests": "Osobni rekordi",
+    "checkinAnswers": "Check-in klijenta",
+    "overview": "Ovaj tjedan",
+    "history": "Povijest",
+    "metrics": {
+      "weight": "Težina",
+      "calories": "Kalorije",
+      "protein": "Proteini",
+      "steps": "Koraci",
+      "sleep": "San",
+      "energy": "Energija",
+      "adherence": "Plan prehrane",
+      "training": "Trening",
+      "vsLastWeek": "vs prošli tjedan",
+      "vsTarget": "cilj",
+      "daysLogged": "{n} od 7 dana uneseno",
+      "sessions": "{done} od {planned} treninga",
+      "noData": "Nedovoljno podataka ovaj tjedan"
+    },
+    "errors": {
+      "generateFailed": "Izvještaj nije moguće generirati. Pokušaj ponovno.",
+      "releaseFailed": "Izvještaj nije moguće poslati. Pokušaj ponovno.",
+      "alreadyPublished": "Ovaj izvještaj je već objavljen.",
+      "notFound": "Izvještaj nije pronađen.",
+      "loadFailed": "Izvještaje nije moguće učitati."
+    }
   }
 }

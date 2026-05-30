@@ -156,7 +156,8 @@
       "log": "Log",
       "photos": "Photos",
       "profile": "Profile",
-      "workout": "Workout"
+      "workout": "Workout",
+      "reports": "Reports"
     },
     "workout": {
       "allDone": "All sets done",
@@ -248,7 +249,8 @@
       "meals": "Meals",
       "signOut": "Sign out",
       "openMenu": "Open menu",
-      "closeMenu": "Close menu"
+      "closeMenu": "Close menu",
+      "reports": "Reports"
     },
     "home": {
       "title": "Clients",
@@ -673,5 +675,48 @@
   "pushBanner": {
     "description": "Daily log reminders",
     "enable": "Turn on"
+  },
+  "reports": {
+    "title": "Weekly Reports",
+    "weekOf": "Week of {date}",
+    "empty": "No reports yet. Your coach will send your first weekly report soon.",
+    "coachEmpty": "No reports generated yet.",
+    "draft": "Draft",
+    "published": "Published",
+    "released": "Released",
+    "generateNow": "Generate now",
+    "regenerate": "Regenerate",
+    "release": "Release to client",
+    "coachNote": "Personal note to client",
+    "coachNotePlaceholder": "Add a personal message (optional)…",
+    "clientSummary": "Client summary",
+    "coachSummary": "Coach summary",
+    "flags": "Flags",
+    "personalBests": "Personal bests",
+    "checkinAnswers": "Client check-in",
+    "overview": "This week",
+    "history": "History",
+    "metrics": {
+      "weight": "Weight",
+      "calories": "Calories",
+      "protein": "Protein",
+      "steps": "Steps",
+      "sleep": "Sleep",
+      "energy": "Energy",
+      "adherence": "Meal plan",
+      "training": "Training",
+      "vsLastWeek": "vs last week",
+      "vsTarget": "target",
+      "daysLogged": "{n} of 7 days logged",
+      "sessions": "{done} of {planned} sessions",
+      "noData": "Not enough data this week"
+    },
+    "errors": {
+      "generateFailed": "Could not generate the report. Try again.",
+      "releaseFailed": "Could not release the report. Try again.",
+      "alreadyPublished": "This report is already published.",
+      "notFound": "Report not found.",
+      "loadFailed": "Could not load reports."
+    }
   }
 }
