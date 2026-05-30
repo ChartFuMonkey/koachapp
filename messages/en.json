@@ -799,12 +799,6 @@
     "openApp": "Open Koach",
     "desktopNote": "Koach is built for your phone. Open this page on your phone to install it."
   },
-  "installBanner": {
-    "iosHintPrefix": "Add to Home Screen: tap",
-    "iosHintSuffix": "\"Add to Home Screen\"",
-    "installPrompt": "Install KoachApp to home screen",
-    "installCta": "Install"
-  },
   "pushBanner": {
     "description": "Daily log reminders",
     "enable": "Turn on"

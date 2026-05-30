@@ -799,12 +799,6 @@
     "openApp": "Otvori Koach",
     "desktopNote": "Koach je napravljen za tvoj telefon. Otvori ovu stranicu na telefonu da bi ga instalirao."
   },
-  "installBanner": {
-    "iosHintPrefix": "Dodaj na početni zaslon: tapni",
-    "iosHintSuffix": "\"Dodaj na početni zaslon\"",
-    "installPrompt": "Instaliraj KoachApp na početni zaslon",
-    "installCta": "Instaliraj"
-  },
   "pushBanner": {
     "description": "Podsjetnici za dnevni log",
     "enable": "Uključi"
