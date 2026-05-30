@@ -13,6 +13,7 @@ const tabs = [
   { key: "log", route: "/app/log", glyph: "◍", hotkey: "L" },
   { key: "workout", route: "/app/workout", glyph: "◎", hotkey: "R" },
   { key: "checkin", route: "/app/checkin", glyph: "◑", hotkey: "C" },
+  { key: "reports", route: "/app/reports", glyph: "◔", hotkey: "E" },
   { key: "profile", route: "/app/profile", glyph: "◐", hotkey: "Y" },
 ] as const;
 
