@@ -1,7 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { resolveLocale } from "@/i18n/request";
+import { foodDisplayName } from "@/lib/food-display";
 import MealPlanBuilder from "./meal-plan-builder";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default async function MealPlanBuilderPage({
   params,
@@ -10,6 +14,7 @@ export default async function MealPlanBuilderPage({
 }) {
   const { id } = await params;
   const t = await getTranslations("coach.clients.detail");
+  const locale = await resolveLocale();
 
   const [clientRes, profileRes, plansRes, mealsRes] = await Promise.all([
     supabaseAdmin.from("clients").select("id").eq("id", id).maybeSingle(),
@@ -30,8 +35,8 @@ export default async function MealPlanBuilderPage({
       .select(`
         id, name,
         meal_foods (
-          id, quantity_g,
-          foods ( calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g )
+          id, quantity_g, sort_order,
+          foods ( name, name_en, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g )
         )
       `)
       .order("name", { ascending: true }),
@@ -48,18 +53,32 @@ export default async function MealPlanBuilderPage({
     })),
   }));
 
-  // Compute meal macros for display in picker
+  // Compute meal macros and per-food breakdown for display
   const meals = (mealsRes.data ?? []).map((meal: any) => {
-    let cal = 0, protein = 0, carbs = 0, fat = 0;
-    for (const mf of meal.meal_foods ?? []) {
+    let cal = 0,
+      protein = 0,
+      carbs = 0,
+      fat = 0;
+    const sortedFoods = [...(meal.meal_foods ?? [])].sort(
+      (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
+    const foods = sortedFoods.map((mf: any) => {
       const f = Array.isArray(mf.foods) ? mf.foods[0] : mf.foods;
-      if (!f) continue;
+      if (!f) {
+        return { name: "—", quantity_g: mf.quantity_g, cal: 0 };
+      }
       const factor = mf.quantity_g / 100;
-      cal += f.calories_per_100g * factor;
+      const fcal = f.calories_per_100g * factor;
+      cal += fcal;
       protein += f.protein_per_100g * factor;
       carbs += f.carbs_per_100g * factor;
       fat += f.fat_per_100g * factor;
-    }
+      return {
+        name: foodDisplayName(f, locale),
+        quantity_g: mf.quantity_g,
+        cal: Math.round(fcal),
+      };
+    });
     return {
       id: meal.id,
       name: meal.name,
@@ -67,6 +86,7 @@ export default async function MealPlanBuilderPage({
       protein: Math.round(protein),
       carbs: Math.round(carbs),
       fat: Math.round(fat),
+      foods,
     };
   });
 

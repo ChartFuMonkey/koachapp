@@ -4,12 +4,9 @@ import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Loader2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Chip } from "@/components/ui/athletic/chip";
-import { MicroLabel } from "@/components/ui/athletic/micro-label";
-import { ProgressBar } from "@/components/ui/athletic/progress-bar";
+import { SliderScale } from "@/components/ui/athletic/slider-scale";
+import { SegmentedControl } from "@/components/ui/athletic/segmented-control";
 import {
   getThisWeekCheckin,
   submitCheckin,
@@ -19,85 +16,12 @@ import {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type CheckinRow = Record<string, any>;
 
-function DiscreteSlider({
-  value,
-  onChange,
-  color = "var(--lime)",
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  color?: string;
-}) {
-  return (
-    <div className="mt-2 flex gap-[3px]">
-      {Array.from({ length: 10 }, (_, i) => {
-        const cellValue = i + 1;
-        const isActive = cellValue <= value;
-        return (
-          <button
-            key={i}
-            type="button"
-            onClick={() => onChange(cellValue)}
-            aria-label={`${cellValue}`}
-            className="flex-1 h-2 rounded-[2px] transition-colors"
-            style={{
-              backgroundColor: isActive ? color : "var(--hairline-2)",
-            }}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function SliderRow({
-  label,
-  value,
-  onChange,
-  color,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  color?: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-baseline justify-between">
-        <Label className="text-sm text-ink-2">{label}</Label>
-        <span className="font-mono text-sm text-ink tabular-nums">
-          {value}
-          <span className="text-ink-3">/10</span>
-        </span>
-      </div>
-      <DiscreteSlider value={value} onChange={onChange} color={color} />
-    </div>
-  );
-}
-
-function TextareaField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Label className="text-sm text-ink-2 mb-2 inline-block">{label}</Label>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={3}
-        placeholder={placeholder}
-        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink resize-none outline-none placeholder:text-ink-3 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-      />
-    </div>
-  );
+function getISOWeek(d: Date): number {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
 export default function CheckinPage() {
@@ -180,14 +104,17 @@ export default function CheckinPage() {
   }
 
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
+  const isoWeek = getISOWeek(new Date());
 
   // Submitted view
   if (submitted) {
     return (
       <div className="px-5 pt-5 pb-6">
-        <MicroLabel>~/Weekly check-in</MicroLabel>
-        <div className="mt-1 flex items-center gap-3 mb-4">
-          <h1 className="text-[28px] font-semibold leading-tight text-ink tracking-tight">
+        <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+          WEEK {isoWeek} · SUNDAY REVIEW
+        </div>
+        <div className="mt-1.5 flex items-center gap-3">
+          <h1 className="text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
             {t("title")}
           </h1>
           <Chip variant="good" className="gap-1 mt-1">
@@ -196,40 +123,24 @@ export default function CheckinPage() {
           </Chip>
         </div>
         {submitted.checkin_date && (
-          <p className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.06em] mb-4">
+          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
             {new Date(
               (submitted.checkin_date as string) + "T00:00"
             ).toLocaleDateString(bcp47)}
           </p>
         )}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <MetricCard label={t("energy")} value={submitted.energy_level} max={10} />
           <MetricCard label={t("stress")} value={submitted.stress_level} max={10} />
-          <MetricCard
-            label={t("motivation")}
-            value={submitted.motivation}
-            max={10}
-          />
-          <MetricCard
-            label={t("sleepQuality")}
-            value={submitted.sleep_quality}
-            max={10}
-          />
+          <MetricCard label={t("motivation")} value={submitted.motivation} max={10} />
+          <MetricCard label={t("sleepQuality")} value={submitted.sleep_quality} max={10} />
           <MetricCard label={t("appetite")} value={submitted.appetite} max={10} />
-          <MetricCard
-            label={t("dietPct")}
-            value={submitted.adherence_diet_pct}
-            unit="%"
-          />
+          <MetricCard label={t("dietPct")} value={submitted.adherence_diet_pct} unit="%" />
           <MetricCard
             label={t("trainingPlan")}
             value={submitted.adherence_training ? tCommon("yes") : tCommon("no")}
           />
-          <MetricCard
-            label={t("overallRating")}
-            value={submitted.overall_rating}
-            max={10}
-          />
+          <MetricCard label={t("overallRating")} value={submitted.overall_rating} max={10} />
         </div>
         <div className="mt-5 space-y-3">
           {submitted.what_went_well && (
@@ -257,130 +168,203 @@ export default function CheckinPage() {
   const filledSections =
     [whatWentWell, challenges, goalsNextWeek, questionsForCoach].filter(
       (s) => s.trim().length > 0
-    ).length + 1; // ratings always count as section 1
+    ).length + 1;
+  const progressPct = Math.min(100, (filledSections / sections) * 100);
+
+  const adherenceOptions = [
+    { value: 0, label: "<60%" },
+    { value: 60, label: "60%" },
+    { value: 70, label: "70%" },
+    { value: 80, label: "80%" },
+    { value: 90, label: "90%" },
+    { value: 100, label: "100%" },
+  ];
 
   return (
-    <div className="px-5 pt-5 pb-6">
-      <MicroLabel>~/Weekly check-in</MicroLabel>
-      <h1 className="mt-1 text-[28px] font-semibold leading-tight text-ink tracking-tight">
-        {t("title")}
-      </h1>
-
-      {/* Section progress */}
-      <div className="mt-4 flex items-center gap-3">
-        <ProgressBar
-          value={filledSections}
-          max={sections}
-          size="thin"
-          className="flex-1"
-        />
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3 shrink-0">
+    <div className="flex flex-col">
+      {/* Sticky header */}
+      <div className="px-5 pt-5 pb-4 border-b border-border">
+        <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+          WEEK {isoWeek} · SUNDAY REVIEW
+        </div>
+        <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
+          {t("title")}
+        </h1>
+        <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-hairline">
+          <div
+            className="h-full bg-lime transition-[width] duration-400"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
           {filledSections} / {sections} SECTIONS
-        </span>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-5 space-y-3">
-        <SliderRow label={t("energyLevel")} value={energyLevel} onChange={setEnergyLevel} />
-        <SliderRow label={t("stressLevel")} value={stressLevel} onChange={setStressLevel} color="var(--warn)" />
-        <SliderRow label={t("motivation")} value={motivation} onChange={setMotivation} />
-        <SliderRow
-          label={t("sleepQuality")}
-          value={sleepQuality}
-          onChange={setSleepQuality}
-          color="var(--good)"
-        />
-        <SliderRow label={t("appetite")} value={appetite} onChange={setAppetite} />
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 px-5 py-5">
+        {/* All sliders consolidated into ONE card per BClientCheckin */}
+        <div className="rounded-xl border border-border bg-surface-1 p-4">
+          <div className="mb-3.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+            HOW DID YOU FEEL THIS WEEK?
+          </div>
+          <div className="flex flex-col gap-4">
+            <SliderScale
+              label={t("energy")}
+              value={energyLevel}
+              onChange={setEnergyLevel}
+              color="var(--lime)"
+            />
+            <SliderScale
+              label={t("stress")}
+              value={stressLevel}
+              onChange={setStressLevel}
+              color="var(--warn)"
+            />
+            <SliderScale
+              label={t("motivation")}
+              value={motivation}
+              onChange={setMotivation}
+              color="var(--violet)"
+            />
+            <SliderScale
+              label={t("sleepQuality")}
+              value={sleepQuality}
+              onChange={setSleepQuality}
+              color="var(--good)"
+            />
+            <SliderScale
+              label={t("appetite")}
+              value={appetite}
+              onChange={setAppetite}
+              color="var(--carb)"
+            />
+          </div>
+        </div>
 
         {/* Diet adherence */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <Label className="text-sm text-ink-2 mb-2 inline-block">
-            {t("adherenceDietLabel")}
-          </Label>
-          <div className="grid grid-cols-6 gap-1.5">
-            {[0, 20, 40, 60, 80, 100].map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setAdherenceDietPct(p)}
-                className={`rounded-md py-2 font-mono text-[12px] transition-colors ${
-                  adherenceDietPct === p
-                    ? "bg-primary text-bg font-semibold"
-                    : "bg-surface-2 text-ink-2 hover:bg-surface-3"
-                }`}
-              >
-                {p}%
-              </button>
-            ))}
+        <div className="rounded-xl border border-border bg-surface-1 p-4">
+          <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+            DIET ADHERENCE
           </div>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            inputMode="numeric"
-            value={adherenceDietPct ?? ""}
-            onChange={(e) =>
-              setAdherenceDietPct(
-                e.target.value === "" ? null : Number(e.target.value)
-              )
-            }
-            placeholder={t("adherenceDietPlaceholder")}
-            className="mt-2"
-          />
+          <div className="mb-3 flex items-baseline gap-1">
+            <span className="font-mono text-[36px] font-bold leading-none tracking-[-0.02em] text-ink tabular-nums">
+              {adherenceDietPct ?? "—"}
+            </span>
+            <span className="font-mono text-sm text-ink-3">%</span>
+          </div>
+          <div className="grid grid-cols-6 gap-1">
+            {adherenceOptions.map((p) => {
+              const active = adherenceDietPct === p.value;
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setAdherenceDietPct(p.value)}
+                  className={`rounded-md py-2 font-mono text-[11px] font-semibold transition-colors ${
+                    active
+                      ? "bg-lime text-bg"
+                      : "bg-surface-2 text-ink-2 hover:bg-surface-3"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Training adherence */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <Label
-            htmlFor="training"
-            className="flex cursor-pointer items-center gap-3 text-sm text-ink-2"
-          >
+        <div className="rounded-xl border border-border bg-surface-1 p-4">
+          <label className="flex cursor-pointer items-center gap-3 text-sm text-ink-2">
             <input
-              id="training"
               type="checkbox"
               checked={adherenceTraining}
               onChange={(e) => setAdherenceTraining(e.target.checked)}
-              className="size-4 rounded border-border bg-surface accent-primary"
+              className="size-4 rounded border-border bg-surface-2 accent-lime"
             />
             {t("adherenceTrainingLabel")}
-          </Label>
+          </label>
         </div>
 
-        <TextareaField
-          label={t("whatWentWellPrompt")}
+        <TextareaCard
+          label={t("whatWentWellPrompt").toUpperCase()}
           value={whatWentWell}
           onChange={setWhatWentWell}
           placeholder={t("textareaPlaceholder")}
+          minHeight={80}
         />
-        <TextareaField
-          label={t("challengesPrompt")}
+        <TextareaCard
+          label={t("challengesPrompt").toUpperCase()}
           value={challenges}
           onChange={setChallenges}
           placeholder={t("textareaPlaceholder")}
+          minHeight={60}
         />
-        <TextareaField
-          label={t("goalsNextWeek")}
+        <TextareaCard
+          label={t("goalsNextWeek").toUpperCase()}
           value={goalsNextWeek}
           onChange={setGoalsNextWeek}
           placeholder={t("textareaPlaceholder")}
+          minHeight={60}
         />
-        <TextareaField
-          label={t("questionsForCoach")}
+        <TextareaCard
+          label={t("questionsForCoach").toUpperCase()}
           value={questionsForCoach}
           onChange={setQuestionsForCoach}
           placeholder={t("textareaPlaceholder")}
+          minHeight={60}
         />
 
-        <SliderRow
-          label={t("overallRatingPrompt")}
-          value={overallRating}
-          onChange={setOverallRating}
-        />
+        <div className="rounded-xl border border-border bg-surface-1 p-4">
+          <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+            OVERALL WEEKLY RATING
+          </div>
+          <SliderScale
+            label={t("overallRating")}
+            value={overallRating}
+            onChange={setOverallRating}
+            color="var(--lime)"
+          />
+        </div>
 
-        <Button type="submit" size="lg" disabled={saving} className="w-full mt-2">
+        <button
+          type="submit"
+          disabled={saving}
+          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-lime px-4 py-4 text-sm font-bold text-bg hover:bg-lime-hover active:bg-lime-press disabled:opacity-50 transition-all"
+        >
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-          {saving ? t("sendLoading") : t("submit")}
-        </Button>
+          {saving ? t("sendLoading") : `${t("submit")} →`}
+        </button>
       </form>
+    </div>
+  );
+}
+
+function TextareaCard({
+  label,
+  value,
+  onChange,
+  placeholder,
+  minHeight = 60,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  minHeight?: number;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-surface-1 p-4">
+      <div className="mb-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
+        {label}
+      </div>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{ minHeight }}
+        className="w-full rounded-md border border-hairline-2 bg-bg px-3.5 py-3 text-[13px] text-ink-2 leading-relaxed outline-none placeholder:text-ink-3 focus-visible:border-lime focus-visible:ring-2 focus-visible:ring-lime/30"
+      />
     </div>
   );
 }
@@ -397,14 +381,14 @@ function MetricCard({
   unit?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3">
-      <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+    <div className="rounded-lg border border-border bg-surface-1 p-3">
+      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
         {label}
       </span>
-      <p className="mt-1.5 font-mono text-[20px] font-semibold text-ink tabular-nums leading-none">
+      <p className="mt-1.5 font-mono text-[20px] font-semibold leading-none text-ink tabular-nums">
         {value != null ? value : "—"}
-        {max ? <span className="text-ink-3 text-xs">/{max}</span> : null}
-        {unit ? <span className="text-ink-3 text-xs ml-0.5">{unit}</span> : null}
+        {max ? <span className="text-xs text-ink-3">/{max}</span> : null}
+        {unit ? <span className="ml-0.5 text-xs text-ink-3">{unit}</span> : null}
       </p>
     </div>
   );
@@ -412,11 +396,11 @@ function MetricCard({
 
 function TextBlock({ label, text }: { label: string; text: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-3">
+    <div className="rounded-xl border border-border bg-surface-1 p-4">
+      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
         {label}
       </span>
-      <p className="mt-1.5 text-sm text-ink-2 leading-relaxed">{text}</p>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{text}</p>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { getProgressData } from "@/actions/daily-log";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
+import { EmptyState } from "@/components/ui/athletic/empty-state";
 
 type LogEntry = {
   log_date: string;
@@ -32,11 +33,7 @@ function formatDate(dateStr: string) {
 }
 
 function NoData({ text }: { text: string }) {
-  return (
-    <p className="py-10 text-center font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
-      {text}
-    </p>
-  );
+  return <EmptyState glyph="◍" label={text} hint="LOG DAYS TO SEE TREND" />;
 }
 
 const tooltipStyle = {

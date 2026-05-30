@@ -8,6 +8,7 @@
   /* Athletic OS — surfaces, ink, accent */
   --color-bg: var(--bg);
   --color-surface: var(--surface);
+  --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
   --color-hairline: var(--hairline);
@@ -17,6 +18,8 @@
   --color-ink-3: var(--ink-3);
   --color-ink-4: var(--ink-4);
   --color-lime: var(--lime);
+  --color-lime-hover: var(--lime-hover);
+  --color-lime-press: var(--lime-press);
   --color-good: var(--good);
   --color-warn: var(--warn);
   --color-danger: var(--danger);
@@ -73,9 +76,11 @@
 }
 
 :root {
-  /* === Athletic OS palette === */
-  --bg:        #0A0B0D;
-  --surface:   #111317;
+  /* === Athletic OS palette ===
+     Tokens follow Design Guidelines v1 (Athletic OS · 2026). */
+  --bg:        #06070A;
+  --surface:   #0E1014;
+  --surface-1: #111317;
   --surface-2: #171A1F;
   --surface-3: #1F242B;
 
@@ -88,7 +93,10 @@
   --ink-4: #3B4250;
 
   --lime:      #C5F73B;
+  --lime-hover: #D7FF5A;
+  --lime-press: #B6E62E;
   --lime-glow: rgba(197, 247, 59, 0.35);
+  --accent-glow: rgba(197, 247, 59, 0.35);
 
   --good:   #3DE8A0;
   --warn:   #FF8A3D;
@@ -100,12 +108,40 @@
   --fat:     #FB7185;
   --violet:  #A78BFA;
 
+  /* === Spacing (4px base) === */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+
+  /* === Radius === */
+  --r-1: 3px;  /* chip */
+  --r-2: 6px;  /* button */
+  --r-3: 8px;  /* card sm */
+  --r-4: 10px; /* card md */
+  --r-5: 12px;
+  --r-6: 14px; /* hero card */
+
+  /* === Motion === */
+  --ease-fast:  cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out:   cubic-bezier(0, 0, 0.2, 1);
+  --ease-linear: linear;
+  --d-1:  80ms;
+  --d-2: 160ms;
+  --d-3: 240ms;
+  --d-4: 400ms;
+
   /* === shadcn semantic vars, mapped to Athletic tokens === */
   --background: var(--bg);
   --foreground: var(--ink);
-  --card: var(--surface);
+  --card: var(--surface-1);
   --card-foreground: var(--ink);
-  --popover: var(--surface);
+  --popover: var(--surface-1);
   --popover-foreground: var(--ink);
   --primary: var(--lime);
   --primary-foreground: var(--bg);
@@ -125,7 +161,7 @@
   --chart-4: var(--carb);
   --chart-5: var(--violet);
   --radius: 0.625rem;
-  --sidebar: var(--surface);
+  --sidebar: var(--surface-1);
   --sidebar-foreground: var(--ink-2);
   --sidebar-primary: var(--lime);
   --sidebar-primary-foreground: var(--bg);
@@ -152,6 +188,27 @@
     @apply font-sans;
     line-height: 1.45;
   }
+
+  /* Athletic OS §22 — 3px lime focus outline at 30% alpha on every focusable element.
+     Custom focus-visible styles in components override this. */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="radio"]:focus-visible,
+  [tabindex="0"]:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid rgba(197, 247, 59, 0.3);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    /* Inputs handle their own focus state — they get a lime border + soft ring */
+    outline: none;
+  }
 }
 
 @layer utilities {
@@ -170,5 +227,47 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-3);
+  }
+
+  /* Hero glow — lime radial in top-right corner.
+     Reserved for live-state cards: energy budget, lifting now, etc. */
+  .glow-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .glow-card::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, var(--accent-glow), transparent 65%);
+    pointer-events: none;
+  }
+
+  /* Live-state pulse — opacity-only, no scale */
+  .pulse-live {
+    animation: koach-pulse 1.2s linear infinite;
+  }
+  @keyframes koach-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+  }
+}
+
+/* Respect prefers-reduced-motion (Design Guidelines · 22 Accessibility) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .pulse-live {
+    animation: none;
+    opacity: 1;
   }
 }

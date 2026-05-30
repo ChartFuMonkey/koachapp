@@ -6,30 +6,29 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   createMeal,
   updateMeal,
   deleteMeal,
   addMealFood,
-  updateMealFood,
   removeMealFood,
   reorderMealFood,
 } from "@/actions/meals";
 import {
   Plus,
   Trash2,
-  ChevronDown,
-  ChevronUp,
   X,
   Loader2,
   Check,
   Pencil,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { foodDisplayName } from "@/lib/food-display";
 import { translateError } from "@/lib/translate-error";
+import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import type { Locale } from "@/i18n/request";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -69,7 +68,10 @@ function calcMacros(food: FoodRef, qty: number) {
 }
 
 function mealTotals(mealFoods: MealFood[]) {
-  let cal = 0, protein = 0, carbs = 0, fat = 0;
+  let cal = 0,
+    protein = 0,
+    carbs = 0,
+    fat = 0;
   for (const mf of mealFoods) {
     if (!mf.foods) continue;
     const m = calcMacros(mf.foods, mf.quantity_g);
@@ -84,6 +86,19 @@ function mealTotals(mealFoods: MealFood[]) {
     carbs: Math.round(carbs),
     fat: Math.round(fat),
   };
+}
+
+// Derive a category chip label from a meal name. Pure display heuristic.
+function categoryFromName(name: string): string {
+  const n = name.toLowerCase();
+  if (/\b(pre|pre-?work|pre-?workout)\b/.test(n)) return "PRE";
+  if (/\b(post|post-?work|post-?workout|recovery)\b/.test(n)) return "POST";
+  if (/breakfast|oats|porridge|cereal|granola|toast|eggs|doru[čc]ak|zajut(a|er)k/.test(n))
+    return "BREAKFAST";
+  if (/lunch|bowl|ru[čc]ak/.test(n)) return "LUNCH";
+  if (/dinner|salmon|steak|ve[čc]era/.test(n)) return "DINNER";
+  if (/snack|yogurt|fruit|nuts|u[žz]ina/.test(n)) return "SNACK";
+  return "MEAL";
 }
 
 export default function MealManager({
@@ -108,7 +123,10 @@ export default function MealManager({
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editNotes, setEditNotes] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Add food form state
   const [selectedFoodId, setSelectedFoodId] = useState("");
@@ -196,7 +214,11 @@ export default function MealManager({
     router.refresh();
   }
 
-  async function handleReorder(mfId: string, mealId: string, direction: "up" | "down") {
+  async function handleReorder(
+    mfId: string,
+    mealId: string,
+    direction: "up" | "down",
+  ) {
     await reorderMealFood(mfId, mealId, direction);
     router.refresh();
   }
@@ -212,21 +234,33 @@ export default function MealManager({
     : allFoods;
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
+    <div className="px-10 py-8">
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <MicroLabel>
+            ~/MEALS — {initialMeals.length} TEMPLATES
+          </MicroLabel>
+          <h1 className="mt-2 text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
+            {t("title")}
+          </h1>
+        </div>
         {!showNewMeal && (
-          <Button onClick={() => setShowNewMeal(true)}>
-            <Plus size={14} /> {t("newMeal")}
-          </Button>
+          <button
+            type="button"
+            onClick={() => setShowNewMeal(true)}
+            className="rounded-md bg-lime px-3.5 py-2 text-[13px] font-semibold text-bg transition-colors hover:bg-lime/90"
+          >
+            + {t("newMeal")}
+          </button>
         )}
       </div>
 
       {/* New meal form */}
       {showNewMeal && (
-        <form onSubmit={handleCreateMeal}>
-          <Card className="mb-4">
-            <CardContent className="space-y-3 p-4">
+        <form onSubmit={handleCreateMeal} className="mt-6">
+          <div className="rounded-lg border border-border bg-surface-1 p-5">
+            <div className="space-y-3">
               <div>
                 <Label className="mb-1 text-xs">{t("nameLabel")} *</Label>
                 <Input
@@ -246,237 +280,313 @@ export default function MealManager({
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={saving}>
-                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  {saving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Check size={14} />
+                  )}
                   {t("createSubmit")}
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setShowNewMeal(false)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowNewMeal(false)}
+                >
                   <X size={14} /> {tCommon("cancel")}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </form>
       )}
 
+      {/* Meal grid */}
       {initialMeals.length === 0 ? (
-        <p className="py-8 text-center text-ink-3">
-          {t("emptyList")}
-        </p>
+        <p className="mt-10 py-8 text-center text-ink-3">{t("emptyList")}</p>
       ) : (
-        <div className="space-y-3">
+        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
           {initialMeals.map((meal) => {
-            const isExpanded = expandedMeals.has(meal.id);
             const totals = mealTotals(meal.meal_foods);
+            const isExpanded = expandedMeals.has(meal.id);
             const isEditing = editingMealId === meal.id;
+            const category = categoryFromName(meal.name);
+
+            // Stacked bar segment proportions weighted by kcal contribution.
+            const energyTotal =
+              totals.protein * 4 + totals.carbs * 4 + totals.fat * 9;
+            const pPct =
+              energyTotal > 0 ? (totals.protein * 4 * 100) / energyTotal : 0;
+            const cPct =
+              energyTotal > 0 ? (totals.carbs * 4 * 100) / energyTotal : 0;
+            const fPct =
+              energyTotal > 0 ? (totals.fat * 9 * 100) / energyTotal : 0;
 
             return (
-              <Card key={meal.id}>
-                <CardContent className="p-0">
-                  {/* Header */}
-                  <div
-                    className="flex cursor-pointer items-center justify-between p-4"
+              <div
+                key={meal.id}
+                className="rounded-md border border-border bg-surface-1 p-5"
+              >
+                {/* Top row: chip + name on left, kcal on right */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="inline-block rounded-[3px] border border-border bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-2">
+                      {category}
+                    </span>
+                    {isEditing ? (
+                      <div className="mt-2.5 flex gap-2">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="h-8"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateMeal(meal.id)}
+                          disabled={saving}
+                        >
+                          <Check size={12} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingMealId(null)}
+                        >
+                          <X size={12} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(meal.id)}
+                        className="mt-2.5 block text-left text-[22px] font-semibold leading-tight tracking-[-0.01em] text-ink hover:text-ink-2"
+                      >
+                        {meal.name}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="text-right">
+                      <div className="font-mono text-2xl font-semibold leading-none text-ink">
+                        {totals.cal}
+                      </div>
+                      <div className="mt-1 font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-ink-3">
+                        KCAL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stacked macro bar */}
+                <div className="mt-4 flex h-1.5 overflow-hidden rounded-[3px] bg-surface-2">
+                  {pPct > 0 && (
+                    <div
+                      className="bg-lime"
+                      style={{ width: `${pPct}%` }}
+                    />
+                  )}
+                  {cPct > 0 && (
+                    <div
+                      style={{ width: `${cPct}%`, background: "#FFB84D" }}
+                    />
+                  )}
+                  {fPct > 0 && (
+                    <div
+                      className="bg-warn"
+                      style={{ width: `${fPct}%` }}
+                    />
+                  )}
+                </div>
+
+                {/* Macro labels + foods count */}
+                <div className="mt-2.5 flex items-center justify-between font-mono text-[11px]">
+                  <span className="text-lime">
+                    P {Math.round(totals.protein)}g
+                  </span>
+                  <span style={{ color: "#FFB84D" }}>
+                    C {Math.round(totals.carbs)}g
+                  </span>
+                  <span className="text-warn">
+                    F {Math.round(totals.fat)}g
+                  </span>
+                  <span className="text-ink-3">
+                    {t("mealMeta", { count: meal.meal_foods.length })}
+                  </span>
+                </div>
+
+                {/* Card action row */}
+                <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
+                  <button
+                    type="button"
                     onClick={() => toggleExpanded(meal.id)}
+                    className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3 transition-colors hover:text-ink-2"
                   >
-                    <div className="min-w-0 flex-1">
-                      {isEditing ? (
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    {isExpanded ? (
+                      <ChevronUp size={11} />
+                    ) : (
+                      <ChevronDown size={11} />
+                    )}
+                    {t("addFood")}
+                  </button>
+                  <div className="ml-auto flex items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label="Edit"
+                      onClick={() => {
+                        setEditName(meal.name);
+                        setEditNotes(meal.notes || "");
+                        setEditingMealId(meal.id);
+                      }}
+                      className="rounded p-1 text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink-2"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Delete"
+                      onClick={() =>
+                        setDeleteTarget({ id: meal.id, name: meal.name })
+                      }
+                      className="rounded p-1 text-ink-3 transition-colors hover:bg-surface-2 hover:text-warn"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded: foods list + add food */}
+                {isExpanded && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    {meal.meal_foods.length === 0 ? (
+                      <p className="mb-3 text-sm text-ink-3">
+                        {t("noFoodsInMeal")}
+                      </p>
+                    ) : (
+                      <div className="mb-3 space-y-1.5">
+                        {meal.meal_foods.map((mf, idx) => {
+                          if (!mf.foods) return null;
+                          const m = calcMacros(mf.foods, mf.quantity_g);
+                          return (
+                            <div
+                              key={mf.id}
+                              className="flex items-center gap-2 rounded-md bg-surface-2/50 p-2 text-sm"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <span className="font-medium text-ink-2">
+                                  {foodDisplayName(mf.foods, locale)}
+                                </span>
+                                <span className="ml-2 font-mono text-[11px] text-ink-3">
+                                  {mf.quantity_g}g
+                                </span>
+                                <span className="ml-2 font-mono text-[10px] text-ink-3">
+                                  {m.cal} kcal · {m.protein}/{m.carbs}/{m.fat}
+                                </span>
+                              </div>
+                              <div className="flex shrink-0 gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  disabled={idx === 0}
+                                  onClick={() =>
+                                    handleReorder(mf.id, meal.id, "up")
+                                  }
+                                >
+                                  <ChevronUp size={12} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  disabled={idx === meal.meal_foods.length - 1}
+                                  onClick={() =>
+                                    handleReorder(mf.id, meal.id, "down")
+                                  }
+                                >
+                                  <ChevronDown size={12} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  className="text-warn hover:text-warn/80"
+                                  onClick={() => handleRemoveFood(mf.id)}
+                                >
+                                  <X size={12} />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Add food trigger / form */}
+                    {addingFoodFor === meal.id ? (
+                      <div className="space-y-2 rounded-md border border-border p-3">
+                        <Input
+                          value={foodSearch}
+                          onChange={(e) => setFoodSearch(e.target.value)}
+                          placeholder={t("searchFoods")}
+                          className="h-8"
+                        />
+                        <select
+                          value={selectedFoodId}
+                          onChange={(e) => setSelectedFoodId(e.target.value)}
+                          className="h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring dark:bg-input/30"
+                        >
+                          <option value="">{t("pickFood")}</option>
+                          {filteredFoods.map((f) => (
+                            <option key={f.id} value={f.id}>
+                              {foodDisplayName(f, locale)} (
+                              {f.calories_per_100g} kcal/100g)
+                            </option>
+                          ))}
+                        </select>
+                        <div className="flex items-center gap-2">
                           <Input
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            className="h-8"
+                            type="number"
+                            value={foodQuantity}
+                            onChange={(e) => setFoodQuantity(e.target.value)}
+                            placeholder="100"
+                            className="h-8 w-24"
                           />
+                          <span className="text-xs text-ink-3">
+                            {t("gramsSuffix")}
+                          </span>
                           <Button
                             size="sm"
-                            onClick={() => handleUpdateMeal(meal.id)}
-                            disabled={saving}
+                            disabled={!selectedFoodId || saving}
+                            onClick={() => handleAddFood(meal.id)}
                           >
-                            <Check size={12} />
+                            {saving ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <Plus size={12} />
+                            )}
+                            {t("addFood")}
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => setEditingMealId(null)}
+                            onClick={() => {
+                              setAddingFoodFor(null);
+                              setFoodSearch("");
+                              setSelectedFoodId("");
+                            }}
                           >
                             <X size={12} />
                           </Button>
                         </div>
-                      ) : (
-                        <h3 className="font-medium text-gray-200">{meal.name}</h3>
-                      )}
-                      <p className="mt-0.5 text-xs text-ink-3">
-                        {t("mealMeta", { count: meal.meal_foods.length })} &middot;{" "}
-                        {totals.cal} kcal &middot; {totals.protein}P &middot;{" "}
-                        {totals.carbs}C &middot; {totals.fat}F
-                      </p>
-                    </div>
-                    <div className="ml-2 flex items-center gap-1">
+                      </div>
+                    ) : (
                       <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditName(meal.name);
-                          setEditNotes(meal.notes || "");
-                          setEditingMealId(meal.id);
-                        }}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAddingFoodFor(meal.id)}
                       >
-                        <Pencil size={12} />
+                        <Plus size={12} /> {t("addFood")}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget({ id: meal.id, name: meal.name });
-                        }}
-                        className="text-danger hover:text-red-300"
-                      >
-                        <Trash2 size={12} />
-                      </Button>
-                      {isExpanded ? (
-                        <ChevronUp size={16} className="text-ink-3" />
-                      ) : (
-                        <ChevronDown size={16} className="text-ink-3" />
-                      )}
-                    </div>
+                    )}
                   </div>
-
-                  {/* Expanded content */}
-                  {isExpanded && (
-                    <div className="border-t border-border p-4">
-                      {meal.meal_foods.length === 0 ? (
-                        <p className="mb-3 text-sm text-ink-3">
-                          {t("noFoodsInMeal")}
-                        </p>
-                      ) : (
-                        <div className="mb-3 space-y-2">
-                          {meal.meal_foods.map((mf, idx) => {
-                            if (!mf.foods) return null;
-                            const m = calcMacros(mf.foods, mf.quantity_g);
-                            return (
-                              <div
-                                key={mf.id}
-                                className="flex items-center gap-2 rounded-lg bg-surface-2/50 p-2 text-sm"
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <span className="font-medium text-ink-2">
-                                    {foodDisplayName(mf.foods, locale)}
-                                  </span>
-                                  <span className="ml-2 text-ink-3">
-                                    {mf.quantity_g}g
-                                  </span>
-                                  <span className="ml-2 text-xs text-ink-3">
-                                    {m.cal} kcal / {m.protein}P / {m.carbs}C / {m.fat}F
-                                  </span>
-                                </div>
-                                <div className="flex shrink-0 gap-0.5">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    disabled={idx === 0}
-                                    onClick={() => handleReorder(mf.id, meal.id, "up")}
-                                  >
-                                    <ChevronUp size={12} />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    disabled={idx === meal.meal_foods.length - 1}
-                                    onClick={() => handleReorder(mf.id, meal.id, "down")}
-                                  >
-                                    <ChevronDown size={12} />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    className="text-danger hover:text-red-300"
-                                    onClick={() => handleRemoveFood(mf.id)}
-                                  >
-                                    <X size={12} />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {/* Totals row */}
-                          <div className="flex items-center rounded-lg bg-surface-2/50 p-2 text-sm font-medium">
-                            <span className="flex-1 text-ink-2">{t("totalLabel")}</span>
-                            <span className="text-xs text-ink-2">
-                              {totals.cal} kcal / {totals.protein}P / {totals.carbs}C / {totals.fat}F
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Add food */}
-                      {addingFoodFor === meal.id ? (
-                        <div className="space-y-2 rounded-lg border border-border p-3">
-                          <Input
-                            value={foodSearch}
-                            onChange={(e) => setFoodSearch(e.target.value)}
-                            placeholder={t("searchFoods")}
-                            className="h-8"
-                          />
-                          <select
-                            value={selectedFoodId}
-                            onChange={(e) => setSelectedFoodId(e.target.value)}
-                            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring dark:bg-input/30"
-                          >
-                            <option value="">{t("pickFood")}</option>
-                            {filteredFoods.map((f) => (
-                              <option key={f.id} value={f.id}>
-                                {foodDisplayName(f, locale)} ({f.calories_per_100g} kcal/100g)
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              value={foodQuantity}
-                              onChange={(e) => setFoodQuantity(e.target.value)}
-                              placeholder="100"
-                              className="h-8 w-24"
-                            />
-                            <span className="text-xs text-ink-3">{t("gramsSuffix")}</span>
-                            <Button
-                              size="sm"
-                              disabled={!selectedFoodId || saving}
-                              onClick={() => handleAddFood(meal.id)}
-                            >
-                              {saving ? (
-                                <Loader2 size={12} className="animate-spin" />
-                              ) : (
-                                <Plus size={12} />
-                              )}
-                              {t("addFood")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setAddingFoodFor(null);
-                                setFoodSearch("");
-                                setSelectedFoodId("");
-                              }}
-                            >
-                              <X size={12} />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setAddingFoodFor(meal.id)}
-                        >
-                          <Plus size={12} /> {t("addFood")}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                )}
+              </div>
             );
           })}
         </div>

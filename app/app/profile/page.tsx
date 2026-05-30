@@ -4,21 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Loader2, LogOut, Camera, ChevronRight } from "lucide-react";
+import { Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import {
   getProfile,
-  updateProfile,
   getProfileDashboard,
 } from "@/actions/profile";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { Avatar } from "@/components/ui/athletic/avatar";
-import { Chip } from "@/components/ui/athletic/chip";
-import { MicroLabel } from "@/components/ui/athletic/micro-label";
 import { Num } from "@/components/ui/athletic/num";
 
 type Profile = {
@@ -43,28 +36,25 @@ type Dashboard = {
   start_weight: number | null;
 };
 
+function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const t = useTranslations("app.profile");
-  const tErrors = useTranslations("app.profile.errors");
   const tCommon = useTranslations("common");
-  const tCommonErrors = useTranslations("errors");
   const locale = useLocale();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
-
-  function translateError(code: string): string {
-    if (code === "unauthenticated") return tCommonErrors("unauthenticated");
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return tErrors(code as any);
-    } catch {
-      return tCommonErrors("genericLoad");
-    }
-  }
+  const [streak, setStreak] = useState<number>(0);
+  const [workoutCount, setWorkoutCount] = useState<number>(0);
+  const [logCount, setLogCount] = useState<number>(0);
 
   useEffect(() => {
     async function load() {
@@ -74,35 +64,56 @@ export default function ProfilePage() {
       ]);
       if (profileResult.data) setProfile(profileResult.data as Profile);
       if (dashResult.data) setDashboard(dashResult.data as Dashboard);
+
+      // Calculate streak + counts client-side via supabase
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: logs } = await supabase
+          .from("daily_logs")
+          .select("log_date")
+          .eq("client_id", user.id)
+          .order("log_date", { ascending: false })
+          .limit(365);
+        const { count: wc } = await supabase
+          .from("workout_sessions")
+          .select("*", { count: "exact", head: true })
+          .eq("client_id", user.id)
+          .not("duration_min", "is", null);
+        setWorkoutCount(wc ?? 0);
+        setLogCount(logs?.length ?? 0);
+
+        if (logs) {
+          const dates = new Set(logs.map((l) => l.log_date as string));
+          let count = 0;
+          for (let i = 0; i < 365; i++) {
+            const d = new Date(Date.now() - i * 86400000)
+              .toISOString()
+              .slice(0, 10);
+            if (dates.has(d)) {
+              count++;
+            } else if (i > 0) {
+              break;
+            } else {
+              break;
+            }
+          }
+          setStreak(count);
+        }
+      }
+
       setLoading(false);
     }
     load();
   }, []);
 
-  async function handleSave() {
-    if (!profile?.full_name?.trim()) {
-      toast.error(t("nameRequired"));
-      return;
-    }
-    setSaving(true);
-    const result = await updateProfile({
-      full_name: profile.full_name.trim(),
-      height_cm: profile.height_cm,
-      date_of_birth: profile.date_of_birth,
-      gender: profile.gender,
-    });
-    if (result.error) {
-      toast.error(translateError(result.error));
-    } else {
-      toast.success(t("profileUpdatedToast"));
-    }
-    setSaving(false);
-  }
-
   async function handleSignOut() {
     setSigningOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
+    toast.success(t("signOutLoading"));
     router.push("/");
   }
 
@@ -116,243 +127,184 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="p-6 text-center text-ink-3">{t("notFound")}</div>
+      <div className="px-5 pt-5">
+        <p className="text-sm text-ink-2">{t("notFound")}</p>
+      </div>
     );
   }
 
+  const fullName = profile.full_name ?? "—";
   const bcp47 = locale === "en" ? "en-US" : "hr-HR";
-  const fullName = profile.full_name || "—";
+  const sinceText = dashboard?.start_date
+    ? new Intl.DateTimeFormat(bcp47, {
+        month: "short",
+        year: "numeric",
+      })
+        .format(new Date(dashboard.start_date + "T00:00"))
+        .toUpperCase()
+    : null;
+
+  const menuItems = [
+    { label: t("targets"), href: "#targets" },
+    { label: t("photosLink"), href: "/app/photos" },
+    { label: t("language"), href: "#language" },
+    { label: t("dateOfBirth"), href: "#dob" },
+  ];
 
   return (
-    <div className="px-5 pt-5 pb-6">
-      {/* Avatar header with accent glow */}
-      <div className="relative flex flex-col items-center pt-2 pb-5">
+    <div className="flex flex-col">
+      {/* Centered header with glow */}
+      <div className="relative border-b border-border px-5 pt-6 pb-5 text-center overflow-hidden">
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-32 -z-10 blur-3xl"
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at center top, rgba(197,247,59,0.18), transparent 60%)",
+              "radial-gradient(circle at 50% 0%, rgba(197,247,59,0.08), transparent 70%)",
           }}
         />
-        <Avatar name={fullName} size="xl" />
-        <h1 className="mt-3 text-[22px] font-semibold leading-tight text-ink tracking-tight">
-          {fullName}
-        </h1>
-        {profile.email && (
-          <p className="mt-0.5 font-mono text-[11px] text-ink-3">
-            {profile.email}
-          </p>
-        )}
-        {dashboard?.phase && (
-          <Chip variant="ghost" className="mt-2">
-            {dashboard.phase.name.toUpperCase()}
-          </Chip>
-        )}
+        <div className="relative inline-flex flex-col items-center">
+          <div
+            className="flex size-[72px] items-center justify-center rounded-full text-bg font-bold text-[28px]"
+            style={{
+              background: "linear-gradient(135deg, #C5F73B, #3DE8A0)",
+            }}
+          >
+            {getInitials(fullName)}
+          </div>
+          <h1 className="mt-3 text-[22px] font-semibold leading-tight tracking-[-0.01em] text-ink">
+            {fullName}
+          </h1>
+          {sinceText && (
+            <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
+              ATHLETIC OS · SINCE {sinceText}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 3-up stat strip */}
-      {dashboard && (
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          <div className="rounded-xl border border-border bg-card p-3 text-center">
-            <MicroLabel>START</MicroLabel>
-            <p className="mt-1.5 font-mono text-[20px] font-semibold text-ink tabular-nums leading-none">
-              <Num value={dashboard.start_weight} decimals={1} />
-            </p>
-            <p className="mt-1 font-mono text-[10px] text-ink-3">kg</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3 text-center">
-            <MicroLabel>HEIGHT</MicroLabel>
-            <p className="mt-1.5 font-mono text-[20px] font-semibold text-ink tabular-nums leading-none">
-              <Num value={profile.height_cm} />
-            </p>
-            <p className="mt-1 font-mono text-[10px] text-ink-3">cm</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3 text-center">
-            <MicroLabel>SINCE</MicroLabel>
-            <p className="mt-1.5 font-mono text-[14px] font-semibold text-ink leading-none whitespace-nowrap">
-              {dashboard.start_date
-                ? new Date(
-                    dashboard.start_date + "T00:00"
-                  ).toLocaleDateString(bcp47, {
-                    day: "2-digit",
-                    month: "short",
-                  })
-                : "—"}
-            </p>
-            <p className="mt-1 font-mono text-[10px] text-ink-3">
-              {dashboard.start_date
-                ? new Date(dashboard.start_date + "T00:00").getFullYear()
-                : ""}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Targets summary */}
-      {dashboard?.targets && (
-        <div className="rounded-xl border border-border bg-card p-4 mb-5">
-          <MicroLabel>TARGETS</MicroLabel>
-          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-[12px]">
-            {[
-              ["targetCalories", dashboard.targets.calories, "kcal"],
-              ["targetProtein", dashboard.targets.protein, "g"],
-              ["targetCarbs", dashboard.targets.carbs, "g"],
-              ["targetFat", dashboard.targets.fat, "g"],
-              ["targetSteps", dashboard.targets.steps, ""],
-              ["targetSleep", dashboard.targets.sleep, "h"],
-            ].map(([key, value, unit]) => (
-              <div
-                key={key as string}
-                className="flex items-baseline justify-between"
-              >
-                <span className="text-ink-3">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {t(key as any)}
-                </span>
-                <span className="text-ink tabular-nums">
-                  {value != null ? value : "—"}
-                  {unit ? <span className="text-ink-3 ml-0.5">{unit as string}</span> : null}
-                </span>
+      <div className="flex flex-col gap-5 px-5 py-5">
+        {/* 3-stat strip */}
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { k: "STREAK", v: `${streak}d`, c: "var(--lime)" },
+            { k: "WORKOUTS", v: String(workoutCount), c: "var(--ink)" },
+            { k: "LOGS", v: String(logCount), c: "var(--ink)" },
+          ].map((s) => (
+            <div
+              key={s.k}
+              className="rounded-lg border border-border bg-surface-1 p-3 text-center"
+            >
+              <div className="font-mono text-[9px] font-medium uppercase tracking-[0.08em] text-ink-3">
+                {s.k}
               </div>
-            ))}
-          </div>
+              <div
+                className="mt-1 font-mono text-[22px] font-semibold leading-none tabular-nums"
+                style={{ color: s.c }}
+              >
+                {s.v}
+              </div>
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* Edit profile */}
-      <div className="rounded-xl border border-border bg-card p-4 mb-5">
-        <MicroLabel>{t("editTitle").toUpperCase()}</MicroLabel>
-        <div className="mt-3 space-y-3">
-          <div>
-            <Label htmlFor="full_name" className="text-xs text-ink-3 mb-1 inline-block">
-              {t("fullName")}
-            </Label>
-            <Input
-              id="full_name"
-              value={profile.full_name || ""}
-              onChange={(e) =>
-                setProfile({ ...profile, full_name: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <Label htmlFor="email" className="text-xs text-ink-3 mb-1 inline-block">
-              {tCommon("email")}
-            </Label>
-            <Input
-              id="email"
-              value={profile.email || ""}
-              disabled
-              className="text-ink-3"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label
-                htmlFor="dob"
-                className="text-xs text-ink-3 mb-1 inline-block"
-              >
-                {t("dateOfBirth")}
-              </Label>
-              <Input
-                id="dob"
-                type="date"
-                value={profile.date_of_birth || ""}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    date_of_birth: e.target.value || null,
-                  })
-                }
-              />
+        {/* Current phase + targets */}
+        {dashboard?.phase && (
+          <div className="rounded-xl border border-border bg-surface-1 p-4">
+            <div className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
+              CURRENT PHASE
             </div>
-            <div>
-              <Label
-                htmlFor="height"
-                className="text-xs text-ink-3 mb-1 inline-block"
-              >
-                {t("heightCm")}
-              </Label>
-              <Input
-                id="height"
-                type="number"
-                value={profile.height_cm ?? ""}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    height_cm: e.target.value
-                      ? parseFloat(e.target.value)
-                      : null,
-                  })
-                }
-              />
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-lg font-semibold text-ink">
+                {dashboard.phase.name}
+              </span>
+              {dashboard.phase.start_date && (
+                <span className="font-mono text-[11px] text-ink-3 tabular-nums">
+                  SINCE{" "}
+                  {new Date(
+                    dashboard.phase.start_date + "T00:00"
+                  ).toLocaleDateString(bcp47)}
+                </span>
+              )}
             </div>
           </div>
-          <div>
-            <Label className="text-xs text-ink-3 mb-1 inline-block">
-              {t("gender")}
-            </Label>
-            <div className="flex gap-2">
-              {(["M", "F"] as const).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setProfile({ ...profile, gender: g })}
-                  className={`flex-1 rounded-lg border px-4 py-2 font-mono text-[11px] uppercase tracking-[0.06em] transition-colors ${
-                    profile.gender === g
-                      ? "border-primary/40 bg-primary/10 text-primary"
-                      : "border-border text-ink-3 hover:border-hairline-2"
-                  }`}
-                >
-                  {g === "M" ? t("male") : t("female")}
-                </button>
+        )}
+
+        {dashboard?.targets && (
+          <div className="rounded-xl border border-border bg-surface-1 p-4">
+            <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
+              TARGETS
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+              {[
+                { k: t("targetCalories"), v: dashboard.targets.calories, u: "kcal" },
+                { k: t("targetProtein"), v: dashboard.targets.protein, u: "g" },
+                { k: t("targetCarbs"), v: dashboard.targets.carbs, u: "g" },
+                { k: t("targetFat"), v: dashboard.targets.fat, u: "g" },
+                { k: t("targetSteps"), v: dashboard.targets.steps, u: "" },
+                { k: t("targetSleep"), v: dashboard.targets.sleep, u: "h" },
+              ].map((row) => (
+                <div key={row.k} className="flex items-baseline justify-between">
+                  <span className="text-sm text-ink-2">{row.k}</span>
+                  <span className="font-mono text-sm font-semibold tabular-nums text-ink">
+                    {row.v != null ? (
+                      <>
+                        <Num value={row.v as number} />
+                        {row.u && (
+                          <span className="text-[10px] text-ink-3 ml-0.5">
+                            {row.u}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-ink-3">—</span>
+                    )}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
-          <Button
-            onClick={handleSave}
-            size="lg"
-            disabled={saving}
-            className="w-full mt-2"
-          >
-            {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-            {saving ? tCommon("saving") : tCommon("save")}
-          </Button>
+        )}
+
+        {/* ACCOUNT menu */}
+        <div>
+          <div className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
+            ACCOUNT
+          </div>
+          <div className="overflow-hidden rounded-xl border border-border bg-surface-1">
+            {menuItems.map((item, idx) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`flex items-center justify-between px-4 py-3.5 hover:bg-surface-2/40 transition-colors ${
+                  idx < menuItems.length - 1 ? "border-b border-border" : ""
+                }`}
+              >
+                <span className="text-sm text-ink">{item.label}</span>
+                <ChevronRight size={14} className="text-ink-3" />
+              </Link>
+            ))}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <span className="text-sm text-ink">{t("language")}</span>
+              <LanguageSwitcher />
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Account links */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden mb-5">
-        <Link
-          href="/app/photos"
-          className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2/50 transition-colors"
+        {/* Log out */}
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="w-full rounded-xl border border-border bg-surface-1 px-4 py-3.5 text-sm text-danger transition-colors hover:bg-surface-2 disabled:opacity-50"
         >
-          <Camera size={16} className="text-ink-3 shrink-0" />
-          <span className="flex-1 text-sm text-ink">
-            {t.has("photosLink") ? t("photosLink") : "Progress photos"}
-          </span>
-          <ChevronRight size={14} className="text-ink-3" />
-        </Link>
+          {signingOut ? (
+            <Loader2 className="inline size-4 animate-spin" />
+          ) : (
+            t("signOut")
+          )}
+        </button>
       </div>
-
-      {/* Language */}
-      <div className="rounded-xl border border-border bg-card p-4 mb-5 flex items-center justify-between">
-        <span className="text-sm text-ink-2">{t("language")}</span>
-        <LanguageSwitcher />
-      </div>
-
-      {/* Sign out */}
-      <Button
-        variant="outline"
-        onClick={handleSignOut}
-        disabled={signingOut}
-        size="lg"
-        className="w-full text-danger border-danger/30 hover:bg-danger/10"
-      >
-        <LogOut className="size-4" />
-        {signingOut ? t("signOutLoading") : t("signOut")}
-      </Button>
     </div>
   );
 }
