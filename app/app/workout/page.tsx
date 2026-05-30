@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
-import { Chip } from "@/components/ui/athletic/chip";
 import { EmptyState } from "@/components/ui/athletic/empty-state";
 import { getActiveProgram, createWorkoutSession } from "@/actions/workout";
+import { ExerciseDemo } from "@/components/exercise-demo";
 
 type Exercise = {
   id: string;
   name: string;
   notes: string | null;
   video_url: string | null;
+  video_storage_path: string | null;
 };
 
 type ProgramExercise = {
@@ -47,6 +48,7 @@ export default function WorkoutPage() {
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
   function translateError(code: string): string {
@@ -164,29 +166,70 @@ export default function WorkoutPage() {
                   <ul className="flex flex-col gap-1.5">
                     {day.program_exercises.map((pe, i) => {
                       const ex = pe.exercises;
+                      const hasDemo = !!(
+                        ex.video_url ||
+                        ex.video_storage_path ||
+                        ex.notes
+                      );
+                      const isExExpanded = expandedExercise === pe.id;
                       return (
                         <li
                           key={pe.id}
-                          className="grid grid-cols-[24px_1fr_auto] items-center gap-3 rounded-lg border border-border bg-surface-1 px-3 py-2.5"
+                          className="overflow-hidden rounded-lg border border-border bg-surface-1"
                         >
-                          <span className="font-mono text-[11px] text-ink-3 tabular-nums">
-                            {(i + 1).toString().padStart(2, "0")}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium text-ink truncate">
-                              {ex.name}
+                          <div
+                            className={`grid grid-cols-[24px_1fr_auto] items-center gap-3 px-3 py-2.5 ${
+                              hasDemo ? "cursor-pointer active:bg-surface-2/50" : ""
+                            }`}
+                            onClick={
+                              hasDemo
+                                ? () =>
+                                    setExpandedExercise(
+                                      isExExpanded ? null : pe.id
+                                    )
+                                : undefined
+                            }
+                          >
+                            <span className="font-mono text-[11px] text-ink-3 tabular-nums">
+                              {(i + 1).toString().padStart(2, "0")}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-ink truncate">
+                                {ex.name}
+                              </div>
+                              <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
+                                {pe.sets} × {pe.reps}
+                                {pe.rpe ? ` · RPE ${pe.rpe}` : ""}
+                                {pe.rest_sec
+                                  ? ` · ${t("restSecondsShort", {
+                                      sec: pe.rest_sec,
+                                    })}`
+                                  : ""}
+                              </div>
                             </div>
-                            <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
-                              {pe.sets} × {pe.reps}
-                              {pe.rpe ? ` · RPE ${pe.rpe}` : ""}
-                              {pe.rest_sec
-                                ? ` · ${t("restSecondsShort", {
-                                    sec: pe.rest_sec,
-                                  })}`
-                                : ""}
-                            </div>
+                            {hasDemo ? (
+                              <span className="flex items-center gap-1 text-ink-3">
+                                <Play size={12} className="text-lime" />
+                                {isExExpanded ? (
+                                  <ChevronUp size={14} />
+                                ) : (
+                                  <ChevronDown size={14} />
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-ink-3">›</span>
+                            )}
                           </div>
-                          <span className="text-ink-3">›</span>
+                          {hasDemo && isExExpanded ? (
+                            <div className="border-t border-border px-3 py-3">
+                              <ExerciseDemo
+                                videoUrl={ex.video_url}
+                                videoStoragePath={ex.video_storage_path}
+                                description={ex.notes}
+                                descriptionLabel={t("description")}
+                              />
+                            </div>
+                          ) : null}
                         </li>
                       );
                     })}

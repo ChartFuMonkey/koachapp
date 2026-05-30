@@ -35,7 +35,7 @@ export async function getActiveProgram() {
       id, day_label, sort_order,
       program_exercises (
         id, sets, reps, rest_sec, rpe, sort_order,
-        exercises ( id, name, notes, video_url )
+        exercises ( id, name, notes, video_url, video_storage_path )
       )
     `
     )

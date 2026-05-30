@@ -19,6 +19,7 @@ import { Pencil, Trash2, Check, X, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { translateError } from "@/lib/translate-error";
+import { buildPublicVideoUrl } from "@/lib/video";
 
 type Exercise = {
   id: string;
@@ -28,6 +29,7 @@ type Exercise = {
   difficulty: string | null;
   notes: string | null;
   video_url: string | null;
+  video_storage_path: string | null;
 };
 
 const DIFFICULTY_VALUES = ["", "beginner", "intermediate", "advanced"] as const;
@@ -145,6 +147,16 @@ export default function ExerciseManager({
     onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     onCancel: () => void;
   }) {
+    const hasUpload = !!exercise?.video_storage_path;
+    const [videoMode, setVideoMode] = useState<"link" | "upload">(
+      hasUpload ? "upload" : "link"
+    );
+    const [removeVideo, setRemoveVideo] = useState(false);
+    const hasExistingVideo = !!(exercise?.video_url || exercise?.video_storage_path);
+    const toggleBase =
+      "inline-flex h-7 items-center rounded-md border px-2.5 font-mono text-[11px] uppercase tracking-[0.06em]";
+    const toggleOn = `${toggleBase} border-ink bg-ink text-bg`;
+    const toggleOff = `${toggleBase} border-hairline-2 bg-surface-2 text-ink-2 hover:text-ink`;
     return (
       <form onSubmit={onSubmit}>
         <Card className="mb-4">
@@ -192,22 +204,75 @@ export default function ExerciseManager({
                 </select>
               </div>
               <div className="sm:col-span-1 lg:col-span-3">
-                <Label className="mb-1 text-xs">{t("videoUrlLabel")}</Label>
-                <Input
-                  name="video_url"
-                  type="url"
-                  defaultValue={exercise?.video_url ?? ""}
-                  placeholder="https://..."
+                <Label className="mb-1 text-xs">{t("videoLabel")}</Label>
+                <div className="mb-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    className={videoMode === "link" ? toggleOn : toggleOff}
+                    onClick={() => setVideoMode("link")}
+                  >
+                    {t("videoModeLink")}
+                  </button>
+                  <button
+                    type="button"
+                    className={videoMode === "upload" ? toggleOn : toggleOff}
+                    onClick={() => setVideoMode("upload")}
+                  >
+                    {t("videoModeUpload")}
+                  </button>
+                </div>
+
+                <input
+                  type="hidden"
+                  name="current_video_storage_path"
+                  value={exercise?.video_storage_path ?? ""}
                 />
+                <input
+                  type="hidden"
+                  name="current_video_url"
+                  value={exercise?.video_url ?? ""}
+                />
+                <input type="hidden" name="video_remove" value={removeVideo ? "1" : ""} />
+
+                {videoMode === "link" ? (
+                  <Input
+                    name="video_url"
+                    type="url"
+                    defaultValue={exercise?.video_url ?? ""}
+                    placeholder={t("videoLinkPlaceholder")}
+                  />
+                ) : (
+                  <div className="space-y-1">
+                    <Input
+                      name="video_file"
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                    />
+                    <p className="text-[11px] text-ink-3">{t("videoUploadHint")}</p>
+                    {hasUpload && !removeVideo ? (
+                      <p className="text-[11px] text-ink-2">{t("videoCurrent")} ✓</p>
+                    ) : null}
+                  </div>
+                )}
+
+                {hasExistingVideo ? (
+                  <button
+                    type="button"
+                    onClick={() => setRemoveVideo((v) => !v)}
+                    className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3 underline hover:text-danger"
+                  >
+                    {removeVideo ? tCommon("cancel") : t("videoRemove")}
+                  </button>
+                ) : null}
               </div>
             </div>
             <div>
-              <Label className="mb-1 text-xs">{t("notesLabel")}</Label>
+              <Label className="mb-1 text-xs">{t("descriptionLabel")}</Label>
               <Textarea
                 name="notes"
-                rows={2}
+                rows={3}
                 defaultValue={exercise?.notes ?? ""}
-                placeholder={t("notesPlaceholder")}
+                placeholder={t("descriptionPlaceholder")}
               />
             </div>
             <div className="flex gap-2">
@@ -375,17 +440,27 @@ export default function ExerciseManager({
                   <div className="font-mono text-sm font-semibold text-ink tabular-nums">
                     {usedCount}×
                   </div>
-                  {ex.video_url && (
-                    <a
-                      href={ex.video_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto inline-flex items-center gap-1 rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-2 transition-colors hover:text-lime"
-                    >
-                      <Play size={10} />
-                      {t("demo")}
-                    </a>
-                  )}
+                  {(() => {
+                    const demoHref =
+                      ex.video_url ||
+                      (ex.video_storage_path
+                        ? buildPublicVideoUrl(
+                            process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+                            ex.video_storage_path
+                          )
+                        : null);
+                    return demoHref ? (
+                      <a
+                        href={demoHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto inline-flex items-center gap-1 rounded-[3px] border border-hairline-2 bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-2 transition-colors hover:text-lime"
+                      >
+                        <Play size={10} />
+                        {t("demo")}
+                      </a>
+                    ) : null;
+                  })()}
                 </div>
               </div>
             );
