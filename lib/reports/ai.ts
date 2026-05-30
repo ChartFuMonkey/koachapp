@@ -8,8 +8,8 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { WeeklyMetrics, Flag, AiSummaries, ReportLanguage } from "./types";
 
-// Low-cost model chosen during brainstorming (a fraction of a cent per report).
-export const REPORT_MODEL = "claude-haiku-4-5";
+// Model for report generation. Igor chose Sonnet for higher-quality narrative.
+export const REPORT_MODEL = "claude-sonnet-4-6";
 
 const SYSTEM_PROMPT = `You write weekly fitness-coaching reports from a JSON summary of one client's week.
 
