@@ -136,3 +136,29 @@ export async function getUnreadCount(
 
   return count ?? 0;
 }
+
+/** Per-client unread counts for the coach: client-sent messages not yet read. */
+export async function getCoachUnreadCounts(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== COACH_UUID) return {};
+
+  const { data, error } = await supabase
+    .from("messages")
+    .select("client_id")
+    .is("read_at", null)
+    .neq("sender_id", user.id);
+
+  if (error) {
+    console.error("getCoachUnreadCounts error", error);
+    return {};
+  }
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const cid = (row as { client_id: string }).client_id;
+    counts[cid] = (counts[cid] ?? 0) + 1;
+  }
+  return counts;
+}
