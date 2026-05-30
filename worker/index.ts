@@ -37,14 +37,18 @@ self.addEventListener("notificationclick", (event) => {
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clients) => {
+        const abs = new URL(target, self.location.origin).href;
         const existing = clients.find((c) => c.url.includes(target));
         if (existing) return existing.focus();
         const anyWin = clients[0];
         if (anyWin) {
-          anyWin.navigate(target);
-          return anyWin.focus();
+          // navigate() needs an absolute URL and can reject; fall back to a new window.
+          return anyWin
+            .navigate(abs)
+            .then((c) => (c ?? anyWin).focus())
+            .catch(() => self.clients.openWindow(abs));
         }
-        return self.clients.openWindow(target);
+        return self.clients.openWindow(abs);
       })
   );
 });

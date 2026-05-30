@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useMessageThread } from "@/lib/messages/use-message-thread";
 
 interface InboxCardProps {
@@ -13,14 +14,19 @@ interface InboxCardProps {
   coachFirstName: string;
 }
 
-function timeFmt(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = (now.getTime() - d.getTime()) / 1000;
-  if (diff < 60) return "JUST NOW";
-  if (diff < 3600) return `${Math.floor(diff / 60)}M AGO`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}H AGO`;
-  return d
+type TimeLabels = {
+  justNow: string;
+  minutesAgo: (n: number) => string;
+  hoursAgo: (n: number) => string;
+};
+
+// Module-scope so Date.now() isn't a render-time impurity inside the component.
+function relTime(iso: string, labels: TimeLabels): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return labels.justNow;
+  if (diff < 3600) return labels.minutesAgo(Math.floor(diff / 60));
+  if (diff < 86400) return labels.hoursAgo(Math.floor(diff / 3600));
+  return new Date(iso)
     .toLocaleString(undefined, { day: "numeric", month: "short" })
     .toUpperCase();
 }
@@ -37,7 +43,14 @@ export default function InboxCard({
     clientId,
     currentUserId,
   });
+  const t = useTranslations("app.messages");
   const [composing, setComposing] = useState(false);
+
+  const timeLabels: TimeLabels = {
+    justNow: t("justNow"),
+    minutesAgo: (n) => t("minutesAgo", { n }),
+    hoursAgo: (n) => t("hoursAgo", { n }),
+  };
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -156,7 +169,7 @@ export default function InboxCard({
                 {m.body}
               </div>
               <div className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em] text-ink-3">
-                {timeFmt(m.created_at)}
+                {relTime(m.created_at, timeLabels)}
               </div>
             </div>
           );

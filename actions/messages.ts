@@ -176,7 +176,8 @@ export async function getCoachUnreadCounts(): Promise<Record<string, number>> {
     .from("messages")
     .select("client_id")
     .is("read_at", null)
-    .neq("sender_id", user.id);
+    .neq("sender_id", user.id)
+    .limit(10000);
 
   if (error) {
     console.error("getCoachUnreadCounts error", error);

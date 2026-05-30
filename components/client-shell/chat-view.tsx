@@ -23,10 +23,14 @@ export default function ChatView({ userId }: { userId: string }) {
     });
   }, [messages]);
 
-  // Mark read when viewing and whenever a new message lands while focused.
+  // Mark read when viewing — only when something from the coach is actually
+  // unread (avoids a redundant server round-trip on every message change).
   useEffect(() => {
-    if (!loading) markRead();
-  }, [loading, messages, markRead]);
+    if (loading) return;
+    if (messages.some((m) => m.sender_id !== userId && m.read_at == null)) {
+      markRead();
+    }
+  }, [loading, messages, markRead, userId]);
 
   async function handleSend() {
     const trimmed = body.trim();

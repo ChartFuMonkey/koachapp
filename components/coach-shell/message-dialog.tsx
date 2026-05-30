@@ -42,6 +42,9 @@ export default function MessageDialog({
     currentUserId,
     active: open,
   });
+  // The dialog is coach-only; fall back to the coach UUID so message bubbles
+  // align correctly even before the parent resolves currentUserId.
+  const selfId = currentUserId || process.env.NEXT_PUBLIC_COACH_UUID || "";
   const [sending, setSending] = useState(false);
   const [body, setBody] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -155,7 +158,7 @@ export default function MessageDialog({
             </div>
           ) : (
             messages.map((m) => {
-              const mine = m.sender_id === currentUserId;
+              const mine = m.sender_id === selfId;
               return (
                 <div
                   key={m.id}

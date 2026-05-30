@@ -48,8 +48,16 @@ export function useClientUnread(userId: string, initial = 0): number {
         onResubscribe: reload,
       });
     })();
+    // Realtime delivery stops if the socket's JWT expires; re-sync on wake.
+    const onWake = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onWake);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onWake);
       if (channel) supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,8 +90,16 @@ export function useCoachUnread(
         onResubscribe: reload,
       });
     })();
+    // Realtime delivery stops if the socket's JWT expires; re-sync on wake.
+    const onWake = () => {
+      if (document.visibilityState === "visible") reload();
+    };
+    window.addEventListener("focus", onWake);
+    document.addEventListener("visibilitychange", onWake);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onWake);
+      document.removeEventListener("visibilitychange", onWake);
       if (channel) supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
