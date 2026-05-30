@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Not application source — don't lint:
+    ".claude/**", // agent worktrees / session files (incl. stale worktree copies)
+    "docs/**", // specs, plans, and throwaway prototype mockups (*.jsx)
   ]),
 ]);
 
