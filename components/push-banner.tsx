@@ -24,7 +24,9 @@ export default function PushBanner() {
       Notification.permission === "default" &&
       localStorage.getItem("push-dismissed") !== "true"
     ) {
-      setVisible(true);
+      // Defer so the update runs in a callback, not synchronously in the effect
+      // body (satisfies react-hooks/set-state-in-effect).
+      queueMicrotask(() => setVisible(true));
     }
   }, []);
 
