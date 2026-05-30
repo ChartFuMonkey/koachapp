@@ -208,14 +208,14 @@ export default async function TodayPage() {
   return (
     <div className="flex flex-col">
       {/* Top header */}
-      <div className="px-5 pt-5 pb-2">
+      <div className="px-5 md:px-8 pt-5 md:pt-8 pb-2">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
               {dateStr}
               {dayNumber != null && ` · DAY ${dayNumber}`}
             </div>
-            <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
+            <h1 className="mt-1.5 text-[28px] md:text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink">
               {t("greeting", { name })}
             </h1>
           </div>
@@ -234,9 +234,9 @@ export default async function TodayPage() {
         </div>
       </div>
 
-      <div className="px-5 pb-6 flex flex-col gap-3.5 mt-3 md:max-w-[920px] md:mx-auto md:w-full">
-        {/* Hero card — Energy budget */}
-        <div className="relative overflow-hidden rounded-xl border border-border bg-surface-1 p-5">
+      <div className="px-5 md:px-8 pb-6 flex flex-col gap-3.5 mt-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:items-start">
+        {/* Hero card — Energy budget (full-width across the grid) */}
+        <div className="md:col-span-2 lg:col-span-3 relative overflow-hidden rounded-xl border border-border bg-surface-1 p-5 lg:p-6">
           <div
             aria-hidden
             className="absolute -top-10 -right-10 size-40"
@@ -403,8 +403,8 @@ export default async function TodayPage() {
           )}
         </div>
 
-        {/* Meals + day stats — side-by-side at md+ */}
-        <div className="flex flex-col gap-3.5 md:grid md:grid-cols-2 md:gap-4 md:items-start">
+        {/* Meals + day stats — stacked within the grid cell. */}
+        <div className="flex flex-col gap-3.5">
         {/* Meals list */}
         {mealData && mealData.meals.length > 0 && (
           <div>

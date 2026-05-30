@@ -273,7 +273,8 @@
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "reports": "Reports",
-      "roleLabel": "Coach"
+      "roleLabel": "Coach",
+      "search": "Search"
     },
     "home": {
       "title": "Clients",

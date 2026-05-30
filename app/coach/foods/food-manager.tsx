@@ -280,14 +280,14 @@ export default function FoodManager({
   const totalCount = initialFoods.length;
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
             ~/FOODS &mdash; {totalCount} {totalCount === 1 ? "ENTRY" : "ENTRIES"}
           </div>
-          <h1 className="mt-2 text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
+          <h1 className="mt-2 text-[28px] sm:text-[36px] font-semibold leading-none tracking-[-0.02em] text-ink">
             {t("title")}
           </h1>
         </div>

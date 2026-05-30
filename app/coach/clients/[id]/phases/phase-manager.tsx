@@ -371,7 +371,7 @@ export default function PhaseManager({
   }
 
   return (
-    <div className="px-10 py-8">
+    <div className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       {/* Back link */}
       <Link
         href={`/coach/clients/${clientId}`}
@@ -382,7 +382,7 @@ export default function PhaseManager({
 
       {/* Header: micro-label + 36px headline */}
       <MicroLabel>{clientName.toUpperCase()} · PHASE MANAGER</MicroLabel>
-      <h1 className="mt-2 text-[36px] font-semibold leading-none tracking-tight text-ink">
+      <h1 className="mt-2 text-[28px] sm:text-[36px] font-semibold leading-none tracking-tight text-ink">
         {t("title")}
       </h1>
 

@@ -70,13 +70,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="bg-bg min-h-screen flex">
-      {/* LG+ left rail (Client desktop §19) */}
-      <aside className="hidden lg:flex sticky top-0 h-screen w-[220px] shrink-0 flex-col border-r border-border bg-surface-1 px-4 py-5">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-7 items-center justify-center rounded-[7px] bg-lime text-bg font-bold text-sm">
+      {/* Left rail — appears at MD as a 64px icon rail, expands to a 220px
+          labeled sidebar at LG. Below MD the bottom tab bar takes over. */}
+      <aside className="hidden md:flex sticky top-0 h-screen w-[64px] lg:w-[220px] shrink-0 flex-col border-r border-border bg-surface-1 px-2 lg:px-4 py-5">
+        <div className="flex items-center gap-2.5 px-1 lg:px-0 justify-center lg:justify-start">
+          <div className="flex size-8 items-center justify-center rounded-[7px] bg-lime text-bg font-bold text-sm shrink-0">
             K
           </div>
-          <div className="flex flex-col leading-tight">
+          <div className="hidden lg:flex flex-col leading-tight">
             <span className="text-sm font-semibold text-ink tracking-[-0.01em]">
               koach
             </span>
@@ -94,7 +95,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 key={tab.route}
                 href={tab.route}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-1 ${
+                aria-label={t(tab.key)}
+                title={t(tab.key)}
+                className={`flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] transition-colors duration-fast justify-center lg:justify-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-1 ${
                   active
                     ? "bg-surface-2 text-ink"
                     : "text-ink-2 hover:bg-surface-2/60 hover:text-ink"
@@ -103,8 +106,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="text-base leading-none" aria-hidden>
                   {tab.glyph}
                 </span>
-                <span className="flex-1">{t(tab.key)}</span>
-                <span className="font-mono text-[10px] text-ink-3 px-1 py-0.5 bg-bg rounded-[3px] border border-border">
+                <span className="hidden lg:flex flex-1">{t(tab.key)}</span>
+                <span className="hidden lg:inline font-mono text-[10px] text-ink-3 px-1 py-0.5 bg-bg rounded-[3px] border border-border">
                   {tab.hotkey}
                 </span>
               </Link>
@@ -112,25 +115,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         {gPending && (
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.08em] text-lime">
+          <div className="mb-2 hidden lg:block font-mono text-[10px] uppercase tracking-[0.08em] text-lime">
             G → …
           </div>
         )}
       </aside>
 
-      {/* Center column — mobile-canonical 430 max, tablet 2-col grid, desktop centered */}
+      {/* Center column — phone-width on mobile, widening through tablet to a
+          comfortable reading measure on desktop. No longer frozen at 430px. */}
       <div className="flex-1 min-w-0 flex justify-center">
-        <div
-          className="w-full max-w-[430px] lg:max-w-[480px] xl:max-w-[520px] min-h-screen flex flex-col bg-bg"
-        >
-          <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-8">
+        <div className="w-full max-w-[480px] md:max-w-[720px] lg:max-w-[860px] xl:max-w-[960px] min-h-screen flex flex-col bg-bg">
+          <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-8">
             {children}
           </main>
           <PushBanner />
           <InstallBanner />
 
-          {/* Bottom tab bar — hidden on LG+ where the side nav takes over */}
-          <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)] z-30 lg:hidden">
+          {/* Bottom tab bar — mobile only; the side rail takes over at MD. */}
+          <nav className="fixed bottom-0 inset-x-0 border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)] z-30 md:hidden">
             <div className="flex justify-around px-2 pt-1.5 pb-3">
               {tabs.map((tab) => {
                 const isActive = isActiveTab(tab.route);
@@ -161,8 +163,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* LG+ right context rail — coach note + week strip + streak. Hidden on /app/workout/log where it would distract */}
-      <aside className="hidden lg:flex sticky top-0 h-screen w-[220px] shrink-0 flex-col border-l border-border bg-surface-1 px-4 py-5">
+      {/* Right context rail — supplementary (coach note + week strip + streak).
+          Only at XL so tablet/laptop give the main content full room first. */}
+      <aside className="hidden xl:flex sticky top-0 h-screen w-[240px] shrink-0 flex-col border-l border-border bg-surface-1 px-4 py-5">
         <ClientContextRail />
       </aside>
     </div>

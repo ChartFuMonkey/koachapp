@@ -109,12 +109,12 @@ export default function CheckinPage() {
   // Submitted view
   if (submitted) {
     return (
-      <div className="px-5 pt-5 pb-6">
+      <div className="px-5 md:px-8 pt-5 pb-6">
         <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
           WEEK {isoWeek} · {t("weeklyReview")}
         </div>
         <div className="mt-1.5 flex items-center gap-3">
-          <h1 className="text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
+          <h1 className="text-[28px] md:text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink">
             {t("title")}
           </h1>
           <Chip variant="good" className="gap-1 mt-1">
@@ -129,7 +129,7 @@ export default function CheckinPage() {
             ).toLocaleDateString(bcp47)}
           </p>
         )}
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <MetricCard label={t("energy")} value={submitted.energy_level} max={10} />
           <MetricCard label={t("stress")} value={submitted.stress_level} max={10} />
           <MetricCard label={t("motivation")} value={submitted.motivation} max={10} />
@@ -183,11 +183,11 @@ export default function CheckinPage() {
   return (
     <div className="flex flex-col">
       {/* Sticky header */}
-      <div className="px-5 pt-5 pb-4 border-b border-border">
+      <div className="px-5 md:px-8 pt-5 pb-4 border-b border-border">
         <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
           WEEK {isoWeek} · {t("weeklyReview")}
         </div>
-        <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
+        <h1 className="mt-1.5 text-[28px] md:text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink">
           {t("title")}
         </h1>
         <div className="mt-3 h-[3px] overflow-hidden rounded-full bg-hairline">
@@ -201,7 +201,7 @@ export default function CheckinPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 px-5 py-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 px-5 md:px-8 py-5">
         {/* All sliders consolidated into ONE card per BClientCheckin */}
         <div className="rounded-xl border border-border bg-surface-1 p-4">
           <div className="mb-3.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
@@ -286,34 +286,36 @@ export default function CheckinPage() {
           </label>
         </div>
 
-        <TextareaCard
-          label={t("whatWentWellPrompt").toUpperCase()}
-          value={whatWentWell}
-          onChange={setWhatWentWell}
-          placeholder={t("textareaPlaceholder")}
-          minHeight={80}
-        />
-        <TextareaCard
-          label={t("challengesPrompt").toUpperCase()}
-          value={challenges}
-          onChange={setChallenges}
-          placeholder={t("textareaPlaceholder")}
-          minHeight={60}
-        />
-        <TextareaCard
-          label={t("goalsNextWeek").toUpperCase()}
-          value={goalsNextWeek}
-          onChange={setGoalsNextWeek}
-          placeholder={t("textareaPlaceholder")}
-          minHeight={60}
-        />
-        <TextareaCard
-          label={t("questionsForCoach").toUpperCase()}
-          value={questionsForCoach}
-          onChange={setQuestionsForCoach}
-          placeholder={t("textareaPlaceholder")}
-          minHeight={60}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <TextareaCard
+            label={t("whatWentWellPrompt").toUpperCase()}
+            value={whatWentWell}
+            onChange={setWhatWentWell}
+            placeholder={t("textareaPlaceholder")}
+            minHeight={80}
+          />
+          <TextareaCard
+            label={t("challengesPrompt").toUpperCase()}
+            value={challenges}
+            onChange={setChallenges}
+            placeholder={t("textareaPlaceholder")}
+            minHeight={60}
+          />
+          <TextareaCard
+            label={t("goalsNextWeek").toUpperCase()}
+            value={goalsNextWeek}
+            onChange={setGoalsNextWeek}
+            placeholder={t("textareaPlaceholder")}
+            minHeight={60}
+          />
+          <TextareaCard
+            label={t("questionsForCoach").toUpperCase()}
+            value={questionsForCoach}
+            onChange={setQuestionsForCoach}
+            placeholder={t("textareaPlaceholder")}
+            minHeight={60}
+          />
+        </div>
 
         <div className="rounded-xl border border-border bg-surface-1 p-4">
           <div className="mb-3 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">

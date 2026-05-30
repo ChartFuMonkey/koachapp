@@ -250,42 +250,45 @@ export default function LogPage() {
   return (
     <div className="flex flex-col">
       {/* Sticky header */}
-      <div className="px-5 pt-5 pb-4 border-b border-border">
+      <div className="px-5 md:px-8 pt-5 md:pt-8 pb-4 border-b border-border">
         <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
           {dateHeader}
         </div>
-        <h1 className="mt-1.5 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink">
+        <h1 className="mt-1.5 text-[28px] md:text-[32px] font-semibold leading-none tracking-[-0.02em] text-ink">
           {t("title")}
         </h1>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-2 px-5 py-5"
+        className="flex flex-col gap-2 px-5 md:px-8 py-5 md:py-8"
       >
-        {statRows.map((row) => {
-          const { key, labelFallback: _ignore, ...rest } = row;
-          return <StatRow key={key} {...rest} />;
-        })}
-
-        {/* Sleep quality slider */}
-        <div className="mt-2 rounded-lg border border-border bg-surface-1 p-4">
-          <SliderScale
-            label={t("sleepQuality")}
-            value={sleepQuality}
-            onChange={setSleepQuality}
-            color="var(--good)"
-          />
+        {/* Numeric stat rows — single column on phone, multi-column on bigger screens */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {statRows.map((row) => {
+            const { key, labelFallback: _ignore, ...rest } = row;
+            return <StatRow key={key} {...rest} />;
+          })}
         </div>
 
-        {/* Energy level slider */}
-        <div className="rounded-lg border border-border bg-surface-1 p-4">
-          <SliderScale
-            label={t("energyLevel")}
-            value={energyLevel}
-            onChange={setEnergyLevel}
-            color="var(--lime)"
-          />
+        {/* Sliders — side-by-side from tablet up */}
+        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+          <div className="rounded-lg border border-border bg-surface-1 p-4">
+            <SliderScale
+              label={t("sleepQuality")}
+              value={sleepQuality}
+              onChange={setSleepQuality}
+              color="var(--good)"
+            />
+          </div>
+          <div className="rounded-lg border border-border bg-surface-1 p-4">
+            <SliderScale
+              label={t("energyLevel")}
+              value={energyLevel}
+              onChange={setEnergyLevel}
+              color="var(--lime)"
+            />
+          </div>
         </div>
 
         {/* Meal plan followed */}
@@ -324,7 +327,7 @@ export default function LogPage() {
         </div>
 
         {/* Note for coach */}
-        <div className="rounded-lg border border-border bg-surface-1 p-4">
+        <div className="mt-2 rounded-lg border border-border bg-surface-1 p-4">
           <div className="mb-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-ink-3">
             {t("notesLabel").toUpperCase()}
           </div>
@@ -340,7 +343,7 @@ export default function LogPage() {
         <button
           type="submit"
           disabled={saving}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-lime px-4 py-4 text-sm font-bold uppercase tracking-[0.02em] text-bg hover:bg-lime-hover active:bg-lime-press disabled:opacity-50 transition-all"
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-lime px-4 py-4 text-sm font-bold uppercase tracking-[0.02em] text-bg hover:bg-lime-hover active:bg-lime-press disabled:opacity-50 transition-all md:max-w-xs md:self-end"
         >
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
           {saving ? tCommon("saving") : `${tCommon("save")} →`}

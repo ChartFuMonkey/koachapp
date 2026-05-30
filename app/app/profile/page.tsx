@@ -168,7 +168,7 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col">
       {/* Centered header with glow */}
-      <div className="relative border-b border-border px-5 pt-6 pb-5 text-center overflow-hidden">
+      <div className="relative border-b border-border px-5 md:px-8 pt-6 pb-5 text-center overflow-hidden">
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
@@ -205,7 +205,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 px-5 py-5">
+      <div className="flex flex-col gap-5 px-5 md:px-8 py-5 lg:max-w-[640px] lg:mx-auto lg:w-full">
         {/* 3-stat strip */}
         <div className="grid grid-cols-3 gap-2">
           {[

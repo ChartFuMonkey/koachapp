@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Kbd } from "@/components/ui/athletic/kbd";
@@ -146,7 +146,16 @@ export default function CoachShell({
           <Menu size={18} />
         </button>
         <span className="ml-3 font-semibold text-ink text-sm">{t("brand")}</span>
-        <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
+        <button
+          onClick={() =>
+            window.dispatchEvent(new CustomEvent("koach:command-open"))
+          }
+          aria-label={t("search")}
+          className="ml-auto rounded-sm p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-1"
+        >
+          <Search size={16} />
+        </button>
+        <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">
           COACH
         </span>
       </div>
@@ -167,11 +176,17 @@ export default function CoachShell({
         onMouseEnter={() => setRailExpanded(true)}
         onMouseLeave={() => setRailExpanded(false)}
       >
-        {/* Brand block */}
+        {/* Brand block — tap toggles the rail open on touch devices */}
         <div className="flex items-center gap-2.5 px-4 pt-5 pb-6">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-lime text-bg font-bold text-sm">
+          <button
+            type="button"
+            onClick={() => setRailExpanded((v) => !v)}
+            aria-label={railExpanded ? t("closeMenu") : t("openMenu")}
+            aria-expanded={railExpanded}
+            className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-lime text-bg font-bold text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-lime focus-visible:outline-offset-1"
+          >
             K
-          </div>
+          </button>
           {railExpanded && (
             <div className="flex flex-col leading-tight overflow-hidden">
               <span className="text-sm font-semibold text-ink tracking-[-0.01em]">
