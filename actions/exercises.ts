@@ -9,7 +9,7 @@ export async function getExercises() {
 
   const { data, error } = await supabaseAdmin
     .from("exercises")
-    .select("id, name, muscle_group, equipment, difficulty, notes, video_url")
+    .select("id, name, muscle_group, equipment, difficulty, notes, video_url, video_storage_path")
     .order("name", { ascending: true });
 
   if (error) {
