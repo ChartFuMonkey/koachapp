@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import LoginAsClientLink from "@/components/install/login-as-client-link";
 
 export default async function LandingPage() {
   const t = await getTranslations("landing");
@@ -50,12 +51,11 @@ export default async function LandingPage() {
         </p>
 
         <div className="mt-10 flex w-full flex-col gap-2.5">
-          <Link
-            href="/login?role=client"
+          <LoginAsClientLink
             className="w-full inline-flex items-center justify-center rounded-lg bg-lime px-4 py-4 text-sm font-bold uppercase tracking-[0.02em] text-bg hover:bg-lime-hover active:bg-lime-press transition-all"
           >
             {t("loginAsClient")} →
-          </Link>
+          </LoginAsClientLink>
           <Link
             href="/login?role=coach"
             className="w-full inline-flex items-center justify-center rounded-lg border border-hairline-2 bg-surface-1 px-4 py-4 text-sm font-medium text-ink hover:bg-surface-2 transition-colors"
