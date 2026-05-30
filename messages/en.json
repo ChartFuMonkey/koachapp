@@ -176,10 +176,24 @@
       "checkin": "Check-in",
       "home": "Today",
       "log": "Log",
+      "messages": "Messages",
       "photos": "Photos",
       "profile": "Profile",
       "workout": "Workout",
       "reports": "Reports"
+    },
+    "messages": {
+      "title": "Messages",
+      "subtitle": "Your coach",
+      "empty": "No messages yet. Say hi!",
+      "placeholder": "Write a message…",
+      "send": "Send",
+      "read": "Read",
+      "loadError": "Couldn't load messages",
+      "sendError": "Couldn't send. Try again.",
+      "justNow": "Just now",
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago"
     },
     "workout": {
       "allDone": "All sets done",
