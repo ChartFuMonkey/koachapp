@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendPushToClient } from "@/lib/push";
 
 export type Message = {
   id: string;
@@ -56,6 +57,32 @@ export async function sendMessage(
 
   revalidatePath(`/coach/clients/${clientId}`);
   revalidatePath("/app");
+
+  // Best-effort push to the *recipient* (never the sender). Must never fail the send.
+  const preview = trimmed.length > 120 ? `${trimmed.slice(0, 119)}…` : trimmed;
+  try {
+    if (isCoach) {
+      // recipient = client (Croatian UI)
+      await sendPushToClient(clientId, "Nova poruka od trenera", preview, "/app/messages");
+    } else if (COACH_UUID) {
+      // recipient = coach (English UI); include the client's name
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const who = (prof?.full_name as string | null) || "a client";
+      await sendPushToClient(
+        COACH_UUID,
+        `New message from ${who}`,
+        preview,
+        `/coach/clients/${clientId}`
+      );
+    }
+  } catch (err) {
+    console.error("message push failed (non-fatal)", err);
+  }
+
   return { data: data as Message };
 }
 
@@ -135,4 +162,31 @@ export async function getUnreadCount(
     .neq("sender_id", user.id);
 
   return count ?? 0;
+}
+
+/** Per-client unread counts for the coach: client-sent messages not yet read. */
+export async function getCoachUnreadCounts(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== COACH_UUID) return {};
+
+  const { data, error } = await supabase
+    .from("messages")
+    .select("client_id")
+    .is("read_at", null)
+    .neq("sender_id", user.id)
+    .limit(10000);
+
+  if (error) {
+    console.error("getCoachUnreadCounts error", error);
+    return {};
+  }
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const cid = (row as { client_id: string }).client_id;
+    counts[cid] = (counts[cid] ?? 0) + 1;
+  }
+  return counts;
 }

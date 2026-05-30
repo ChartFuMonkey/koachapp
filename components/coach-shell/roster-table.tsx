@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/athletic/avatar";
 import { Chip } from "@/components/ui/athletic/chip";
 import { StatusDot } from "@/components/ui/athletic/status-dot";
+import { useClientUnreadCount } from "@/components/coach-shell/coach-unread-context";
 
 export type RosterRow = {
   id: string;
@@ -47,6 +48,21 @@ export type RosterLabels = {
   filters: Record<FilterId, string>;
   sorts: Record<SortId, string>;
 };
+
+function ClientNameCell({ id, name }: { id: string; name: string }) {
+  const unread = useClientUnreadCount(id);
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <Avatar name={name} size="sm" />
+      <span className="font-medium text-[13px] text-ink truncate">{name}</span>
+      {unread > 0 && (
+        <span className="ml-auto inline-flex min-w-[18px] items-center justify-center rounded-full bg-lime px-1.5 text-[10px] font-bold text-bg">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function matchesFilter(row: RosterRow, filter: FilterId): boolean {
   switch (filter) {
@@ -197,12 +213,7 @@ export function RosterTable({
               }`}
             >
               <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] lg:grid-cols-[2fr_1fr_0.6fr_0.7fr_0.6fr_1fr_0.6fr_0.4fr] items-center gap-2 px-5 py-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar name={c.name} size="sm" />
-                  <span className="font-medium text-[13px] text-ink truncate">
-                    {c.name}
-                  </span>
-                </div>
+                <ClientNameCell id={c.id} name={c.name} />
                 <div>
                   <Chip variant="neutral" className="w-fit">
                     {c.phaseName}

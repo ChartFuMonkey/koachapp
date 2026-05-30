@@ -176,10 +176,24 @@
       "checkin": "Prijava",
       "home": "Danas",
       "log": "Dnevnik",
+      "messages": "Poruke",
       "photos": "Foto",
       "profile": "Profil",
       "workout": "Trening",
       "reports": "Izvještaji"
+    },
+    "messages": {
+      "title": "Poruke",
+      "subtitle": "Tvoj trener",
+      "empty": "Još nema poruka. Pozdravi trenera!",
+      "placeholder": "Napiši poruku…",
+      "send": "Pošalji",
+      "read": "Pročitano",
+      "loadError": "Učitavanje poruka nije uspjelo",
+      "sendError": "Slanje nije uspjelo. Pokušaj ponovno.",
+      "justNow": "Upravo sad",
+      "minutesAgo": "Prije {n} min",
+      "hoursAgo": "Prije {n} h"
     },
     "workout": {
       "allDone": "Sve serije gotove",

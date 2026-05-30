@@ -7,9 +7,12 @@ import { useTranslations } from "next-intl";
 import PushBanner from "@/components/push-banner";
 import InstallBanner from "@/components/install-banner";
 import ClientContextRail from "@/components/client-shell/context-rail";
+import NavUnreadBadge from "@/components/client-shell/nav-unread-badge";
+import { createClient } from "@/lib/supabase/client";
 
 const tabs = [
   { key: "home", route: "/app", glyph: "◉", hotkey: "T" },
+  { key: "messages", route: "/app/messages", glyph: "◓", hotkey: "M" },
   { key: "log", route: "/app/log", glyph: "◍", hotkey: "L" },
   { key: "workout", route: "/app/workout", glyph: "◎", hotkey: "R" },
   { key: "checkin", route: "/app/checkin", glyph: "◑", hotkey: "C" },
@@ -22,6 +25,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const t = useTranslations("app.nav");
   const [gPending, setGPending] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch the signed-in user once so the Messages tab can show a live unread badge.
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
 
   // Client keyboard shortcuts per §12: T / L / R / C / Y + G modifier + Esc
   useEffect(() => {
@@ -103,8 +114,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     : "text-ink-2 hover:bg-surface-2/60 hover:text-ink"
                 }`}
               >
-                <span className="text-base leading-none" aria-hidden>
-                  {tab.glyph}
+                <span className="relative">
+                  <span className="text-base leading-none" aria-hidden>
+                    {tab.glyph}
+                  </span>
+                  {tab.key === "messages" && userId && (
+                    <NavUnreadBadge userId={userId} className="absolute -right-2 -top-1.5" />
+                  )}
                 </span>
                 <span className="hidden lg:flex flex-1">{t(tab.key)}</span>
                 <span className="hidden lg:inline font-mono text-[10px] text-ink-3 px-1 py-0.5 bg-bg rounded-[3px] border border-border">
@@ -146,11 +162,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       isActive ? "text-lime" : "text-ink-3 hover:text-ink-2"
                     }`}
                   >
-                    <span
-                      className="text-[18px] leading-none select-none"
-                      aria-hidden
-                    >
-                      {tab.glyph}
+                    <span className="relative">
+                      <span
+                        className="text-[18px] leading-none select-none"
+                        aria-hidden
+                      >
+                        {tab.glyph}
+                      </span>
+                      {tab.key === "messages" && userId && (
+                        <NavUnreadBadge userId={userId} className="absolute -right-2 -top-1" />
+                      )}
                     </span>
                     <span className="font-mono text-[9px] uppercase tracking-[0.08em] leading-none">
                       {t(tab.key)}

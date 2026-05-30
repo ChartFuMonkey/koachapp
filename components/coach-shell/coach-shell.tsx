@@ -10,6 +10,9 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Kbd } from "@/components/ui/athletic/kbd";
 import { LiveTimestamp } from "./live-timestamp";
 import { CommandPalette } from "./command-palette";
+import { useCoachUnread } from "@/lib/messages/use-unread";
+import { CoachUnreadContext } from "./coach-unread-context";
+import CoachPushOptin from "./coach-push-optin";
 
 interface NavLink {
   labelKey: "clients" | "exercises" | "foods" | "meals" | "reports";
@@ -47,10 +50,12 @@ export default function CoachShell({
   children,
   clients = [],
   coachName = "Coach",
+  initialUnread = {},
 }: {
   children: React.ReactNode;
   clients?: ClientItem[];
   coachName?: string;
+  initialUnread?: Record<string, number>;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -62,6 +67,9 @@ export default function CoachShell({
     setDrawerOpen(false);
     setRailExpanded(false);
   }, [pathname]);
+
+  const unread = useCoachUnread(initialUnread);
+  const totalUnread = Object.values(unread).reduce((a, b) => a + b, 0);
 
   // Coach keyboard shortcuts per §12: C / E / F / M (P, A reserved), ⌘K, G→T, N, /, Esc
   const [gPending, setGPending] = useState(false);
@@ -375,6 +383,12 @@ export default function CoachShell({
             {buildBreadcrumb(pathname)}
           </span>
           <div className="flex items-center gap-3">
+            <CoachPushOptin />
+            {totalUnread > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-lime/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-lime">
+                {totalUnread} unread
+              </span>
+            )}
             {gPending && (
               <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-lime">
                 G →
@@ -384,7 +398,9 @@ export default function CoachShell({
             <span className="size-1.5 rounded-full bg-good shadow-[0_0_8px_rgba(61,232,160,0.5)]" />
           </div>
         </div>
-        <main className="flex-1 overflow-x-auto">{children}</main>
+        <main className="flex-1 overflow-x-auto">
+          <CoachUnreadContext.Provider value={unread}>{children}</CoachUnreadContext.Provider>
+        </main>
       </div>
       <CommandPalette clients={clients} />
     </div>

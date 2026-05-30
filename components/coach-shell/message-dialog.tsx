@@ -3,12 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X, Loader2 } from "lucide-react";
-import {
-  listMessages,
-  sendMessage,
-  markMessagesRead,
-  type Message,
-} from "@/actions/messages";
+import { useMessageThread } from "@/lib/messages/use-message-thread";
 
 interface MessageDialogProps {
   open: boolean;
@@ -42,41 +37,32 @@ export default function MessageDialog({
   clientName,
   currentUserId,
 }: MessageDialogProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { messages, loading, error, send, markRead } = useMessageThread({
+    clientId,
+    currentUserId,
+    active: open,
+  });
+  // The dialog is coach-only; fall back to the coach UUID so message bubbles
+  // align correctly even before the parent resolves currentUserId.
+  const selfId = currentUserId || process.env.NEXT_PUBLIC_COACH_UUID || "";
   const [sending, setSending] = useState(false);
   const [body, setBody] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // When open and loaded, mark the thread read and scroll to newest — also when
+  // a new message arrives live while the dialog is open.
   useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    setLoading(true);
-    listMessages(clientId).then((res) => {
-      if (cancelled) return;
-      if (res.error) {
-        setError(res.error);
-      } else {
-        setMessages(res.data ?? []);
-      }
-      setLoading(false);
-      // Scroll to bottom (most recent at bottom because we reversed)
-      requestAnimationFrame(() => {
-        listRef.current?.scrollTo({
-          top: listRef.current.scrollHeight,
-          behavior: "auto",
-        });
-        textareaRef.current?.focus();
+    if (!open || loading) return;
+    markRead();
+    requestAnimationFrame(() => {
+      listRef.current?.scrollTo({
+        top: listRef.current?.scrollHeight ?? 0,
+        behavior: "auto",
       });
-      // Mark as read in the background
-      markMessagesRead(clientId).catch(() => {});
+      textareaRef.current?.focus();
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, clientId]);
+  }, [open, loading, messages, markRead]);
 
   // Close on Esc
   useEffect(() => {
@@ -95,18 +81,16 @@ export default function MessageDialog({
     const trimmed = body.trim();
     if (!trimmed || sending) return;
     setSending(true);
-    const res = await sendMessage(clientId, trimmed);
-    if (res.error || !res.data) {
+    const res = await send(trimmed);
+    setSending(false);
+    if (res.error) {
       toast.error(res.error === "tooLong" ? "Too long (max 2000)" : "Couldn't send. Retry.");
-      setSending(false);
       return;
     }
-    setMessages((prev) => [...prev, res.data!]);
     setBody("");
-    setSending(false);
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
-        top: listRef.current.scrollHeight,
+        top: listRef.current?.scrollHeight ?? 0,
         behavior: "smooth",
       });
       textareaRef.current?.focus();
@@ -174,7 +158,7 @@ export default function MessageDialog({
             </div>
           ) : (
             messages.map((m) => {
-              const mine = m.sender_id === currentUserId;
+              const mine = m.sender_id === selfId;
               return (
                 <div
                   key={m.id}

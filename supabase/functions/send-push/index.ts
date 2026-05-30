@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { client_id, title, body } = await req.json();
+    const { client_id, title, body, url } = await req.json();
 
     if (!client_id || !title || !body) {
       return new Response(
@@ -273,6 +273,12 @@ Deno.serve(async (req) => {
         { status: 400, headers: { "Content-Type": "application/json", ...cors } }
       );
     }
+    if (url !== undefined && (typeof url !== "string" || url.length > 512)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid url" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...cors } }
+      );
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -291,7 +297,7 @@ Deno.serve(async (req) => {
     let sent = 0;
     for (const sub of subscriptions || []) {
       try {
-        const status = await sendPush(sub, JSON.stringify({ title, body }));
+        const status = await sendPush(sub, JSON.stringify({ title, body, url }));
         if (status >= 200 && status < 300) {
           sent++;
         } else if (status === 410) {
