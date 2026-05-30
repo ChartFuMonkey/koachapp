@@ -111,6 +111,26 @@
       "errors": {
         "loadFailed": "Couldn't load profile.",
         "updateFailed": "Couldn't update profile."
+      },
+      "editProfile": "Edit profile",
+      "personalDetails": "Personal details",
+      "account": "Account",
+      "emailLabel": "Email",
+      "heightLabel": "Height",
+      "genderLabel": "Gender",
+      "edit": {
+        "title": "Edit profile",
+        "name": "Full name",
+        "height": "Height (cm)",
+        "dateOfBirth": "Date of birth",
+        "gender": "Gender",
+        "gender_male": "Male",
+        "gender_female": "Female",
+        "gender_other": "Other",
+        "nameRequired": "Please enter your name",
+        "heightInvalid": "Enter a valid height",
+        "saved": "Profile updated",
+        "saveFailed": "Could not save. Please try again."
       }
     },
     "progress": {
@@ -265,7 +285,25 @@
       "never": "Never",
       "daysSuffix": "{count}/7 days",
       "active": "Active",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "search": "Search",
+      "colClient": "Client",
+      "colLast": "Last",
+      "colDelta": "7D Δ",
+      "colAdherence": "Adherence",
+      "colRpe": "RPE",
+      "sort": "Sort",
+      "sortLastLog": "Last log",
+      "sortAdherence": "Adherence",
+      "sortName": "Name",
+      "sortDelta": "Weight Δ",
+      "filterAll": "All",
+      "filterOnTrack": "On track",
+      "filterAttention": "Attention",
+      "filterOverdue": "Overdue",
+      "filterCut": "Cut",
+      "filterBulk": "Bulk",
+      "filterRecomp": "Recomp"
     },
     "meals": {
       "title": "Meals",
@@ -642,7 +680,8 @@
     "password": "Password",
     "save": "Save",
     "saving": "Saving…",
-    "yes": "Yes"
+    "yes": "Yes",
+    "close": "Close"
   },
   "errors": {
     "genericLoad": "Couldn't load. Retry.",

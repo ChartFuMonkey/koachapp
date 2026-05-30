@@ -111,6 +111,26 @@
       "errors": {
         "loadFailed": "Greška pri dohvaćanju profila.",
         "updateFailed": "Greška pri ažuriranju profila."
+      },
+      "editProfile": "Uredi profil",
+      "personalDetails": "Osobni podaci",
+      "account": "Račun",
+      "emailLabel": "E-pošta",
+      "heightLabel": "Visina",
+      "genderLabel": "Spol",
+      "edit": {
+        "title": "Uredi profil",
+        "name": "Ime i prezime",
+        "height": "Visina (cm)",
+        "dateOfBirth": "Datum rođenja",
+        "gender": "Spol",
+        "gender_male": "Muški",
+        "gender_female": "Ženski",
+        "gender_other": "Ostalo",
+        "nameRequired": "Unesite svoje ime",
+        "heightInvalid": "Unesite valjanu visinu",
+        "saved": "Profil ažuriran",
+        "saveFailed": "Spremanje nije uspjelo. Pokušajte ponovno."
       }
     },
     "progress": {
@@ -265,7 +285,25 @@
       "never": "Nikad",
       "daysSuffix": "{count}/7 dana",
       "active": "Aktivan",
-      "inactive": "Neaktivan"
+      "inactive": "Neaktivan",
+      "search": "Pretraži",
+      "colClient": "Klijent",
+      "colLast": "Zadnji",
+      "colDelta": "7D Δ",
+      "colAdherence": "Pridržavanje",
+      "colRpe": "RPE",
+      "sort": "Poredaj",
+      "sortLastLog": "Zadnji log",
+      "sortAdherence": "Pridržavanje",
+      "sortName": "Ime",
+      "sortDelta": "Težina Δ",
+      "filterAll": "Svi",
+      "filterOnTrack": "Na cilju",
+      "filterAttention": "Pažnja",
+      "filterOverdue": "Kasni",
+      "filterCut": "Rezanje",
+      "filterBulk": "Masa",
+      "filterRecomp": "Rekomp"
     },
     "meals": {
       "title": "Obroci",
@@ -642,7 +680,8 @@
     "password": "Lozinka",
     "save": "Spremi",
     "saving": "Spremam…",
-    "yes": "Da"
+    "yes": "Da",
+    "close": "Zatvori"
   },
   "errors": {
     "genericLoad": "Učitavanje neuspješno. Pokušaj ponovo.",

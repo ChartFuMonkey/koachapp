@@ -47,6 +47,7 @@ export default async function TodayPage() {
 
   const [
     { data: client },
+    { data: selfProfile },
     { data: todayLog },
     { data: recentLogs },
     mealPlanResult,
@@ -55,8 +56,13 @@ export default async function TodayPage() {
     supabase
       .from("clients")
       .select(
-        "first_name, target_calories, target_protein_g, target_carbs_g, target_fat_g, target_steps, target_sleep_h, start_date"
+        "target_calories, target_protein_g, target_carbs_g, target_fat_g, target_steps, target_sleep_h, start_date"
       )
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("full_name")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -88,7 +94,8 @@ export default async function TodayPage() {
       .maybeSingle(),
   ]);
 
-  const name = client?.first_name || t("nameFallback");
+  const fullName = (selfProfile?.full_name as string | null) ?? null;
+  const name = fullName?.trim().split(/\s+/)[0] || t("nameFallback");
   const dateStr = formatLocalizedDate(new Date(), locale);
   const mealData = mealPlanResult.data;
 

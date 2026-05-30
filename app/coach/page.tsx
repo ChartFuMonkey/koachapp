@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { Avatar } from "@/components/ui/athletic/avatar";
-import { Chip } from "@/components/ui/athletic/chip";
 import { MicroLabel } from "@/components/ui/athletic/micro-label";
-import { StatusDot } from "@/components/ui/athletic/status-dot";
-import { Kbd } from "@/components/ui/athletic/kbd";
+import { CommandSearchButton } from "@/components/coach-shell/command-search-button";
 import {
   MobileRoster,
   type MobileRosterClient,
 } from "@/components/coach-shell/mobile-roster";
+import {
+  RosterTable,
+  type RosterRow,
+} from "@/components/coach-shell/roster-table";
 import {
   normalizePhase,
   weightDeltaTone,
@@ -112,8 +113,7 @@ export default async function CoachRosterPage() {
       .in("id", clientIds),
     supabaseAdmin
       .from("exercise_logs")
-      .select("client_id, rpe, created_at")
-      .in("client_id", clientIds)
+      .select("rpe, created_at, workout_sessions!inner(client_id, session_date)")
       .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString())
       .limit(2000),
   ]);
@@ -121,7 +121,31 @@ export default async function CoachRosterPage() {
   const phases = phasesRes.data || [];
   const logs = logsRes.data || [];
   const profiles = profilesRes.data || [];
-  const rpeLogs = rpeRes.data || [];
+  // exercise_logs has no client_id of its own — it links to the client through
+  // its workout_session. Flatten the joined row into a simple shape and keep
+  // only rows for the coach's own clients.
+  const clientIdSet = new Set(clientIds);
+  const rpeLogs = ((rpeRes.data || []) as unknown[]).flatMap((row) => {
+    const r = row as {
+      rpe: number | null;
+      session_date?: string | null;
+      workout_sessions:
+        | { client_id: string; session_date: string | null }
+        | { client_id: string; session_date: string | null }[]
+        | null;
+    };
+    const ws = Array.isArray(r.workout_sessions)
+      ? r.workout_sessions[0]
+      : r.workout_sessions;
+    if (!ws || !clientIdSet.has(ws.client_id)) return [];
+    return [
+      {
+        client_id: ws.client_id,
+        rpe: r.rpe,
+        session_date: ws.session_date,
+      },
+    ];
+  });
 
   const profileMap = new Map(profiles.map((p) => [p.id, p.full_name]));
   const phaseMap = new Map(phases.map((p) => [p.client_id, p.name]));
@@ -209,7 +233,22 @@ export default async function CoachRosterPage() {
   const sparkAttention = sparkLogging.map(
     (v) => Math.max(0, clientData.length - v) // inverse of logged
   );
-  const sparkRpe = Array.from({ length: 10 }, (_, i) => 7 + ((i * 17) % 10) / 10);
+  // Real 10-day average-RPE series across all clients (rounded to 1 decimal).
+  // Days with no logged RPE carry 0 so the sparkline reads as a genuine trend.
+  const sparkRpe = Array.from({ length: 10 }, (_, i) => {
+    const d = new Date(Date.now() - (9 - i) * 86400000)
+      .toISOString()
+      .slice(0, 10);
+    const dayVals = rpeLogs
+      .filter((r) => r.session_date === d && r.rpe != null)
+      .map((r) => Number(r.rpe));
+    if (dayVals.length === 0) return 0;
+    return (
+      Math.round(
+        (dayVals.reduce((a, b) => a + b, 0) / dayVals.length) * 10
+      ) / 10
+    );
+  });
 
   const stats = [
     {
@@ -238,7 +277,60 @@ export default async function CoachRosterPage() {
     },
   ];
 
-  const filters = ["All", "On track", "Need attention", "Overdue", "Cut", "Bulk", "Recomp"];
+  // Precompute every display value server-side so the interactive table stays
+  // a pure presentational client component (filter/sort only).
+  const rosterRows: RosterRow[] = clientData.map((c) => {
+    const tone =
+      c.weekLogs >= 4 ? "good" : c.weekLogs >= 1 ? "warn" : "danger";
+    const phase = normalizePhase(c.phaseName);
+    const deltaColor = toneToColorVar(weightDeltaTone(c.weekDelta, phase));
+    const deltaText =
+      c.weekDelta === null
+        ? "—"
+        : `${c.weekDelta > 0 ? "+" : ""}${c.weekDelta.toFixed(1)}`;
+    return {
+      id: c.id,
+      name: c.name,
+      phaseName: c.phaseName,
+      phaseKind: phase ?? "",
+      lastAgo: relativeAgo(c.lastLogDate),
+      lastLogDate: c.lastLogDate,
+      lastWeight: c.lastWeight,
+      weekDelta: c.weekDelta,
+      deltaColor,
+      deltaText,
+      adherencePct: c.adherencePct,
+      avgRpe: c.avgRpe,
+      weekLogs: c.weekLogs,
+      tone: tone as "good" | "warn" | "danger",
+    };
+  });
+
+  const rosterLabels = {
+    client: t("colClient"),
+    phase: t("colPhase"),
+    last: t("colLast"),
+    weight: t("colWeight"),
+    delta: t("colDelta"),
+    adherence: t("colAdherence"),
+    rpe: t("colRpe"),
+    sort: t("sort"),
+    filters: {
+      all: t("filterAll"),
+      ontrack: t("filterOnTrack"),
+      attention: t("filterAttention"),
+      overdue: t("filterOverdue"),
+      cut: t("filterCut"),
+      bulk: t("filterBulk"),
+      recomp: t("filterRecomp"),
+    },
+    sorts: {
+      last: t("sortLastLog"),
+      adherence: t("sortAdherence"),
+      name: t("sortName"),
+      delta: t("sortDelta"),
+    },
+  };
 
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
@@ -251,13 +343,7 @@ export default async function CoachRosterPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-1 px-3 py-2 font-mono text-[12px] text-ink-2 hover:bg-surface-2 transition-colors"
-          >
-            <Kbd>⌘K</Kbd>
-            <span>Search</span>
-          </button>
+          <CommandSearchButton label={t("search")} />
           <Link
             href="/coach/clients/new"
             className="inline-flex items-center rounded-md bg-lime px-3.5 py-2 text-[13px] font-semibold text-bg hover:bg-lime-hover active:bg-lime-press transition-all"
@@ -290,112 +376,8 @@ export default async function CoachRosterPage() {
         ))}
       </div>
 
-      {/* Filter chips + sort */}
-      <div className="mt-7 flex flex-wrap items-center gap-1.5">
-        {filters.map((f, i) => (
-          <button
-            key={f}
-            type="button"
-            className={`px-1.5 py-[3px] rounded-[3px] font-mono text-[10px] uppercase tracking-[0.06em] border transition-colors ${
-              i === 0
-                ? "bg-ink text-bg border-ink"
-                : "bg-surface-1 text-ink-2 border-border hover:bg-surface-2 hover:text-ink"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-        <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
-          SORT: LAST_LOG ↓
-        </span>
-      </div>
-
-      {/* Roster table — desktop. Per §15 Coach tablet: tables with >6 cols show 4 priority cols at MD. */}
-      <div className="mt-4 hidden sm:block overflow-hidden rounded-lg border border-border bg-surface-1">
-        {/* Header row */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] lg:grid-cols-[2fr_1fr_0.6fr_0.7fr_0.6fr_1fr_0.6fr_0.4fr] items-center gap-2 px-5 py-3 border-b border-border font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-ink-3">
-          <span>CLIENT</span>
-          <span>PHASE</span>
-          <span className="hidden lg:inline">LAST</span>
-          <span className="hidden lg:inline">WEIGHT</span>
-          <span className="hidden lg:inline">7D Δ</span>
-          <span>ADHERENCE</span>
-          <span className="hidden lg:inline">RPE</span>
-          <span />
-        </div>
-
-        {clientData.map((c, idx) => {
-          const tone =
-            c.weekLogs >= 4 ? "good" : c.weekLogs >= 1 ? "warn" : "danger";
-          const phase = normalizePhase(c.phaseName);
-          const deltaColor = toneToColorVar(weightDeltaTone(c.weekDelta, phase));
-          const deltaText =
-            c.weekDelta === null
-              ? "—"
-              : `${c.weekDelta > 0 ? "+" : ""}${c.weekDelta.toFixed(1)}`;
-          const barColor =
-            tone === "good"
-              ? "var(--good)"
-              : tone === "warn"
-                ? "var(--warn)"
-                : "var(--danger)";
-          return (
-            <Link
-              key={c.id}
-              href={`/coach/clients/${c.id}`}
-              className={`block transition-colors hover:bg-surface-2/40 ${
-                idx < clientData.length - 1 ? "border-b border-border" : ""
-              }`}
-            >
-              <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] lg:grid-cols-[2fr_1fr_0.6fr_0.7fr_0.6fr_1fr_0.6fr_0.4fr] items-center gap-2 px-5 py-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Avatar name={c.name} size="sm" />
-                  <span className="font-medium text-[13px] text-ink truncate">
-                    {c.name}
-                  </span>
-                </div>
-                <div>
-                  <Chip variant="neutral" className="w-fit">
-                    {c.phaseName}
-                  </Chip>
-                </div>
-                <span className="hidden lg:inline font-mono text-[11px] text-ink-2 tabular-nums">
-                  {relativeAgo(c.lastLogDate)}
-                </span>
-                <span className="hidden lg:inline font-mono text-[12px] text-ink tabular-nums">
-                  {c.lastWeight != null ? c.lastWeight : "—"}
-                </span>
-                <span
-                  className="hidden lg:inline font-mono text-[12px] tabular-nums"
-                  style={{ color: deltaColor }}
-                >
-                  {deltaText}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="h-1 max-w-[80px] flex-1 overflow-hidden rounded-full bg-hairline">
-                    <div
-                      className="h-full"
-                      style={{
-                        width: `${c.adherencePct}%`,
-                        background: barColor,
-                      }}
-                    />
-                  </div>
-                  <span className="font-mono text-[11px] text-ink-2 tabular-nums">
-                    {c.adherencePct}%
-                  </span>
-                </div>
-                <span className="hidden lg:inline font-mono text-[12px] text-ink tabular-nums">
-                  {c.avgRpe != null ? c.avgRpe.toFixed(1) : "—"}
-                </span>
-                <div className="flex items-center justify-end">
-                  <StatusDot tone={tone as "good" | "warn" | "danger"} />
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+      {/* Filter chips + sort + desktop roster table (interactive) */}
+      <RosterTable rows={rosterRows} labels={rosterLabels} />
 
       {/* Roster — mobile triage view */}
       <div className="mt-4 sm:hidden overflow-hidden rounded-lg border border-border bg-surface-1">

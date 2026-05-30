@@ -60,8 +60,15 @@ export function CommandPalette({ clients }: { clients: ClientItem[] }) {
         setOpen(false);
       }
     }
+    function onOpenRequest() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("koach:command-open", onOpenRequest);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("koach:command-open", onOpenRequest);
+    };
   }, [open]);
 
   // Focus input when opened, reset query
