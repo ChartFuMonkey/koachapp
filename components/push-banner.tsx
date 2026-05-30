@@ -4,38 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { savePushSubscription } from "@/actions/push";
-
-function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray.buffer as ArrayBuffer;
-}
-
-async function subscribeToPush() {
-  const registration = await navigator.serviceWorker.ready;
-  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  if (!vapidKey) return;
-
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidKey),
-  });
-
-  const json = subscription.toJSON();
-  await savePushSubscription({
-    endpoint: json.endpoint!,
-    keys: {
-      p256dh: json.keys!.p256dh!,
-      auth: json.keys!.auth!,
-    },
-  });
-}
+import { subscribeToPush } from "@/lib/push-subscribe";
 
 export default function PushBanner() {
   const t = useTranslations("pushBanner");

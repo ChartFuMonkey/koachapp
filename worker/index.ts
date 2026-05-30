@@ -5,24 +5,46 @@ self.addEventListener("push", (event) => {
     title: "KoachApp",
     body: "Novi podsjetnik!",
   };
+  const url: string | undefined = data.url;
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: "/icon-192.png",
-      badge: "/badge-96.png",
-    })
+    (async () => {
+      // Suppress the OS notification if a window is already focused on the
+      // target chat — the live update already showed the message there.
+      if (url) {
+        const wins = await self.clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        });
+        const focusedOnTarget = wins.some(
+          (w) => w.focused && w.url.includes(url)
+        );
+        if (focusedOnTarget) return;
+      }
+      await self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: "/icon-192.png",
+        badge: "/badge-96.png",
+        data: { url: url ?? "/app" },
+      });
+    })()
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const target: string = event.notification.data?.url ?? "/app";
   event.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((clients) => {
-      if (clients.length > 0) {
-        clients[0].focus();
-      } else {
-        self.clients.openWindow("/app");
-      }
-    })
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        const existing = clients.find((c) => c.url.includes(target));
+        if (existing) return existing.focus();
+        const anyWin = clients[0];
+        if (anyWin) {
+          anyWin.navigate(target);
+          return anyWin.focus();
+        }
+        return self.clients.openWindow(target);
+      })
   );
 });

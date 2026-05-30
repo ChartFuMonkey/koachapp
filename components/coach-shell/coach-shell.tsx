@@ -12,6 +12,7 @@ import { LiveTimestamp } from "./live-timestamp";
 import { CommandPalette } from "./command-palette";
 import { useCoachUnread } from "@/lib/messages/use-unread";
 import { CoachUnreadContext } from "./coach-unread-context";
+import CoachPushOptin from "./coach-push-optin";
 
 interface NavLink {
   labelKey: "clients" | "exercises" | "foods" | "meals" | "reports";
@@ -382,6 +383,7 @@ export default function CoachShell({
             {buildBreadcrumb(pathname)}
           </span>
           <div className="flex items-center gap-3">
+            <CoachPushOptin />
             {totalUnread > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-lime/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-lime">
                 {totalUnread} unread
