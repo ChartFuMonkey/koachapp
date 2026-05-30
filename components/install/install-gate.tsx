@@ -64,6 +64,8 @@ export default function InstallGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     const role = new URLSearchParams(window.location.search).get("role");
     if (shouldRedirectToInstall(pathname, role, readEnv())) {
+      // Redirect guard must reflect its decision in render state (show the splash).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRedirecting(true);
       router.replace("/install");
     } else {

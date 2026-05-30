@@ -34,40 +34,15 @@ function MenuIcon() {
   );
 }
 
-type RichKey = "iosStep1" | "iosStep2" | "iosStep3" | "androidStep1" | "androidStep2" | "androidStep3" | "inAppStepIos" | "inAppStepAndroid";
+type RichKey =
+  | "iosStep1" | "iosStep2" | "iosStep3"
+  | "androidStep1" | "androidStep2" | "androidStep3"
+  | "inAppStepIos" | "inAppStepAndroid";
 
-export default function InstallScreen() {
-  const t = useTranslations("installGate");
-  const { canPrompt, installed, promptInstall } = useInstallPrompt();
-  const [env, setEnv] = useState<GateEnv | null>(null);
-  const [showOther, setShowOther] = useState(false);
-  const [copied, setCopied] = useState(false);
+type RichRenderer = (key: RichKey, icon: React.ReactNode) => React.ReactNode;
 
-  useEffect(() => {
-    setEnv(readEnv());
-  }, []);
-
-  const mode = env ? getScreenMode(env) : null;
-
-  // Rich-text renderer: <icon/> swaps in the right glyph per key; <b> bolds.
-  function rich(key: RichKey, icon: React.ReactNode) {
-    return t.rich(key, {
-      icon: () => <>{icon}</>,
-      b: (chunks) => <b className="font-semibold text-ink">{chunks}</b>,
-    });
-  }
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
-  const Step = ({ n, children }: { n: number; children: React.ReactNode }) => (
+function Step({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
     <div className="flex items-start gap-3">
       <span className="flex size-[26px] flex-none items-center justify-center rounded-full border-[1.5px] border-lime text-[13px] font-bold text-lime">
         {n}
@@ -75,42 +50,64 @@ export default function InstallScreen() {
       <span className="text-[13.5px] leading-relaxed text-ink-2">{children}</span>
     </div>
   );
+}
 
-  const IosSteps = () => (
+function IosSteps({ rich }: { rich: RichRenderer }) {
+  return (
     <div className="flex flex-col gap-3.5">
       <Step n={1}>{rich("iosStep1", <ShareIcon />)}</Step>
       <Step n={2}>{rich("iosStep2", <AddBoxIcon />)}</Step>
       <Step n={3}>{rich("iosStep3", null)}</Step>
     </div>
   );
+}
 
-  const AndroidSteps = () =>
-    installed ? (
+function AndroidSteps({
+  rich,
+  installCta,
+  installedMsg,
+  canPrompt,
+  installed,
+  onInstall,
+}: {
+  rich: RichRenderer;
+  installCta: string;
+  installedMsg: string;
+  canPrompt: boolean;
+  installed: boolean;
+  onInstall: () => void;
+}) {
+  if (installed) {
+    return (
       <p
         className="rounded-lg border px-4 py-3 text-sm text-ink"
         style={{ background: "rgba(197,247,59,0.10)", borderColor: "rgba(197,247,59,0.30)" }}
       >
-        {t("androidInstalled")}
+        {installedMsg}
       </p>
-    ) : (
-      <div className="flex flex-col gap-4">
-        {canPrompt && (
-          <button
-            onClick={() => promptInstall()}
-            className="w-full rounded-lg bg-lime px-4 py-3.5 text-sm font-bold uppercase tracking-[0.02em] text-bg transition-colors hover:bg-lime-hover"
-          >
-            {t("androidInstallCta")}
-          </button>
-        )}
-        <div className="flex flex-col gap-3.5">
-          <Step n={1}>{rich("androidStep1", <MenuIcon />)}</Step>
-          <Step n={2}>{rich("androidStep2", null)}</Step>
-          <Step n={3}>{rich("androidStep3", null)}</Step>
-        </div>
-      </div>
     );
+  }
+  return (
+    <div className="flex flex-col gap-4">
+      {canPrompt && (
+        <button
+          onClick={onInstall}
+          className="w-full rounded-lg bg-lime px-4 py-3.5 text-sm font-bold uppercase tracking-[0.02em] text-bg transition-colors hover:bg-lime-hover"
+        >
+          {installCta}
+        </button>
+      )}
+      <div className="flex flex-col gap-3.5">
+        <Step n={1}>{rich("androidStep1", <MenuIcon />)}</Step>
+        <Step n={2}>{rich("androidStep2", null)}</Step>
+        <Step n={3}>{rich("androidStep3", null)}</Step>
+      </div>
+    </div>
+  );
+}
 
-  const Shell = ({ children }: { children: React.ReactNode }) => (
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
     <div className="relative flex min-h-screen flex-col items-center bg-bg px-6 pb-12 pt-16 text-center">
       <div
         aria-hidden
@@ -125,8 +122,40 @@ export default function InstallScreen() {
       </div>
     </div>
   );
+}
 
-  // Pre-mount / SSR: neutral shell (branding + headline + subline, no steps).
+export default function InstallScreen() {
+  const t = useTranslations("installGate");
+  const { canPrompt, installed, promptInstall } = useInstallPrompt();
+  const [env, setEnv] = useState<GateEnv | null>(null);
+  const [showOther, setShowOther] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    // Read browser-only environment AFTER mount so SSR and the first client
+    // paint both render the neutral shell (prevents a hydration mismatch).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEnv(readEnv());
+  }, []);
+
+  const mode = env ? getScreenMode(env) : null;
+
+  const rich: RichRenderer = (key, icon) =>
+    t.rich(key, {
+      icon: () => <>{icon}</>,
+      b: (chunks) => <b className="font-semibold text-ink">{chunks}</b>,
+    });
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   if (mode === null) {
     return (
       <Shell>
@@ -165,6 +194,17 @@ export default function InstallScreen() {
 
   // mode === "ios" | "android" | "desktop"
   const primaryIsIos = mode === "ios" || mode === "desktop";
+  const iosStepsEl = <IosSteps rich={rich} />;
+  const androidStepsEl = (
+    <AndroidSteps
+      rich={rich}
+      installCta={t("androidInstallCta")}
+      installedMsg={t("androidInstalled")}
+      canPrompt={canPrompt}
+      installed={installed}
+      onInstall={() => promptInstall()}
+    />
+  );
   return (
     <Shell>
       <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.03em] text-ink">{t("headline")}</h1>
@@ -180,11 +220,12 @@ export default function InstallScreen() {
       </div>
 
       <div className="mt-6 w-full rounded-xl border border-border bg-surface-2 p-4 text-left">
-        {primaryIsIos ? <IosSteps /> : <AndroidSteps />}
+        {primaryIsIos ? iosStepsEl : androidStepsEl}
       </div>
 
       <button
         onClick={() => setShowOther((v) => !v)}
+        aria-expanded={showOther}
         className="mt-4 flex w-full items-center justify-between rounded-xl border border-hairline-2 bg-surface-1 px-4 py-3 text-left text-[13px] font-medium text-ink-2"
       >
         {t("otherBrowserToggle")}
@@ -192,7 +233,7 @@ export default function InstallScreen() {
       </button>
       {showOther && (
         <div className="mt-2 w-full rounded-xl border border-border bg-surface-2 p-4 text-left">
-          {primaryIsIos ? <AndroidSteps /> : <IosSteps />}
+          {primaryIsIos ? androidStepsEl : iosStepsEl}
         </div>
       )}
 
