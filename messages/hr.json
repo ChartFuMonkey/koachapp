@@ -717,6 +717,31 @@
       "alreadyPublished": "Ovaj izvještaj je već objavljen.",
       "notFound": "Izvještaj nije pronađen.",
       "loadFailed": "Izvještaje nije moguće učitati."
-    }
+    },
+    "sections": {
+      "nutrition": "Prehrana",
+      "training": "Trening",
+      "progress": "Napredak"
+    },
+    "goalProgress": "Napredak prema cilju",
+    "goalStart": "Početak",
+    "goalNow": "Sada",
+    "goalTarget": "Cilj",
+    "adherence7d": "Dani na planu",
+    "weightTrend": "Trend težine",
+    "strengthTrend": "Napredak snage",
+    "measurementsTrend": "Tjelesne mjere",
+    "waist": "Struk",
+    "bodyFat": "Masno tkivo",
+    "macros": "Makronutrijenti vs cilj",
+    "recommendations": "Preporuke trenera",
+    "recTraining": "Trening",
+    "recNutrition": "Prehrana",
+    "recGeneral": "Općenito",
+    "recTrainingPlaceholder": "Savjeti za trening sljedeći tjedan…",
+    "recNutritionPlaceholder": "Savjeti za prehranu sljedeći tjedan…",
+    "recGeneralPlaceholder": "Općenita poruka / fokus za sljedeći tjedan…",
+    "downloadPdf": "Preuzmi PDF",
+    "generatedOn": "Generirano {date}"
   }
 }

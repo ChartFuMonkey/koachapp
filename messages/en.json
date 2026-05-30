@@ -717,6 +717,31 @@
       "alreadyPublished": "This report is already published.",
       "notFound": "Report not found.",
       "loadFailed": "Could not load reports."
-    }
+    },
+    "sections": {
+      "nutrition": "Nutrition",
+      "training": "Training",
+      "progress": "Progress"
+    },
+    "goalProgress": "Goal progress",
+    "goalStart": "Start",
+    "goalNow": "Now",
+    "goalTarget": "Goal",
+    "adherence7d": "Meal-plan days",
+    "weightTrend": "Weight trend",
+    "strengthTrend": "Strength progression",
+    "measurementsTrend": "Body measurements",
+    "waist": "Waist",
+    "bodyFat": "Body fat",
+    "macros": "Macros vs target",
+    "recommendations": "Coach's recommendations",
+    "recTraining": "Training",
+    "recNutrition": "Nutrition",
+    "recGeneral": "General",
+    "recTrainingPlaceholder": "Training advice for next week…",
+    "recNutritionPlaceholder": "Nutrition advice for next week…",
+    "recGeneralPlaceholder": "General message / focus for next week…",
+    "downloadPdf": "Download PDF",
+    "generatedOn": "Generated {date}"
   }
 }
