@@ -22,6 +22,15 @@ export type DailyPoint = {
   weightKg: number | null;
   calories: number | null;
   steps: number | null;
+  followedMealPlan: boolean | null;
+};
+
+export type TrendPoint = { weekStart: string; value: number };
+
+export type Trends = {
+  weightByWeek: TrendPoint[];
+  measurements: Array<{ date: string; waistCm: number | null; bodyFatPct: number | null }>;
+  strength: Array<{ exercise: string; points: TrendPoint[] }>;
 };
 
 export type CheckinEcho = {
@@ -81,6 +90,7 @@ export type WeeklyMetrics = {
   checkin: CheckinEcho | null;
   phase: PhaseInfo | null;
   daily: DailyPoint[];
+  trends: Trends;
 };
 
 export type FlagSeverity = "info" | "warn" | "danger";
@@ -110,6 +120,9 @@ export type WeeklyReportRow = {
   client_summary: string | null;
   coach_summary: string | null;
   coach_note: string | null;
+  rec_training: string | null;
+  rec_nutrition: string | null;
+  rec_general: string | null;
   ai_model: string | null;
   ai_generated_at: string | null;
   generated_at: string;

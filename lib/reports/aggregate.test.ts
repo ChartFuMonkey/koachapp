@@ -116,5 +116,5 @@ test("daily series is sorted and trimmed to chart fields", () => {
     prevLogs: [],
   });
   expect(m.daily.map((d) => d.date)).toEqual(["2026-05-25", "2026-05-26"]);
-  expect(m.daily[0]).toEqual({ date: "2026-05-25", weightKg: 89, calories: 2000, steps: 8000 });
+  expect(m.daily[0]).toEqual({ date: "2026-05-25", weightKg: 89, calories: 2000, steps: 8000, followedMealPlan: null });
 });

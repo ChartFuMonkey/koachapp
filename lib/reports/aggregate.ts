@@ -187,6 +187,8 @@ export function computeMetrics(input: {
         weightKg: l.weight_kg,
         calories: l.calories_kcal,
         steps: l.steps,
+        followedMealPlan: l.followed_meal_plan,
       })),
+    trends: { weightByWeek: [], measurements: [], strength: [] },
   };
 }

@@ -12,6 +12,7 @@ function metrics(over: Partial<WeeklyMetrics> = {}): WeeklyMetrics {
     cardioMin: 0, mealPlanAdherencePct: null,
     training: { sessionsDone: 3, sessionsPlanned: 4, totalVolumeKg: 0, totalDurationMin: 0, personalBests: [] },
     measurement: null, checkin: null, phase: null, daily: [],
+    trends: { weightByWeek: [], measurements: [], strength: [] },
     ...over,
   };
 }

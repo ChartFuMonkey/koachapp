@@ -12,6 +12,7 @@ import {
   type ExerciseSetRow,
 } from "./aggregate";
 import { computeFlags } from "./flags";
+import { computeTrends } from "./trends";
 import { generateSummaries, REPORT_MODEL } from "./ai";
 import type {
   WeeklyReportRow,
@@ -213,6 +214,54 @@ export async function generateReportForClient(
     checkin,
     phase,
   });
+
+  // ── Multi-week history for progress trends ───────────────
+  const trendWindowStart = addDays(weekStart, -7 * 11); // 12 weeks incl. current
+  const [{ data: weightHistory }, { data: measHistoryRows }, { data: strengthSessions }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("daily_logs")
+        .select("log_date, weight_kg")
+        .eq("client_id", clientId)
+        .gte("log_date", trendWindowStart)
+        .lte("log_date", weekEnd),
+      supabaseAdmin
+        .from("measurements")
+        .select("meas_date, waist_cm, body_fat_pct")
+        .eq("client_id", clientId)
+        .order("meas_date", { ascending: false })
+        .limit(8),
+      supabaseAdmin
+        .from("workout_sessions")
+        .select("session_date, exercise_logs(exercise_id, weight_kg)")
+        .eq("client_id", clientId)
+        .gte("session_date", trendWindowStart)
+        .lte("session_date", weekEnd),
+    ]);
+
+  const strengthHistory = (strengthSessions ?? []).flatMap((s) => {
+    const date = (s as { session_date: string }).session_date;
+    const logs = (s as { exercise_logs: { exercise_id: string; weight_kg: number | null }[] }).exercise_logs ?? [];
+    return logs.map((e) => ({ session_date: date, exercise_id: e.exercise_id, weight_kg: e.weight_kg }));
+  });
+
+  const trendExerciseIds = [...new Set(strengthHistory.map((s) => s.exercise_id))];
+  const trendExerciseNames: Record<string, string> = { ...exerciseNames };
+  const missingNames = trendExerciseIds.filter((eid) => !(eid in trendExerciseNames));
+  if (missingNames.length > 0) {
+    const { data: exRows2 } = await supabaseAdmin
+      .from("exercises").select("id, name").in("id", missingNames);
+    for (const ex of exRows2 ?? []) trendExerciseNames[ex.id as string] = ex.name as string;
+  }
+
+  metrics.trends = computeTrends({
+    weekStart,
+    dailyHistory: (weightHistory ?? []) as { log_date: string; weight_kg: number | null }[],
+    measHistory: (measHistoryRows ?? []) as { meas_date: string; waist_cm: number | null; body_fat_pct: number | null }[],
+    strengthHistory,
+    exerciseNames: trendExerciseNames,
+  });
+
   const flags = computeFlags(metrics);
 
   // ── AI narrative (skip if nothing logged) ────────────────
