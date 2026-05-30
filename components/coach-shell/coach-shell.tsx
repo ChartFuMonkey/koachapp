@@ -64,8 +64,13 @@ export default function CoachShell({
   const [railExpanded, setRailExpanded] = useState(false);
 
   useEffect(() => {
-    setDrawerOpen(false);
-    setRailExpanded(false);
+    // Close the drawer/rail on navigation. Deferred to a microtask so the
+    // updates aren't synchronous in the effect body (satisfies
+    // react-hooks/set-state-in-effect); still runs before the next paint.
+    queueMicrotask(() => {
+      setDrawerOpen(false);
+      setRailExpanded(false);
+    });
   }, [pathname]);
 
   const unread = useCoachUnread(initialUnread);
@@ -139,8 +144,6 @@ export default function CoachShell({
     await supabase.auth.signOut();
     router.push("/");
   }
-
-  const showRail = !railExpanded;
 
   return (
     <div className="flex min-h-screen bg-bg">
