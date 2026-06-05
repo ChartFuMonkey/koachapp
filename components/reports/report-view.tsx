@@ -1,5 +1,4 @@
 "use client";
-import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { WeeklyReportRow } from "@/lib/reports/types";
 import { RecommendationBlock } from "./report-parts";
@@ -14,9 +13,18 @@ function weekLabel(start: string, end: string) {
   return `${s.getDate()}.${s.getMonth() + 1}. – ${e.getDate()}.${e.getMonth() + 1}.`;
 }
 
-export function ReportView({ report, locale }: { report: WeeklyReportRow; locale: "hr" | "en" }) {
+export function ReportView({
+  report,
+  locale,
+  showCharts = true,
+  clientName = "",
+}: {
+  report: WeeklyReportRow;
+  locale: "hr" | "en";
+  showCharts?: boolean;
+  clientName?: string;
+}) {
   const t = useTranslations("reports");
-  const ref = useRef<HTMLDivElement>(null);
   const m = report.metrics;
   const change = m.weight.changeKg;
 
@@ -27,10 +35,16 @@ export function ReportView({ report, locale }: { report: WeeklyReportRow; locale
           {t("weekOf", { date: weekLabel(report.week_start, report.week_end) })}
           {m.phase?.name ? ` · ${m.phase.name}` : ""}
         </div>
-        <DownloadPdfButton targetRef={ref} filename={`koachapp-report-${report.week_start}.pdf`} label={t("downloadPdf")} />
+        <DownloadPdfButton
+          report={report}
+          locale={locale}
+          clientName={clientName}
+          filename={`koachapp-report-${report.week_start}.pdf`}
+          label={t("downloadPdf")}
+        />
       </div>
 
-      <div ref={ref} className="flex flex-col gap-6 bg-bg">
+      <div className="flex flex-col gap-6 bg-bg">
         {/* Hero headline */}
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-3">{t("title")}</div>
@@ -50,9 +64,9 @@ export function ReportView({ report, locale }: { report: WeeklyReportRow; locale
           <div className="whitespace-pre-wrap text-[14px] leading-relaxed text-ink-2">{report.client_summary}</div>
         )}
 
-        <NutritionSection report={report} />
-        <TrainingSection report={report} />
-        <ProgressSection report={report} locale={locale} />
+        <NutritionSection report={report} withCharts={showCharts} />
+        <TrainingSection report={report} withCharts={showCharts} />
+        <ProgressSection report={report} locale={locale} withCharts={showCharts} />
 
         <div className="border-t border-border pt-3 text-center font-mono text-[10px] text-ink-3">
           {t("generatedOn", { date: new Date(report.generated_at).toLocaleDateString() })}

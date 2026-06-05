@@ -4,7 +4,7 @@ import type { WeeklyReportRow } from "@/lib/reports/types";
 import { SectionHeader, StatCard, AdherenceDots, RecommendationBlock } from "./report-parts";
 import { MacroBars, CaloriesChart } from "./report-charts";
 
-export function NutritionSection({ report }: { report: WeeklyReportRow }) {
+export function NutritionSection({ report, withCharts = true }: { report: WeeklyReportRow; withCharts?: boolean }) {
   const t = useTranslations("reports");
   const tm = useTranslations("reports.metrics");
   const m = report.metrics;
@@ -17,9 +17,9 @@ export function NutritionSection({ report }: { report: WeeklyReportRow }) {
         <StatCard label={tm("calories")} value={num(m.calories.value)} sub={m.calories.target ? `${tm("vsTarget")} ${m.calories.target}` : undefined} />
         <StatCard label={tm("adherence")} value={m.mealPlanAdherencePct == null ? "—" : `${m.mealPlanAdherencePct}%`} />
       </div>
-      <MacroBars m={m} title={t("macros")} />
+      {withCharts && <MacroBars m={m} title={t("macros")} />}
       <AdherenceDots daily={m.daily} label={t("adherence7d")} />
-      <CaloriesChart daily={m.daily} target={m.calories.target} title={tm("calories")} />
+      {withCharts && <CaloriesChart daily={m.daily} target={m.calories.target} title={tm("calories")} />}
     </section>
   );
 }
