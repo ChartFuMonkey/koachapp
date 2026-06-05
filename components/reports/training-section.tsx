@@ -4,7 +4,7 @@ import type { WeeklyReportRow } from "@/lib/reports/types";
 import { SectionHeader, StatCard, PersonalBests, RecommendationBlock } from "./report-parts";
 import { StrengthChart } from "./report-charts";
 
-export function TrainingSection({ report }: { report: WeeklyReportRow }) {
+export function TrainingSection({ report, withCharts = true }: { report: WeeklyReportRow; withCharts?: boolean }) {
   const t = useTranslations("reports");
   const tm = useTranslations("reports.metrics");
   const m = report.metrics;
@@ -20,7 +20,7 @@ export function TrainingSection({ report }: { report: WeeklyReportRow }) {
         <StatCard label="Volume" value={m.training.totalVolumeKg == null ? "—" : `${m.training.totalVolumeKg} kg`} />
       </div>
       <PersonalBests bests={m.training.personalBests} title={t("personalBests")} />
-      <StrengthChart series={m.trends?.strength ?? []} title={t("strengthTrend")} />
+      {withCharts && <StrengthChart series={m.trends?.strength ?? []} title={t("strengthTrend")} />}
     </section>
   );
 }

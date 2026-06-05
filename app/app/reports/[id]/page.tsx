@@ -23,10 +23,16 @@ export default async function ClientReportDetail({
   if (!data) notFound();
   const report = data as WeeklyReportRow;
 
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", report.client_id)
+    .maybeSingle();
+
   return (
     <div className="px-5 pt-5 pb-10">
       <MicroLabel>~/Reports</MicroLabel>
-      <ReportView report={report} locale={locale} />
+      <ReportView report={report} locale={locale} clientName={prof?.full_name ?? ""} />
     </div>
   );
 }

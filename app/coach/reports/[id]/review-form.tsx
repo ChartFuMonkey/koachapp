@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { regenerateReport, releaseReport } from "@/actions/reports";
 import { translateError } from "@/lib/translate-error";
 import { ReportView } from "@/components/reports/report-view";
+import { ReportVisuals } from "@/components/reports/report-visuals";
 import { FlagList } from "@/components/reports/flag-list";
 import type { WeeklyReportRow } from "@/lib/reports/types";
 
@@ -57,7 +58,7 @@ export function ReviewForm({
   }
 
   return (
-    <div className="px-5 py-6 lg:px-8 max-w-[640px]">
+    <div className="@container px-5 py-6 lg:px-8">
       <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">
         {clientName} · {report.week_start} – {report.week_end} ·{" "}
         <span style={{ color: published ? "var(--good)" : "var(--ink-3)" }}>
@@ -67,6 +68,9 @@ export function ReviewForm({
       <h1 className="mb-5 text-[22px] font-semibold text-ink tracking-tight">
         {t("title")}
       </h1>
+
+      <div className="grid gap-8 @4xl:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] @4xl:items-start">
+        <div className="min-w-0">
 
       {report.flags.length > 0 && (
         <section className="mb-5 rounded-xl border border-border bg-card p-4">
@@ -169,7 +173,14 @@ export function ReviewForm({
         </section>
       )}
 
-      <ReportView report={report} locale={locale} />
+          <ReportView report={report} locale={locale} showCharts={false} clientName={clientName} />
+        </div>
+
+        {/* Right rail: the report's graphs fill the empty desktop space */}
+        <aside className="min-w-0">
+          <ReportVisuals report={report} />
+        </aside>
+      </div>
     </div>
   );
 }
