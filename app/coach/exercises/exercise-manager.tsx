@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,14 +20,18 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { translateError } from "@/lib/translate-error";
 import { buildPublicVideoUrl } from "@/lib/video";
+import { exerciseDisplayName } from "@/lib/exercise-display";
+import type { Locale } from "@/i18n/request";
 
 type Exercise = {
   id: string;
   name: string;
+  name_en: string | null;
   muscle_group: string | null;
   equipment: string | null;
   difficulty: string | null;
   notes: string | null;
+  notes_en: string | null;
   video_url: string | null;
   video_storage_path: string | null;
 };
@@ -41,6 +45,17 @@ const selectClass =
 const FILTERS = ["All", "Legs", "Back", "Chest", "Shoulders", "Arms", "Core"] as const;
 type Filter = (typeof FILTERS)[number];
 
+// The chips are fixed English labels, but muscle_group values are stored in
+// Croatian (and occasionally English). Match each chip against either language.
+const FILTER_MATCHERS: Record<Exclude<Filter, "All">, string[]> = {
+  Legs: ["noge", "kvadriceps", "gluteus", "stražnja loža", "straznja loza", "listovi", "leg", "quad", "glute", "hamstring", "calf"],
+  Back: ["leđa", "leda", "back", "lat"],
+  Chest: ["prsa", "chest"],
+  Shoulders: ["ramena", "shoulder", "delt"],
+  Arms: ["biceps", "triceps", "ruke", "arm"],
+  Core: ["trbušnjaci", "trbusnjaci", "trbuh", "core", "abs"],
+};
+
 export default function ExerciseManager({
   initialExercises,
   usageMap = {},
@@ -53,6 +68,7 @@ export default function ExerciseManager({
   const tErr = useTranslations("coach.exercises.errors");
   const tCommonErr = useTranslations("errors");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -80,10 +96,11 @@ export default function ExerciseManager({
     return initialExercises.filter((ex) => {
       if (activeFilter !== "All") {
         const mg = (ex.muscle_group || "").toLowerCase();
-        if (!mg.includes(activeFilter.toLowerCase())) return false;
+        if (!FILTER_MATCHERS[activeFilter].some((m) => mg.includes(m)))
+          return false;
       }
       if (!q) return true;
-      const hay = [ex.name, ex.muscle_group, ex.equipment, ex.difficulty, ex.notes]
+      const hay = [ex.name, ex.name_en, ex.muscle_group, ex.equipment, ex.difficulty, ex.notes, ex.notes_en]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -394,7 +411,7 @@ export default function ExerciseManager({
                       {ex.equipment ? ` · ${ex.equipment}` : ""}
                     </MicroLabel>
                     <div className="mt-1.5 text-base font-semibold text-ink leading-tight truncate">
-                      {ex.name}
+                      {exerciseDisplayName(ex, locale)}
                     </div>
                     {ex.difficulty && (
                       <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em] text-ink-3">
@@ -422,7 +439,7 @@ export default function ExerciseManager({
                         variant="ghost"
                         size="icon-xs"
                         onClick={() =>
-                          setDeleteTarget({ id: ex.id, name: ex.name })
+                          setDeleteTarget({ id: ex.id, name: exerciseDisplayName(ex, locale) })
                         }
                         className="text-danger hover:text-red-300"
                         aria-label={tCommon("delete")}

@@ -150,10 +150,13 @@ export async function generateReportForClient(
     }
     const { data: exRows } = await supabaseAdmin
       .from("exercises")
-      .select("id, name")
+      .select("id, name, name_en")
       .in("id", exerciseIds);
     for (const ex of exRows ?? [])
-      exerciseNames[ex.id as string] = ex.name as string;
+      exerciseNames[ex.id as string] =
+        language === "en" && ex.name_en
+          ? (ex.name_en as string)
+          : (ex.name as string);
   }
 
   // ── Measurements (latest in week + latest before) ────────
@@ -274,8 +277,12 @@ export async function generateReportForClient(
   const missingNames = trendExerciseIds.filter((eid) => !(eid in trendExerciseNames));
   if (missingNames.length > 0) {
     const { data: exRows2 } = await supabaseAdmin
-      .from("exercises").select("id, name").in("id", missingNames);
-    for (const ex of exRows2 ?? []) trendExerciseNames[ex.id as string] = ex.name as string;
+      .from("exercises").select("id, name, name_en").in("id", missingNames);
+    for (const ex of exRows2 ?? [])
+      trendExerciseNames[ex.id as string] =
+        language === "en" && ex.name_en
+          ? (ex.name_en as string)
+          : (ex.name as string);
   }
 
   metrics.trends = computeTrends({

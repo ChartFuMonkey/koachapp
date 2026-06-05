@@ -22,7 +22,7 @@ export default async function ProgramBuilderPage({
           id, day_label, sort_order,
           program_exercises (
             id, sets, reps, rest_sec, rpe, sort_order,
-            exercises ( id, name, muscle_group )
+            exercises ( id, name, name_en, muscle_group )
           )
         )
       `
@@ -31,7 +31,7 @@ export default async function ProgramBuilderPage({
       .order("created_at", { ascending: false }),
     supabaseAdmin
       .from("exercises")
-      .select("id, name, muscle_group")
+      .select("id, name, name_en, muscle_group")
       .order("name", { ascending: true }),
     getTranslations("coach.clients.detail"),
   ]);

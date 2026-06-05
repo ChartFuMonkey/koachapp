@@ -35,7 +35,7 @@ export async function getActiveProgram() {
       id, day_label, sort_order,
       program_exercises (
         id, sets, reps, rest_sec, rpe, sort_order,
-        exercises ( id, name, notes, video_url, video_storage_path )
+        exercises ( id, name, name_en, notes, notes_en, video_url, video_storage_path )
       )
     `
     )
@@ -202,7 +202,7 @@ export async function getDayExercises(dayId: string) {
     .select(
       `
       id, sets, reps, rest_sec, rpe, sort_order,
-      exercises ( id, name, notes, video_url )
+      exercises ( id, name, name_en, notes, notes_en, video_url )
     `
     )
     .eq("day_id", dayId)

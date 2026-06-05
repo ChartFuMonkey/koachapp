@@ -2,17 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronDown, ChevronUp, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/athletic/empty-state";
 import { getActiveProgram, createWorkoutSession } from "@/actions/workout";
 import { ExerciseDemo } from "@/components/exercise-demo";
+import { exerciseDisplayName, exerciseNotes } from "@/lib/exercise-display";
+import type { Locale } from "@/i18n/request";
 
 type Exercise = {
   id: string;
   name: string;
+  name_en: string | null;
   notes: string | null;
+  notes_en: string | null;
   video_url: string | null;
   video_storage_path: string | null;
 };
@@ -45,6 +49,7 @@ export default function WorkoutPage() {
   const t = useTranslations("app.workout");
   const tErrors = useTranslations("app.workout.errors");
   const tCommonErrors = useTranslations("errors");
+  const locale = useLocale() as Locale;
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
@@ -166,10 +171,11 @@ export default function WorkoutPage() {
                   <ul className="flex flex-col gap-1.5">
                     {day.program_exercises.map((pe, i) => {
                       const ex = pe.exercises;
+                      const notes = exerciseNotes(ex, locale);
                       const hasDemo = !!(
                         ex.video_url ||
                         ex.video_storage_path ||
-                        ex.notes
+                        notes
                       );
                       const isExExpanded = expandedExercise === pe.id;
                       return (
@@ -195,7 +201,7 @@ export default function WorkoutPage() {
                             </span>
                             <div className="min-w-0">
                               <div className="text-sm font-medium text-ink truncate">
-                                {ex.name}
+                                {exerciseDisplayName(ex, locale)}
                               </div>
                               <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-ink-3">
                                 {pe.sets} × {pe.reps}
@@ -225,7 +231,7 @@ export default function WorkoutPage() {
                               <ExerciseDemo
                                 videoUrl={ex.video_url}
                                 videoStoragePath={ex.video_storage_path}
-                                description={ex.notes}
+                                description={notes}
                                 descriptionLabel={t("description")}
                               />
                             </div>
