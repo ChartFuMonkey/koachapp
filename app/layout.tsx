@@ -37,13 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
       statusBarStyle: "black-translucent",
       title: "Koach",
     },
-    icons: {
-      icon: [
-        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-      ],
-      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-    },
+    // Icons come from file conventions (app/favicon.ico, app/icon.svg,
+    // app/apple-icon.png). Next.js auto-detects these and they take priority
+    // over a metadata `icons` field. PWA/Android icons live in manifest.json.
   };
 }
 
