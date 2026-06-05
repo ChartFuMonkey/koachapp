@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { weekBounds, previousWeekStart, addDays } from "./week";
 import {
   computeMetrics,
+  computeExerciseScorecard,
   type DailyLogRow,
   type SessionAgg,
   type ExerciseSetRow,
@@ -96,6 +97,21 @@ export async function generateReportForClient(
       (e) => ({ exercise_id: e.exercise_id, reps: e.reps, weight_kg: e.weight_kg })
     ),
   }));
+
+  // ── Last week's sets (for the coach per-exercise scorecard delta) ─────
+  const { data: prevSessionRows } = await supabaseAdmin
+    .from("workout_sessions")
+    .select("exercise_logs(exercise_id, reps, weight_kg)")
+    .eq("client_id", clientId)
+    .gte("session_date", prevStart)
+    .lte("session_date", prevEnd);
+  const lastWeekSets: ExerciseSetRow[] = (prevSessionRows ?? []).flatMap((s) =>
+    ((s as { exercise_logs: ExerciseSetRow[] }).exercise_logs ?? []).map((e) => ({
+      exercise_id: e.exercise_id,
+      reps: e.reps,
+      weight_kg: e.weight_kg,
+    }))
+  );
 
   // ── Planned sessions = program_days of the active program ─
   const { data: activeProgram } = await supabaseAdmin
@@ -213,6 +229,14 @@ export async function generateReportForClient(
     measurementPrev: measPrev ?? null,
     checkin,
     phase,
+  });
+
+  // Coach-only per-exercise scorecard (this week vs last week).
+  metrics.training.scorecard = computeExerciseScorecard({
+    thisWeekSets: sessions.flatMap((s) => s.sets),
+    lastWeekSets,
+    priorBests,
+    exerciseNames,
   });
 
   // ── Multi-week history for progress trends ───────────────

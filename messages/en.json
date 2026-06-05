@@ -869,7 +869,15 @@
     "recNutritionPlaceholder": "Nutrition advice for next week…",
     "recGeneralPlaceholder": "General message / focus for next week…",
     "downloadPdf": "Download PDF",
-    "generatedOn": "Generated {date}"
+    "generatedOn": "Generated {date}",
+    "scorecard": {
+      "title": "Progress by exercise",
+      "coachOnly": "Coach only",
+      "sets": "sets",
+      "new": "new",
+      "even": "even",
+      "empty": "No training logged this week."
+    }
   },
   "offline": {
     "title": "You’re offline",

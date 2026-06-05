@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { computeMetrics, type DailyLogRow, type ClientTargets } from "./aggregate";
+import { computeMetrics, computeExerciseScorecard, type DailyLogRow, type ClientTargets, type ExerciseSetRow } from "./aggregate";
 
 const targets: ClientTargets = {
   start_weight_kg: 90,
@@ -117,4 +117,50 @@ test("daily series is sorted and trimmed to chart fields", () => {
   });
   expect(m.daily.map((d) => d.date)).toEqual(["2026-05-25", "2026-05-26"]);
   expect(m.daily[0]).toEqual({ date: "2026-05-25", weightKg: 89, calories: 2000, steps: 8000, followedMealPlan: null });
+});
+
+test("exercise scorecard: top set, volume, e1RM, week-over-week delta, PR", () => {
+  const thisWeekSets: ExerciseSetRow[] = [
+    { exercise_id: "bench", reps: 5, weight_kg: 80 },
+    { exercise_id: "bench", reps: 5, weight_kg: 85 }, // heaviest + best e1RM
+    { exercise_id: "squat", reps: 5, weight_kg: 100 },
+    { exercise_id: "plank", reps: 60, weight_kg: null }, // bodyweight: no weight/e1RM
+  ];
+  const lastWeekSets: ExerciseSetRow[] = [
+    { exercise_id: "bench", reps: 5, weight_kg: 82 },
+    { exercise_id: "squat", reps: 5, weight_kg: 100 },
+  ];
+  const out = computeExerciseScorecard({
+    thisWeekSets,
+    lastWeekSets,
+    priorBests: { bench: 82.5, squat: 110 }, // bench is a PR (85 > 82.5); squat is not
+    exerciseNames: { bench: "Bench", squat: "Squat", plank: "Plank" },
+  });
+
+  // sorted by volume desc: bench 825, squat 500, plank 0
+  expect(out.map((r) => r.exercise)).toEqual(["Bench", "Squat", "Plank"]);
+
+  const bench = out.find((r) => r.exercise === "Bench");
+  expect(bench).toBeDefined();
+  if (!bench) return;
+  expect(bench.sets).toBe(2);
+  expect(bench.topWeightKg).toBe(85);
+  expect(bench.topReps).toBe(5);
+  expect(bench.volumeKg).toBe(825);
+  expect(bench.e1rmKg).toBe(Math.round(85 * (1 + 5 / 30))); // 99
+  expect(bench.prevE1rmKg).toBe(Math.round(82 * (1 + 5 / 30))); // 96
+  expect(bench.trainedLastWeek).toBe(true);
+  expect(bench.isWeightPR).toBe(true);
+
+  const squat = out.find((r) => r.exercise === "Squat");
+  expect(squat?.isWeightPR).toBe(false); // 100 < prior 110
+
+  const plank = out.find((r) => r.exercise === "Plank");
+  expect(plank).toBeDefined();
+  if (!plank) return;
+  expect(plank.topWeightKg).toBeNull();
+  expect(plank.e1rmKg).toBeNull();
+  expect(plank.volumeKg).toBe(0);
+  expect(plank.trainedLastWeek).toBe(false);
+  expect(plank.isWeightPR).toBe(false);
 });

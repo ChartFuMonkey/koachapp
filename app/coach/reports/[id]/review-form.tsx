@@ -8,6 +8,7 @@ import { regenerateReport, releaseReport } from "@/actions/reports";
 import { translateError } from "@/lib/translate-error";
 import { ReportView } from "@/components/reports/report-view";
 import { ReportVisuals } from "@/components/reports/report-visuals";
+import { ExerciseScorecard } from "@/components/reports/exercise-scorecard";
 import { FlagList } from "@/components/reports/flag-list";
 import type { WeeklyReportRow } from "@/lib/reports/types";
 
@@ -176,8 +177,11 @@ export function ReviewForm({
           <ReportView report={report} locale={locale} showCharts={false} clientName={clientName} />
         </div>
 
-        {/* Right rail: the report's graphs fill the empty desktop space */}
-        <aside className="min-w-0">
+        {/* Right rail: coach-only per-exercise scorecard + the report's graphs */}
+        <aside className="flex min-w-0 flex-col gap-4">
+          {report.metrics.training.scorecard && report.metrics.training.scorecard.length > 0 && (
+            <ExerciseScorecard scorecard={report.metrics.training.scorecard} locale={locale} />
+          )}
           <ReportVisuals report={report} />
         </aside>
       </div>

@@ -17,6 +17,19 @@ export type PersonalBest = {
   reps: number;
 };
 
+/** Per-exercise weekly summary for the coach review scorecard (coach-only). */
+export type ExerciseScore = {
+  exercise: string;
+  sets: number;
+  topWeightKg: number | null; // heaviest set this week
+  topReps: number | null; // reps on that heaviest set
+  volumeKg: number; // Σ reps × weight this week
+  e1rmKg: number | null; // best estimated 1RM this week (Epley)
+  prevE1rmKg: number | null; // best estimated 1RM last week (null if not trained)
+  trainedLastWeek: boolean;
+  isWeightPR: boolean; // top weight beat the all-time prior best
+};
+
 export type DailyPoint = {
   date: string; // YYYY-MM-DD
   weightKg: number | null;
@@ -80,6 +93,8 @@ export type WeeklyMetrics = {
     totalVolumeKg: number | null;
     totalDurationMin: number;
     personalBests: PersonalBest[];
+    /** Coach-only per-exercise breakdown; absent on older reports. */
+    scorecard?: ExerciseScore[];
   };
   measurement: {
     waistCm: number | null;

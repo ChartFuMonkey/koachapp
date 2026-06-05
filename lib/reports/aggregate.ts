@@ -2,7 +2,7 @@
 // Pure metric computation (no I/O). The orchestrator fetches rows and passes
 // them in; this module only does math so it can be unit-tested.
 
-import type { WeeklyMetrics, MetricPair, CheckinEcho, PhaseInfo } from "./types";
+import type { WeeklyMetrics, MetricPair, CheckinEcho, PhaseInfo, ExerciseScore } from "./types";
 
 export type DailyLogRow = {
   log_date: string;
@@ -191,4 +191,76 @@ export function computeMetrics(input: {
       })),
     trends: { weightByWeek: [], measurements: [], strength: [] },
   };
+}
+
+/** Epley estimated 1RM; a single rep is just the weight. */
+function epley(weightKg: number, reps: number): number {
+  return reps <= 1 ? weightKg : weightKg * (1 + reps / 30);
+}
+
+/**
+ * Per-exercise weekly scorecard for the coach: this week's top set, set count,
+ * volume, and best estimated 1RM, with last week's e1RM for a week-over-week
+ * delta and an all-time weight-PR flag. Sorted most-worked first.
+ */
+export function computeExerciseScorecard(input: {
+  thisWeekSets: ExerciseSetRow[];
+  lastWeekSets: ExerciseSetRow[];
+  priorBests: Record<string, number>;
+  exerciseNames: Record<string, string>;
+}): ExerciseScore[] {
+  const { thisWeekSets, lastWeekSets, priorBests, exerciseNames } = input;
+
+  // Best estimated 1RM per exercise last week.
+  const prevBestE1rm = new Map<string, number>();
+  for (const st of lastWeekSets) {
+    if (st.weight_kg == null || st.reps == null) continue;
+    const e = epley(st.weight_kg, st.reps);
+    prevBestE1rm.set(st.exercise_id, Math.max(prevBestE1rm.get(st.exercise_id) ?? 0, e));
+  }
+  const trainedLastWeek = new Set(lastWeekSets.map((s) => s.exercise_id));
+
+  // Group this week's sets by exercise.
+  const byEx = new Map<string, ExerciseSetRow[]>();
+  for (const st of thisWeekSets) {
+    const arr = byEx.get(st.exercise_id);
+    if (arr) arr.push(st);
+    else byEx.set(st.exercise_id, [st]);
+  }
+
+  const rows: ExerciseScore[] = [];
+  for (const [exId, sets] of byEx) {
+    let topWeightKg: number | null = null;
+    let topReps: number | null = null;
+    let volumeKg = 0;
+    let e1rmKg: number | null = null;
+    for (const st of sets) {
+      const w = st.weight_kg;
+      const r = st.reps;
+      if (w != null && r != null) volumeKg += w * r;
+      if (w == null) continue;
+      if (topWeightKg == null || w > topWeightKg || (w === topWeightKg && (r ?? 0) > (topReps ?? 0))) {
+        topWeightKg = w;
+        topReps = r;
+      }
+      if (r != null) {
+        const e = epley(w, r);
+        if (e1rmKg == null || e > e1rmKg) e1rmKg = e;
+      }
+    }
+    const prior = priorBests[exId];
+    rows.push({
+      exercise: exerciseNames[exId] ?? "Exercise",
+      sets: sets.length,
+      topWeightKg,
+      topReps,
+      volumeKg: Math.round(volumeKg),
+      e1rmKg: e1rmKg == null ? null : Math.round(e1rmKg),
+      prevE1rmKg: prevBestE1rm.has(exId) ? Math.round(prevBestE1rm.get(exId) as number) : null,
+      trainedLastWeek: trainedLastWeek.has(exId),
+      isWeightPR: prior != null && topWeightKg != null && topWeightKg > prior,
+    });
+  }
+
+  return rows.sort((a, b) => b.volumeKg - a.volumeKg);
 }
