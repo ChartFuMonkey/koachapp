@@ -869,7 +869,15 @@
     "recNutritionPlaceholder": "Savjeti za prehranu sljedeći tjedan…",
     "recGeneralPlaceholder": "Općenita poruka / fokus za sljedeći tjedan…",
     "downloadPdf": "Preuzmi PDF",
-    "generatedOn": "Generirano {date}"
+    "generatedOn": "Generirano {date}",
+    "scorecard": {
+      "title": "Napredak po vježbi",
+      "coachOnly": "Samo trener",
+      "sets": "ser.",
+      "new": "novo",
+      "even": "isto",
+      "empty": "Nema zabilježenog treninga ovaj tjedan."
+    }
   },
   "offline": {
     "title": "Bez veze ste",
