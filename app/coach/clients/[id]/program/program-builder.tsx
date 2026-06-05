@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,10 +35,12 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import ConfirmDialog from "@/components/confirm-dialog";
+import { exerciseDisplayName } from "@/lib/exercise-display";
+import type { Locale } from "@/i18n/request";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-type Exercise = { id: string; name: string; muscle_group?: string | null };
+type Exercise = { id: string; name: string; name_en?: string | null; muscle_group?: string | null };
 type ProgramExercise = {
   id: string;
   sets: number | null;
@@ -87,6 +89,7 @@ export default function ProgramBuilder({
   const router = useRouter();
   const t = useTranslations("coach.program");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
 
   const [showNewProgram, setShowNewProgram] = useState(false);
   const [newProgramName, setNewProgramName] = useState("");
@@ -526,7 +529,9 @@ export default function ProgramBuilder({
                             {idx + 1}.
                           </span>
                           <span className="min-w-0 truncate text-[13px] font-medium text-ink">
-                            {pe.exercises?.name ?? t("unknown")}
+                            {pe.exercises
+                              ? exerciseDisplayName(pe.exercises, locale)
+                              : t("unknown")}
                           </span>
                           <span className="font-mono text-[12px] text-ink-2">
                             {pe.sets && pe.reps
@@ -574,8 +579,9 @@ export default function ProgramBuilder({
                                 setDeleteTarget({
                                   type: "exercise",
                                   id: pe.id,
-                                  label:
-                                    pe.exercises?.name ?? t("unknown"),
+                                  label: pe.exercises
+                                    ? exerciseDisplayName(pe.exercises, locale)
+                                    : t("unknown"),
                                 })
                               }
                               className="text-danger hover:text-danger"
@@ -888,6 +894,7 @@ function AddExerciseForm({
 }) {
   const t = useTranslations("coach.program");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [sets, setSets] = useState("");
@@ -899,7 +906,11 @@ function AddExerciseForm({
   const filtered = useMemo(
     () =>
       allExercises.filter((ex) =>
-        ex.name.toLowerCase().includes(search.toLowerCase())
+        [ex.name, ex.name_en]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(search.toLowerCase())
       ),
     [allExercises, search]
   );
@@ -952,7 +963,7 @@ function AddExerciseForm({
                   onClick={() => setSelectedId(ex.id)}
                   className="w-full rounded px-2 py-1.5 text-left text-sm text-ink-2 hover:bg-surface-2"
                 >
-                  {ex.name}
+                  {exerciseDisplayName(ex, locale)}
                 </button>
               ))
             )}
@@ -970,7 +981,10 @@ function AddExerciseForm({
         <div>
           <div className="mb-2 flex items-center gap-2">
             <span className="text-sm font-medium text-ink">
-              {allExercises.find((e) => e.id === selectedId)?.name}
+              {(() => {
+                const sel = allExercises.find((e) => e.id === selectedId);
+                return sel ? exerciseDisplayName(sel, locale) : "";
+              })()}
             </span>
             <Button
               variant="ghost"

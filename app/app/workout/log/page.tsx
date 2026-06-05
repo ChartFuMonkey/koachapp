@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Check, Loader2, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,15 @@ import {
   finishWorkoutSession,
   getPreviousWeights,
 } from "@/actions/workout";
+import { exerciseDisplayName, exerciseNotes } from "@/lib/exercise-display";
+import type { Locale } from "@/i18n/request";
 
 type Exercise = {
   id: string;
   name: string;
+  name_en: string | null;
   notes: string | null;
+  notes_en: string | null;
   video_url: string | null;
 };
 
@@ -152,6 +156,7 @@ function WorkoutLogInner() {
   const t = useTranslations("app.workout");
   const tErrors = useTranslations("app.workout.errors");
   const tCommonErrors = useTranslations("errors");
+  const locale = useLocale() as Locale;
 
   const [exercises, setExercises] = useState<ProgramExercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -390,6 +395,8 @@ function WorkoutLogInner() {
   }
 
   const ex = currentExercise.exercises;
+  const exName = exerciseDisplayName(ex, locale);
+  const exNotes = exerciseNotes(ex, locale);
 
   // Build set log rows: completed sets carry their saved values; current = inputs; rest = NEXT
   const setRows = Array.from({ length: currentExercise.sets }, (_, i) => {
@@ -447,10 +454,10 @@ function WorkoutLogInner() {
           className="mt-1.5 font-semibold text-ink"
           style={{ fontSize: 28, letterSpacing: "-0.02em", lineHeight: 1.1 }}
         >
-          {ex.name}
+          {exName}
         </h1>
-        {ex.notes ? (
-          <p className="mt-1 text-xs text-ink-2">{ex.notes}</p>
+        {exNotes ? (
+          <p className="mt-1 text-xs text-ink-2">{exNotes}</p>
         ) : null}
       </div>
 
@@ -693,7 +700,7 @@ function WorkoutLogInner() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-ink">
-                        {pe.exercises.name}
+                        {exerciseDisplayName(pe.exercises, locale)}
                       </div>
                       <div className="mt-0.5 font-mono text-[11px] tabular-nums text-ink-3">
                         {meta}

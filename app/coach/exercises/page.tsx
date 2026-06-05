@@ -8,7 +8,7 @@ export default async function ExerciseDatabasePage() {
   const [{ data, error }, { data: usageRows }] = await Promise.all([
     supabaseAdmin
       .from("exercises")
-      .select("id, name, muscle_group, equipment, difficulty, notes, video_url, video_storage_path")
+      .select("id, name, name_en, muscle_group, equipment, difficulty, notes, notes_en, video_url, video_storage_path")
       .order("name", { ascending: true }),
     supabaseAdmin.from("program_exercises").select("exercise_id"),
   ]);
